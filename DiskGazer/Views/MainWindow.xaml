@@ -1,0 +1,439 @@
+﻿<Window x:Class="DiskGazer.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:DiskGazer.Views"
+        xmlns:viewModels="clr-namespace:DiskGazer.ViewModels"
+        xmlns:controls="clr-namespace:DiskGazer.Views.Controls"
+        xmlns:converters="clr-namespace:DiskGazer.Views.Converters"
+        x:Name="MainWindowRoot"
+        Title="{Binding Source={x:Static views:ProductInfo.NameVersionMiddle}, Mode=OneWay}"
+        FontFamily="Verdana" FontSize="11"
+        Height="460" Width="540"
+        Icon="/DiskGazer;component/Resources/Gazer.ico"
+        Loaded="OnLoaded" SizeChanged="OnSizeChanged">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <!-- Converters -->
+            <converters:DoubleScaleConverter x:Key="DoubleScaleConverterKey"/>
+            <converters:TripleDigitConverter x:Key="TripleDigitConverterKey"/>
+            <converters:ReadMethodToBooleanConverter x:Key="ReadMethodToBooleanConverterKey"/>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Window.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.Open"
+                        Executed="OpenExecuted"
+                        CanExecute="CanOpenExecute"/>
+        <CommandBinding Command="ApplicationCommands.Close"
+                        Executed="CloseExecuted"
+                        CanExecute="CanCloseExecute"/>
+    </Window.CommandBindings>
+
+    <Grid x:Name="LayoutRoot">
+        <Grid.RowDefinitions>
+            <!-- Height of lower row may be set to star. -->
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="GridDashboard">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Top menu -->
+            <Menu Grid.Row="0"
+                  x:Name="MenuTop"
+                  FontFamily="Verdana"
+                  Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}, Path=Width}"
+                  Height="21" HorizontalAlignment="Left" VerticalAlignment="Top"
+                  Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}">
+                <!-- File -->
+                <MenuItem x:Name="MenuItemFile"
+                          Height="21"
+                          Header="_File"
+                          SubmenuOpened="MenuItemFile_SubmenuOpened" SubmenuClosed="MenuItemFile_SubmenuClosed">
+                    <MenuItem Header="Save screenshot to file"
+                              Command="{Binding SaveScreenshotFileCommand}">
+                        <MenuItem.Icon>
+                            <Image Source="/DiskGazer;component/Resources/Camera_16xLG.png"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Save log to file"
+                              Command="{Binding SaveLogFileCommand}">
+                        <MenuItem.Icon>
+                            <Image Source="/DiskGazer;component/Resources/save_16xLG.png"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Send log to clipboard"
+                              Command="{Binding SendLogClipboardCommand}"/>
+                    <Separator/>
+                    
+                    <!-- Options -->
+                    <MenuItem Header="Options">
+                        <MenuItem.Icon>
+                            <Image Source="/DiskGazer;component/Resources/gear_16xLG.png"/>
+                        </MenuItem.Icon>
+                        <MenuItem Header="Rescan disks"
+                                  Command="{Binding RescanCommand}"
+                                  IsEnabled="{Binding Op.IsReady, Mode=OneWay}">
+                            <MenuItem.Icon>
+                                <Image Source="/DiskGazer;component/Resources/refresh_16xLG.png"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Open monitor window"
+                                  Command="ApplicationCommands.Open"/>
+                        <Separator/>
+
+                        <!-- Read method -->
+                        <StackPanel>
+                            <RadioButton
+                                Margin="2,4,0,3" Padding="0"
+                                Content="Read by native method"
+                                IsChecked="{Binding SettingsCurrent.Method, Mode=TwoWay,
+                                Converter={StaticResource ReadMethodToBooleanConverterKey}, ConverterParameter=Native}"
+                                IsEnabled="{Binding Op.IsReady, Mode=OneWay}"/>
+                            <RadioButton
+                                Margin="2,3,0,4" Padding="0"
+                                Content="Read by P/Invoke method"
+                                IsChecked="{Binding SettingsCurrent.Method, Mode=TwoWay,
+                                Converter={StaticResource ReadMethodToBooleanConverterKey}, ConverterParameter=P_Invoke}"
+                                IsEnabled="{Binding Op.IsReady, Mode=OneWay}"/>
+                        </StackPanel>
+                        <Separator/>
+
+                        <!-- Area fineness -->
+                        <Grid Margin="0,2,0,2">
+                            <TextBlock
+                                x:Name="TextAreaFineness"
+                                Margin="0,4,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                Text="Fineness of area/location"/>
+                            <ComboBox
+                                x:Name="ComboBoxAreaFineness"
+                                Width="56" Margin="156,2,0,2" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                FontSize="11"
+                                ItemsSource="{Binding MenuAreaFineness, Mode=OneTime}"
+                                SelectedItem="{Binding AreaFineness, Mode=TwoWay, Converter={StaticResource TripleDigitConverterKey}, ConverterParameter=2}"/>
+                        </Grid>
+                        <Separator/>
+
+                        <MenuItem Header="Remove outliers from data"
+                                  IsCheckable="True"
+                                  IsChecked="{Binding SettingsCurrent.WillRemoveOutlier, Mode=TwoWay}"/>
+                        <MenuItem Header="Slide chart line to current location"
+                                  IsCheckable="True"
+                                  IsChecked="{Binding WillSlideLine, ElementName=MainWindowRoot, Mode=TwoWay}"/>
+                        <MenuItem Header="Save screenshot and log automatically"
+                                  IsCheckable="True"
+                                  IsChecked="{Binding SettingsCurrent.WillSaveScreenshotLog, Mode=TwoWay}"/>
+                        <MenuItem Header="Indicate window/chart size"
+                                  IsCheckable="True"
+                                  IsChecked="{Binding WillIndicateSize, ElementName=MainWindowRoot, Mode=TwoWay}"/>
+                    </MenuItem>
+                    <Separator/>
+
+                    <!-- Exit -->
+                    <MenuItem Header="Exit"
+                              Command="ApplicationCommands.Close">
+                        <MenuItem.Icon>
+                            <Image Source="/DiskGazer;component/Resources/Close_16xLG.png"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </MenuItem>
+
+                <!-- Chart -->
+                <MenuItem Height="21"
+                          Header="_Chart">
+                    <Grid Margin="0,2,0,2">
+                        <!-- Chart max -->
+                        <CheckBox
+                            x:Name="CheckBoxChartMax"
+                            Margin="0,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                            Content="Fix maximum"
+                            IsChecked="{Binding IsChartMaxFixed, ElementName=MainWindowRoot, Mode=TwoWay}"/>
+                        <TextBox
+                            x:Name="TextBoxChartMax"
+                            Width="40" Height="18" Margin="106,2,0,2" HorizontalAlignment="Left" VerticalAlignment="Top"
+                            VerticalContentAlignment="Center" TextAlignment="Center" IsReadOnly="True" FontSize="11"
+                            Text="{Binding Value, ElementName=SliderChartMax, Mode=OneWay}"/>
+                        <Slider
+                            x:Name="SliderChartMax"
+                            Width="80" Margin="158,2,0,2" HorizontalAlignment="Left" VerticalAlignment="Top"
+                            Minimum="50" Maximum="1000" SmallChange="50" LargeChange="100"
+                            Value="{Binding ChartMax, ElementName=MainWindowRoot, Mode=TwoWay}"/>
+                    </Grid>
+                    <Grid Margin="0,2,0,2">
+                        <!-- Chart min -->
+                        <CheckBox
+                            x:Name="CheckBoxChartMin"
+                            Margin="0,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                            Content="Fix minimum"
+                            IsChecked="{Binding IsChartMinFixed, ElementName=MainWindowRoot, Mode=TwoWay}"/>
+                        <TextBox
+                            x:Name="TextBoxChartMin"
+                            Width="40" Height="18" Margin="106,2,0,2" HorizontalAlignment="Left" VerticalAlignment="Top"
+                            VerticalContentAlignment="Center" TextAlignment="Center" IsReadOnly="True" FontSize="11"
+                            Text="{Binding Value, ElementName=SliderChartMin, Mode=OneWay}"/>
+                        <Slider
+                            x:Name="SliderChartMin"
+                            Width="80" Margin="154,2,0,2" HorizontalAlignment="Left" VerticalAlignment="Top"
+                            Minimum="0" Maximum="950" SmallChange="50" LargeChange="100"
+                            Value="{Binding ChartMin, ElementName=MainWindowRoot, Mode=TwoWay}"/>
+                    </Grid>
+                    <Separator/>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Color bar -->
+                        <TextBlock x:Name="TextColor"
+                                   Margin="0,2,0,2" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                   Text="Change chart line color"/>
+                        <WrapPanel Grid.Row="1"
+                                   x:Name="PanelColorBar"
+                                   Width="Auto" Height="30" Margin="0,2,0,4" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    </Grid>
+                    <Separator/>
+
+                    <MenuItem Header="Pin current chart line"
+                              Click="MenuItemPinLine_Clicked"/>
+                    <MenuItem Header="Clear all chart lines"
+                              Click="MenuItemClearLines_Clicked"/>
+                </MenuItem>
+
+                <!-- Help -->
+                <MenuItem Height="21"
+                          Header="_Help">
+                    <!-- Disk information -->
+                    <MenuItem x:Name="MenuItemDiskInfo"
+                              Header="Disk information">
+                        <MenuItem.Icon>
+                            <Image Source="/DiskGazer;component/Resources/LightBulb_16xLG.png"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator/>
+
+                    <MenuItem Header="{Binding Source={x:Static views:ProductInfo.Title}, Mode=OneWay}" HeaderStringFormat="About {0}">
+                        <StackPanel Margin="0,4"
+                                    Orientation="Vertical">
+                            <TextBlock Margin="2"
+                                       FontSize="16" FontWeight="Bold"
+                                       Text="{Binding Source={x:Static views:ProductInfo.Title}, Mode=OneWay}"/>
+                            <TextBlock Margin="2"
+                                       FontSize="14"
+                                       Text="{Binding Source={x:Static views:ProductInfo.Version}, Mode=OneWay}"/>
+                            <TextBlock Margin="2"
+                                       Text="{Binding Source={x:Static views:ProductInfo.Copyright}, Mode=OneWay}"/>
+                        </StackPanel>
+                    </MenuItem>
+                </MenuItem>
+            </Menu>
+
+            <Grid Grid.Row="1"
+                  Margin="0,0,0,4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Start button -->
+                <Button Grid.RowSpan="2"
+                        x:Name="ButtonStart"
+                        Width="45" Height="45" Margin="8,8,8,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                        Style="{StaticResource ButtonStartReady}"
+                        FontSize="12"
+                        Content="Start"
+                        Command="{Binding RunCommand}"/>
+
+                <!-- Disk -->
+                <ComboBox Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="2"
+                          x:Name="ComboBoxDisk"
+                          Width="322" Margin="0,8,0,5" HorizontalAlignment="Left" VerticalAlignment="Top"
+                          Style="{StaticResource ComboBoxPlain}"
+                          FontSize="12"
+                          ItemsSource="{Binding DiskRosterNames, Mode=OneWay}"
+                          SelectedIndex="{Binding DiskRosterNamesIndex, Mode=TwoWay}"
+                          IsEnabled="{Binding Op.IsReady, Mode=OneWay}"/>
+
+                <!-- Capacity -->
+                <StackPanel Grid.Column="3" Grid.Row="0"
+                            Margin="6,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                            Orientation="Horizontal">
+                    <TextBlock
+                        x:Name="TextCapacity"
+                        Width="47" Margin="0" VerticalAlignment="Center"
+                        Text="Capacity"/>
+                    <TextBox
+                        x:Name="TextBoxCapacity"
+                        Width="70" Height="18" Margin="5,0,0,0"
+                        TextAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"
+                        Text="{Binding CurrentDisk.Size, Mode=OneWay, Converter={StaticResource TripleDigitConverterKey}}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Grid.Row="1"
+                            Margin="0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                            Orientation="Horizontal">
+                    <!-- Number of runs -->
+                    <TextBlock
+                        x:Name="TextNumRun"
+                        Margin="0" VerticalAlignment="Center"
+                        Text="Run"/>
+                    <ComboBox
+                        x:Name="ComboBoxNumRun"
+                        Width="36" Margin="5,0,0,0"
+                        ItemsSource="{Binding MenuNumRun, Mode=OneTime}"
+                        SelectedItem="{Binding SettingsCurrent.NumRun, Mode=TwoWay}"
+                        IsEnabled="{Binding Op.IsReady, Mode=OneWay}"/>
+
+                    <!-- Block size -->
+                    <TextBlock
+                        x:Name="TextBlockSize"
+                        Margin="5,0,0,0" VerticalAlignment="Center"
+                        Text="Block"/>
+                    <ComboBox
+                        x:Name="ComboBoxBlockSize"
+                        Width="56" Margin="5,0,0,0"
+                        ItemsSource="{Binding MenuBlockSize, Mode=OneTime}"
+                        SelectedItem="{Binding MenuBlockSizeItem, Mode=TwoWay}"
+                        IsEnabled="{Binding Op.IsReady, Mode=OneWay}"/>
+
+                    <!-- Block offset -->
+                    <ComboBox
+                        x:Name="ComboBoxBlockOffset"
+                        Width="54" Margin="5,0,0,0"
+                        ItemsSource="{Binding MenuBlockOffset, Mode=OneWay}"
+                        SelectedIndex="{Binding MenuBlockOffsetIndex, Mode=TwoWay}"
+                        IsEnabled="{Binding Op.IsReady, Mode=OneWay}">
+                        <!-- This Style is to suppress binding error message. -->
+                        <ComboBox.ItemContainerStyle>
+                            <Style TargetType="{x:Type ComboBoxItem}">
+                                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                            </Style>
+                        </ComboBox.ItemContainerStyle>
+                    </ComboBox>
+                </StackPanel>
+
+                <!-- Area size -->
+                <Grid Grid.Column="2" Grid.Row="1" Grid.RowSpan="2"
+                      Margin="5,1,0,0" HorizontalAlignment="Right" VerticalAlignment="Top">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock
+                        x:Name="TextAreaSize"
+                        Margin="0" VerticalAlignment="Center"
+                        Text="Area"/>
+                    <controls:TextBoxDoubleFormat
+                        Grid.Column="1" Grid.Row="0"
+                        x:Name="TextBoxAreaSize"
+                        Height="18" Width="70" Margin="5,0,0,0" HorizontalAlignment="Left"
+                        VerticalContentAlignment="Center" TextAlignment="Center" IsReadOnly="True"
+                        ScaleNumber="{Binding SelectedItem, ElementName=ComboBoxAreaFineness, Mode=OneWay, Converter={StaticResource DoubleScaleConverterKey}}"
+                        Text="{Binding Value, ElementName=SliderAreaSize, Mode=OneWay}"/>
+                    <controls:SliderPlus
+                        Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2"
+                        x:Name="SliderAreaSize"
+                        Width="100" Height="18" Margin="0,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                        SmallChange="1"
+                        Maximum="{Binding CurrentDisk.Size, Mode=OneWay, Converter={StaticResource TripleDigitConverterKey}}"
+                        Minimum="{Binding AreaFineness, Mode=OneWay, Converter={StaticResource TripleDigitConverterKey}, ConverterParameter=2}"
+                        ButtonFrequency="{Binding AreaFineness, Mode=OneWay, Converter={StaticResource TripleDigitConverterKey}, ConverterParameter=2}"
+                        Value="{Binding AreaSize, Mode=TwoWay, Converter={StaticResource TripleDigitConverterKey}, ConverterParameter=2}"
+                        IsEnabled="{Binding Op.IsReady, Mode=OneWay}"/>
+                </Grid>
+
+                <!-- Area location -->
+                <Grid Grid.Column="3" Grid.Row="1" Grid.RowSpan="2"
+                      Margin="6,1,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock
+                        x:Name="TextAreaLocation"
+                        Width="47" Margin="0" VerticalAlignment="Center"
+                        Text="Location"/>
+                    <controls:TextBoxDoubleFormat
+                        Grid.Column="1" Grid.Row="0"
+                        x:Name="TextBoxAreaLocation"
+                        Width="70" Height="18" Margin="5,0,0,0" HorizontalAlignment="Left"
+                        VerticalContentAlignment="Center" TextAlignment="Center" IsReadOnly="True"
+                        ScaleNumber="{Binding SelectedItem, ElementName=ComboBoxAreaFineness, Mode=OneWay, Converter={StaticResource DoubleScaleConverterKey}}"
+                        Text="{Binding Value, ElementName=SliderAreaLocation, Mode=OneWay}"/>                        
+                    <controls:SliderPlus
+                        Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2"
+                        x:Name="SliderAreaLocation"
+                        Width="122" Height="18" Margin="0,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                        SmallChange="1"
+                        Maximum="{Binding CurrentDisk.Size, Mode=OneWay, Converter={StaticResource TripleDigitConverterKey}}"
+                        Minimum="0"
+                        ButtonFrequency="{Binding AreaFineness, Mode=OneWay, Converter={StaticResource TripleDigitConverterKey}, ConverterParameter=2}"
+                        Value="{Binding AreaLocation, Mode=TwoWay, Converter={StaticResource TripleDigitConverterKey}, ConverterParameter=2}"
+                        IsEnabled="{Binding Op.IsReady, Mode=OneWay}"/>
+                </Grid>
+
+                <!-- Scores -->
+                <StackPanel Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2"
+                            Margin="8,12,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                            Orientation="Horizontal" >
+                    <TextBlock
+                        Margin="0" VerticalAlignment="Center"
+                        Text="Max"/>
+                    <controls:TextBoxDoubleFormat
+                        Width="58" Height="18" Margin="5,0,0,0"
+                        Style="{StaticResource TextBoxScore}"
+                        VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                        Text="{Binding ScoreMax, Mode=OneWay, StringFormat={}{0:f2}}"
+                        WillLeaveBlankIfZero="True"/>
+                    <TextBlock
+                        Margin="5,0,0,0" VerticalAlignment="Center"
+                        Text="Min"/>
+                    <controls:TextBoxDoubleFormat
+                        Width="58" Height="18" Margin="5,0,0,0"
+                        Style="{StaticResource TextBoxScore}"
+                        VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                        Text="{Binding ScoreMin, Mode=OneWay, StringFormat={}{0:f2}}"
+                        WillLeaveBlankIfZero="True"/>
+                    <TextBlock
+                        Margin="5,0,0,0" VerticalAlignment="Center"
+                        Text="Avg"/>
+                    <controls:TextBoxDoubleFormat
+                        Width="58" Height="18" Margin="5,0,0,0"
+                        Style="{StaticResource TextBoxScore}"
+                        VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                        Text="{Binding ScoreAvg, Mode=OneWay, StringFormat={}{0:f2}}"
+                        WillLeaveBlankIfZero="True"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <!-- Chart is to be added here. -->
+            <WindowsFormsHost x:Name="ChartHost"
+                              Width="Auto" Height="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        </Grid>
+    </Grid>
+</Window>

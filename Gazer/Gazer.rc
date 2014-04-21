@@ -1,0 +1,32 @@
+// Manually created resource script
+
+#include <windows.h>
+
+VS_VERSION_INFO    VERSIONINFO
+FILEVERSION        0,2,0,0
+PRODUCTVERSION     0,2,0,0
+FILEFLAGSMASK      VS_FFI_FILEFLAGSMASK
+FILEFLAGS          0x0L
+FILEOS             VOS_NT_WINDOWS32
+FILETYPE           VFT_APP
+FILESUBTYPE        VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "000004b0" // Neutral language, Unicode
+        BEGIN
+            VALUE "CompanyName",      ""
+            VALUE "FileDescription",  "Win32 console application for Disk Gazer"
+            VALUE "FileVersion",      "0.2.0.0"
+            VALUE "InternalName",     "Gazer.exe"
+            VALUE "LegalCopyright",   "Copyright (c) 2013 EMO"
+            VALUE "OriginalFilename", "Gazer.exe"
+            VALUE "ProductName",      "Disk Gazer"
+            VALUE "ProductVersion",   "0.2.0.0"
+        END 
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0, 1200 // Neutral language, Unicode
+    END
+END
