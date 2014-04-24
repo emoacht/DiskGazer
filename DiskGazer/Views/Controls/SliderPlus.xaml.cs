@@ -44,17 +44,17 @@ namespace DiskGazer.Views.Controls
 					0D,
 					(d, e) =>
 					{
-						var buffer = Math.Round((double)e.NewValue);
+						var buff = Math.Round((double)e.NewValue);
 						var innerSlider = ((SliderPlus)d).InnerSlider;
 
-						if (buffer < innerSlider.Minimum)
-							buffer = innerSlider.Minimum;
+						if (buff < innerSlider.Minimum)
+							buff = innerSlider.Minimum;
 
-						if (buffer > innerSlider.Maximum)
-							buffer = innerSlider.Maximum;
+						if (buff > innerSlider.Maximum)
+							buff = innerSlider.Maximum;
 
-						((SliderPlus)d).innerSliderValue = buffer; // This must be changed on ahead.
-						innerSlider.Value = buffer;
+						((SliderPlus)d).innerSliderValue = buff; // This must be changed on ahead.
+						innerSlider.Value = buff;
 					}));
 
 		public double Maximum
@@ -69,14 +69,14 @@ namespace DiskGazer.Views.Controls
 					10D,
 					(d, e) =>
 					{
-						var buffer = Math.Floor((double)e.NewValue);
+						var buff = Math.Floor((double)e.NewValue);
 						var innerSlider = ((SliderPlus)d).InnerSlider;
 
 						var maximumThreshold = Math.Ceiling(innerSlider.Minimum) + 1D;
-						if (buffer < maximumThreshold)
+						if (buff < maximumThreshold)
 							innerSlider.Maximum = maximumThreshold;
 
-						innerSlider.Maximum = buffer;
+						innerSlider.Maximum = buff;
 					}));
 
 		public double Minimum
@@ -91,14 +91,14 @@ namespace DiskGazer.Views.Controls
 					0D,
 					(d, e) =>
 					{
-						var buffer = Math.Ceiling((double)e.NewValue);
+						var buff = Math.Ceiling((double)e.NewValue);
 						var innerSlider = ((SliderPlus)d).InnerSlider;
 
 						var minimumThreshold = Math.Floor(innerSlider.Maximum) - 1D;
-						if (buffer < minimumThreshold)
+						if (buff < minimumThreshold)
 							innerSlider.Minimum = minimumThreshold;
 
-						innerSlider.Minimum = buffer;
+						innerSlider.Minimum = buff;
 					}));
 
 		public double LargeChange

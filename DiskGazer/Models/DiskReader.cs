@@ -104,22 +104,13 @@ namespace DiskGazer.Models
 			if ((startPoint < 0) || (endPoint < 0) || (startPoint >= endPoint))
 				return null;
 
-			var strBuff = outcome.Substring(startPoint + startSign.Length, ((endPoint - 1) - (startPoint + startSign.Length))).Trim();
+			var buff = outcome
+				.Substring(startPoint + startSign.Length, ((endPoint - 1) - (startPoint + startSign.Length))).Trim()
+				.Split(new string[] { " ", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
-			var strData = strBuff.Split(new string[] { " ", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-
-			var numData = new double[strData.Length];
-
-			for (int i = 0; i < strData.Length; i++)
-			{
-				double num;
-				if (!double.TryParse(strData[i], NumberStyles.Any, CultureInfo.InvariantCulture, out num)) // Culture matters.
-					throw new FormatException("Failed to find data.");
-
-				numData[i] = num;
-			}
-
-			return numData;
+			return buff
+				.Select(x => double.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)) // Culture matters.
+				.ToArray();
 		}
 
 		private static string FindMessage(string outcome)

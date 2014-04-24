@@ -16,6 +16,10 @@ The logic for sequential read test is based on that of [CrystalDiskMark][1] (3.0
 
 ##History
 
+0.3.1 2014-04-25
+
+ - Refactoring
+
 0.3.0 2014-04-21
 
  - Modified internal code drastically.
@@ -31,4 +35,4 @@ The logic for sequential read test is based on that of [CrystalDiskMark][1] (3.0
  - License: MIT License
 
 [1]: http://crystalmark.info/
-[2]: http://www.microsoft.com/en-us/download/details.aspx?id=35825
+[2]: http://msdn.microsoft.com/en-us/library/ms246582.aspx
