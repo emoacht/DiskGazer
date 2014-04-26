@@ -26,6 +26,8 @@ namespace DiskGazer.Models
 		public int BlockOffset { get; set; }
 		public int AreaSize { get; set; }
 		public int AreaLocation { get; set; }
+		public int AreaRatioInner { get; set; }
+		public int AreaRatioOuter { get; set; }
 		public int NumRun { get; set; }
 		public ReadMethod Method { get; set; }
 

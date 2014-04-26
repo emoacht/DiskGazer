@@ -383,20 +383,20 @@ namespace DiskGazer.Models
 					{
 						var dataCopy = data;
 
-						var dataList = diskScoresStepCombined
+						var dataArray = diskScoresStepCombined
 							.AsParallel()
 							.Where(x => (x.Key <= dataCopy.Key) & (dataCopy.Key < x.Key + blockSizeMibiBytes))
 							.Select(x => x.Value)
 							.ToArray();
 
-						if ((3 <= dataList.Length) && // Removing outliers from data less than 3 makes no sense.
+						if ((3 <= dataArray.Length) && // Removing outliers from data less than 3 makes no sense.
 							 Settings.Current.WillRemoveOutlier)
 						{
 							// Remove outliers using average and standard deviation.
-							dataList = RemoveOutlier(dataList, 2); // This multiple (2) is to be considered.
+							dataArray = RemoveOutlier(dataArray, 2); // This multiple (2) is to be considered.
 						}
 
-						diskScoresStepAveraged.Add(data.Key, dataList.Average());
+						diskScoresStepAveraged.Add(data.Key, dataArray.Average());
 					}
 				}
 			}
@@ -442,16 +442,16 @@ namespace DiskGazer.Models
 
 					foreach (var data in diskScoresRunAll)
 					{
-						var dataList = data.Value;
+						var dataArray = data.Value;
 
-						if ((3 <= dataList.Length) && // Removing outliers from data less than 3 makes no sense.
+						if ((3 <= dataArray.Length) && // Removing outliers from data less than 3 makes no sense.
 							Settings.Current.WillRemoveOutlier)
 						{
 							// Remove outliers using average and standard deviation.
-							dataList = RemoveOutlier(dataList, 2); // This multiple (2) is to be considered.
+							dataArray = RemoveOutlier(dataArray, 2); // This multiple (2) is to be considered.
 						}
 
-						diskScoresRunAllAveraged.Add(data.Key, dataList.Average());
+						diskScoresRunAllAveraged.Add(data.Key, dataArray.Average());
 					}
 
 					progress.Report(new ProgressInfo(diskScoresRunAllAveraged));
@@ -476,7 +476,18 @@ namespace DiskGazer.Models
 
 			for (int i = 0; i < data.Length; i++)
 			{
-				score.Add(areaLocationPlus + (blockSizeMibiBytes * i), data[i]);
+				var multiple = i;
+
+				if (Settings.Current.AreaRatioInner < Settings.Current.AreaRatioOuter)
+				{
+					var remainder = multiple % Settings.Current.AreaRatioInner;
+					if (remainder == 0)
+						continue; // Remove data immediately after jump.
+
+					multiple = Settings.Current.AreaRatioOuter * (multiple / Settings.Current.AreaRatioInner) + remainder;
+				}
+
+				score.Add(areaLocationPlus + (blockSizeMibiBytes * multiple), data[i]);
 			}
 
 			return score;

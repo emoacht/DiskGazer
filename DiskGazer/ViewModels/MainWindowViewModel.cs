@@ -1,5 +1,4 @@
-﻿using DiskGazer.Helper;
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,11 +6,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
 using DiskGazer.Common;
+using DiskGazer.Helper;
 using DiskGazer.Models;
 using DiskGazer.Views;
 
@@ -264,7 +265,7 @@ namespace DiskGazer.ViewModels
 		}
 
 		#endregion
-
+				
 
 		#region Area fineness
 
@@ -283,6 +284,37 @@ namespace DiskGazer.ViewModels
 			}
 		}
 		private int _areaFineness = 1024; // MiB
+
+		#endregion
+
+
+		#region Area Ratio
+
+		private readonly List<int> menuAreaRatioDivider = new List<int>() { 1, 2, 4, 8, 16 };
+
+		public string[] MenuAreaRatio
+		{
+			get
+			{
+				return menuAreaRatioDivider
+					.Select(x => String.Format("1/{0}", x))
+					.ToArray();
+			}
+		}
+
+		public int MenuAreaRatioIndex
+		{
+			get
+			{
+				var index = menuAreaRatioDivider.IndexOf(Settings.Current.AreaRatioOuter / Settings.Current.AreaRatioInner);
+				return (0 <= index) ? index : 0;
+			}
+			set
+			{
+				Settings.Current.AreaRatioOuter = Settings.Current.AreaRatioInner * menuAreaRatioDivider[value];
+				RaisePropertyChanged();
+			}
+		}
 
 		#endregion
 
@@ -363,7 +395,7 @@ namespace DiskGazer.ViewModels
 		}
 
 		#endregion
-
+		
 		#endregion
 
 
@@ -447,9 +479,9 @@ namespace DiskGazer.ViewModels
 		}
 		private DelegateCommand _saveLogFileCommand;
 
-		private void SaveLogFileExecute()
+		private async void SaveLogFileExecute()
 		{
-			SaveLogFile();
+			await SaveLogFile();
 		}
 
 		private bool CanSaveLogFileExecute()
@@ -468,9 +500,9 @@ namespace DiskGazer.ViewModels
 		}
 		private DelegateCommand _sendLogClipboardCommand;
 
-		private void SendLogClipboardExecute()
+		private async void SendLogClipboardExecute()
 		{
-			SendLogClipboard();
+			await SendLogClipboard();
 		}
 
 		private bool CanSendLogClipboardExecute()
@@ -633,6 +665,8 @@ namespace DiskGazer.ViewModels
 			DiskScores[0].BlockOffset = Settings.Current.BlockOffset;
 			DiskScores[0].AreaSize = Settings.Current.AreaSize;
 			DiskScores[0].AreaLocation = Settings.Current.AreaLocation;
+			DiskScores[0].AreaRatioInner = Settings.Current.AreaRatioInner;
+			DiskScores[0].AreaRatioOuter = Settings.Current.AreaRatioOuter;
 
 			DiskScores[0].NumRun = Settings.Current.NumRun;
 			DiskScores[0].Method = Settings.Current.Method;
@@ -669,7 +703,7 @@ namespace DiskGazer.ViewModels
 					await Task.Delay(TimeSpan.FromMilliseconds(100));
 				}
 
-				SaveScreenshotLog();
+				await SaveScreenshotLog();
 			}
 		}
 
@@ -731,7 +765,7 @@ namespace DiskGazer.ViewModels
 		/// <summary>
 		/// Save screenshot and log.
 		/// </summary>
-		private void SaveScreenshotLog()
+		private async Task SaveScreenshotLog()
 		{
 			const string folderName = "result";
 			var folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, folderName);
@@ -755,7 +789,7 @@ namespace DiskGazer.ViewModels
 			SaveScreenshotFileBase(screenshot, String.Format("{0}.png", filePath));
 
 			// Save log to file.
-			SaveLogFileBase(String.Format("{0}.txt", filePath));
+			await SaveLogFileBase(String.Format("{0}.txt", filePath));
 		}
 
 		/// <summary>
@@ -793,7 +827,7 @@ namespace DiskGazer.ViewModels
 		/// <summary>
 		/// Save log to file.
 		/// </summary>
-		private void SaveLogFile()
+		private async Task SaveLogFile()
 		{
 			var sfd = new SaveFileDialog()
 			{
@@ -803,17 +837,19 @@ namespace DiskGazer.ViewModels
 
 			if (sfd.ShowDialog() == true)
 			{
-				SaveLogFileBase(sfd.FileName);
+				await SaveLogFileBase(sfd.FileName);
 			}
 		}
 
-		private void SaveLogFileBase(string filePath)
+		private async Task SaveLogFileBase(string filePath)
 		{
 			try
 			{
+				var log = await Task.Run(() => ComposeLog());
+
 				using (var sw = new StreamWriter(filePath, false, Encoding.UTF8))
 				{
-					sw.Write(ComposeLog());
+					await sw.WriteAsync(log);
 				}
 			}
 			catch (Exception ex)
@@ -826,18 +862,35 @@ namespace DiskGazer.ViewModels
 		/// <summary>
 		/// Send log to clipboard.
 		/// </summary>
-		private void SendLogClipboard()
+		private async Task SendLogClipboard()
 		{
+			var tcs = new TaskCompletionSource<bool>(); // No meaning for Boolean.
+
 			try
 			{
-				Clipboard.SetText(ComposeLog());
+				var thread = new Thread(() =>
+				{
+					try
+					{
+						Clipboard.SetText(ComposeLog());
+						tcs.SetResult(true);
+					}
+					catch (Exception ex)
+					{
+						tcs.SetException(ex);
+					}
+				});
+				thread.SetApartmentState(ApartmentState.STA);
+				thread.Start();
+
+				await tcs.Task;
 			}
 			catch (Exception ex)
 			{
 				MessageBox.Show("Failed to send log to clipboard. " + ex.Message,
 								ProductInfo.Title, MessageBoxButton.OK, MessageBoxImage.Error);
 			}
-		}
+		}		
 
 		private System.Drawing.Bitmap GetScreenshot()
 		{
@@ -878,12 +931,13 @@ namespace DiskGazer.ViewModels
 				String.Format("Block offset   : {0} KiB", DiskScores[0].BlockOffset),
 				String.Format("Area size      : {0} GiB", (double)DiskScores[0].AreaSize / 1024D), // Convert MiB to GiB.
 				String.Format("Area location  : {0} GiB", (double)DiskScores[0].AreaLocation / 1024D), // Convert MiB to GiB.
+				String.Format("Area ratio     : {0} / {1}", DiskScores[0].AreaRatioInner, DiskScores[0].AreaRatioOuter),
 				String.Format("Number of runs : {0}", DiskScores[0].NumRun),
 				String.Format("Method to run  : {0}", DiskScores[0].Method.ToString().Replace("_", "/")),
 				String.Format("Start time     : {0:yyyy/MM/dd HH:mm:ss}", DiskScores[0].StartTime),
-				String.Format("Maximum read   : {0:f2} MB/s", DiskScores[0].Data.Values.Max()),
-				String.Format("Minimum read   : {0:f2} MB/s", DiskScores[0].Data.Values.Min()),
-				String.Format("Average read   : {0:f2} MB/s", DiskScores[0].Data.Values.Average()),
+				String.Format("Maximum read   : {0:f2} MB/s", ScoreMax),
+				String.Format("Minimum read   : {0:f2} MB/s", ScoreMin),
+				String.Format("Average read   : {0:f2} MB/s", ScoreAvg),
 				"(MB/s = 1,000,000 Bytes / second)",
 			};
 
