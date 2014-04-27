@@ -15,6 +15,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	int blockOffset   = 0;    // Block offset  (KiB)
 	int areaSize      = 1024; // Area size     (MiB)
 	int areaLocation  = 0;    // Area location (MiB)
+	int areaRatioInner = 16;  // Area ratio inner (numerator)
+	int areaRatioOuter = 16;  // Area ratio outer (denominator)
 
 	// ----------------
 	// Check arguments.
@@ -41,14 +43,32 @@ int _tmain(int argc, _TCHAR* argv[])
 		blockOffset   = _tcstol(argv[3], NULL, 10);
 		areaSize      = _tcstol(argv[4], NULL, 10);
 		areaLocation  = _tcstol(argv[5], NULL, 10);
+
+		cout << "physical drive : " << physicalDrive << endl;
+		cout << "block size     : " << blockSize << endl;
+		cout << "block offset   : " << blockOffset << endl;
+		cout << "area size      : " << areaSize << endl;
+		cout << "area location  : " << areaLocation << endl;
+		break;
+
+	case 8:
+		physicalDrive = _tcstol(argv[1], NULL, 10);
+		blockSize = _tcstol(argv[2], NULL, 10);
+		blockOffset = _tcstol(argv[3], NULL, 10);
+		areaSize = _tcstol(argv[4], NULL, 10);
+		areaLocation = _tcstol(argv[5], NULL, 10);
+		areaRatioInner = _tcstol(argv[6], NULL, 10);
+		areaRatioOuter = _tcstol(argv[7], NULL, 10);
+
+		cout << "physical drive   : " << physicalDrive << endl;
+		cout << "block size       : " << blockSize << endl;
+		cout << "block offset     : " << blockOffset << endl;
+		cout << "area size        : " << areaSize << endl;
+		cout << "area location    : " << areaLocation << endl;
+		cout << "area ratio inner : " << areaRatioInner << endl;
+		cout << "area ratio outer : " << areaRatioOuter << endl;
 		break;
 	}
-
-	cout << "physical drive : " << physicalDrive << endl;
-	cout << "block size     : " << blockSize << endl;
-	cout << "block offset   : " << blockOffset << endl;
-	cout << "area size      : " << areaSize << endl;
-	cout << "area location  : " << areaLocation << endl;
 
 	string message = "";
 
@@ -85,6 +105,12 @@ int _tmain(int argc, _TCHAR* argv[])
 		message += "Invalid area location. ";
 	}
 
+	// Check area ratio.
+	if ((areaRatioInner < 0) || (areaRatioOuter < 0) || (areaRatioInner > areaRatioOuter))
+	{
+		message += "Invalid area ratio. ";
+	}
+	
 	if (!message.empty())
 	{
 		cout << message << endl;
@@ -102,13 +128,14 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	_stprintf_s(physicalDrivePath, _T("\\\\.\\PhysicalDrive%d"), physicalDrive);
 
-	HANDLE hFile = ::CreateFile(physicalDrivePath,
-								GENERIC_READ, // Administrative privilege is required.
-								0,
-								NULL,
-								OPEN_EXISTING,
-								FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING | FILE_FLAG_SEQUENTIAL_SCAN,
-								NULL);
+	HANDLE hFile = ::CreateFile(
+		physicalDrivePath,
+		GENERIC_READ, // Administrative privilege is required.
+		0,
+		NULL,
+		OPEN_EXISTING,
+		FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING | FILE_FLAG_SEQUENTIAL_SCAN,
+		NULL);
 
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
@@ -116,7 +143,26 @@ int _tmain(int argc, _TCHAR* argv[])
 		return 1;
 	}
 
-	// Move pointer.
+	// Prepare parameters.
+	int areaSizeActual = areaSize; // Area size for actual reading
+	if (0 < blockOffset)
+	{
+		areaSizeActual -= 1; // 1 is for the last MiB of area. If offset, it may exceed disk size.
+	}
+
+	long readNum = (areaSizeActual * 1024) / blockSize; // Number of reads
+
+	int loopOuter = 1; // Number of outer loops
+	int loopInner = readNum; // Number of inner loops
+
+	if (areaRatioInner < areaRatioOuter)
+	{
+		loopOuter = (areaSizeActual * 1024) / (blockSize * areaRatioOuter);
+		loopInner = areaRatioInner;
+
+		readNum = loopInner * loopOuter;
+	}
+
 	LARGE_INTEGER areaLocationBytes; // Bytes
 	areaLocationBytes.QuadPart = areaLocation;
 	areaLocationBytes.QuadPart *= 1024;
@@ -126,18 +172,16 @@ int _tmain(int argc, _TCHAR* argv[])
 	blockOffsetBytes.QuadPart = blockOffset;
 	blockOffsetBytes.QuadPart *= 1024;
 
-	areaLocationBytes.QuadPart += blockOffsetBytes.QuadPart;	
+	LARGE_INTEGER jumpBytes; // Bytes
+	jumpBytes.QuadPart = blockSize;
+	jumpBytes.QuadPart *= areaRatioOuter;
+	jumpBytes.QuadPart *= 1024;
 
-	BOOL result = ::SetFilePointerEx(hFile,
-									 areaLocationBytes,
-									 NULL,
-									 FILE_BEGIN);
+	areaLocationBytes.QuadPart += blockOffsetBytes.QuadPart;
 
-	if (result == false)
-	{
-		_tprintf_s(_T("Failed to move pointer (Code: %d)."), ::GetLastError());
-		return 1;
-	}
+	int bufSize = blockSize * 1024; // Buffer size (Bytes)
+	char* buf = (char*) VirtualAlloc(NULL, bufSize, MEM_COMMIT, PAGE_READWRITE); // Buffer
+	DWORD readSize;
 
 	// Check high-resolution performance counter.
 	LARGE_INTEGER frq;
@@ -147,39 +191,48 @@ int _tmain(int argc, _TCHAR* argv[])
 		return 1;
 	}
 
-	// Measure disk transfer rate (sequential read).
-	int areaSizeActual = areaSize; // Area size for actual reading
-	if (0 < blockOffset)
-	{
-		areaSizeActual -= 1; // 1 is for the last MiB of area. If offset, it may exceed disk size.
-	}
-
-	int numLoop = (areaSizeActual * 1024) / blockSize; // Number of loops
-
-	int bufSize = blockSize * 1024; // Buffer size (Bytes)
-	char* buf = (char*)VirtualAlloc(NULL, bufSize, MEM_COMMIT, PAGE_READWRITE); // Buffer
-	DWORD readSize;
-
 	LARGE_INTEGER* lapTime;
-	lapTime = new LARGE_INTEGER[numLoop + 1]; // 1 is for starting time.
+	lapTime = new LARGE_INTEGER[readNum + 1]; // 1 is for starting time.
+	QueryPerformanceCounter(&lapTime[0]); // Starting time
 
-	QueryPerformanceCounter(&lapTime[0]);
-
-	for (int i = 1; i <= numLoop; i++)
+	for (int i = 0; i < loopOuter; i++)
 	{
-		result = ::ReadFile(hFile,
-							buf,
-							bufSize,
-							&readSize,
-							NULL);
-
-		if (result == false)
+		if (0 < i)
 		{
-			_tprintf_s(_T("Failed to measure disk transfer rate (Code: %d)."), ::GetLastError());
+			areaLocationBytes.QuadPart += jumpBytes.QuadPart;
+		}
+
+		// Move pointer.
+		BOOL result1 = ::SetFilePointerEx(
+			hFile,
+			areaLocationBytes,
+			NULL,
+			FILE_BEGIN);
+
+		if (result1 == false)
+		{
+			_tprintf_s(_T("Failed to move pointer (Code: %d)."), ::GetLastError());
 			return 1;
 		}
 
-		QueryPerformanceCounter(&lapTime[i]);
+		// Measure disk transfer rate (sequential read).
+		for (int j = 1; j <= loopInner; j++)
+		{
+			BOOL result2 = ::ReadFile(
+				hFile,
+				buf,
+				bufSize,
+				&readSize,
+				NULL);
+
+			if (result2 == false)
+			{
+				_tprintf_s(_T("Failed to measure disk transfer rate (Code: %d)."), ::GetLastError());
+				return 1;
+			}
+
+			QueryPerformanceCounter(&lapTime[i * loopInner + j]);
+		}
 	}
 
 	VirtualFree(buf, bufSize, MEM_DECOMMIT);
@@ -192,9 +245,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	// ----------------
 	// Calculate each transfer rate.
 	double* data;
-	data = new double[numLoop];
+	data = new double[readNum];
 
-	for (int i = 1; i <= numLoop; i++)
+	for (int i = 1; i <= readNum; i++)
 	{
 		double timeEach = (double)(lapTime[i].QuadPart - lapTime[i - 1].QuadPart) / frq.QuadPart; // Second
 		double scoreEach = floor(bufSize / timeEach) / 1000000.0; // MB/s
@@ -203,8 +256,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 	// Calculate total transfer rate (just for reference).
-	double timeTotal = (double)(lapTime[numLoop].QuadPart - lapTime[0].QuadPart) / frq.QuadPart; // Second
-	double scoreTotal = floor(((long long)areaSizeActual * 1024 * 1024) / timeTotal) / 1000000.0; // MB/s
+	double totalTime = (double)(lapTime[readNum].QuadPart - lapTime[0].QuadPart) / frq.QuadPart; // Second
+	double totalRead = (double)blockSize * (double)readNum * 1024.0; // Bytes
+
+	double totalScore = floor(totalRead / totalTime) / 1000000.0; // MB/s
 
 	delete[] lapTime;
 	lapTime = NULL;
@@ -212,22 +267,22 @@ int _tmain(int argc, _TCHAR* argv[])
 	// Show outcome.
 	_tprintf_s(_T("[Start data]\n"));
 
-	int j = 0;
-	for (int i = 0; i <= numLoop - 1; i++)
+	int k = 0;
+	for (int i = 0; i < readNum; i++)
 	{
 		_tprintf_s(_T("%0.6f "), data[i]); // Data have 6 decimal places.
 
-		j++;
-		if ((j == 6) |
-			(i == numLoop - 1))
+		k++;
+		if ((k == 6) |
+			(i == readNum - 1))
 		{
-			j = 0;
+			k = 0;
 			_tprintf_s(_T("\n"));
 		}
 	}
 
 	_tprintf_s(_T("[End data]\n"));
-	_tprintf_s(_T("Total %0.6f MB/s"), scoreTotal);
+	_tprintf_s(_T("Total %0.6f MB/s"), totalScore);
 
 	delete[] data;
 	data = NULL;

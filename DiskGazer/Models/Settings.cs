@@ -94,6 +94,34 @@ namespace DiskGazer.Models
 		private int _areaLocation = 0;
 
 		/// <summary>
+		/// Area ratio inner (= numerator = number of blocks in inner part of jump)
+		/// </summary>
+		public int AreaRatioInner
+		{
+			get { return _areaRatioInner; }
+			set
+			{
+				_areaRatioInner = value;
+				RaisePropertyChanged();
+			}
+		}
+		private int _areaRatioInner = 8; // Fixed
+
+		/// <summary>
+		/// Area ratio outer (= denominator = number of blocks in outer part of jump)
+		/// </summary>
+		public int AreaRatioOuter
+		{
+			get { return _areaRatioOuter; }
+			set
+			{
+				_areaRatioOuter = value;
+				RaisePropertyChanged();
+			}
+		}
+		private int _areaRatioOuter = 8; // Changeable
+
+		/// <summary>
 		/// Number of runs
 		/// </summary>
 		public int NumRun

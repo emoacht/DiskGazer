@@ -45,19 +45,27 @@ namespace DiskGazer.Models
 
 			try
 			{
+				var arguments = String.Format("{0} {1} {2} {3} {4}",
+					Settings.Current.PhysicalDrive,
+					Settings.Current.BlockSize,
+					Settings.Current.BlockOffset * blockOffsetMultiple,
+					Settings.Current.AreaSize,
+					Settings.Current.AreaLocation);
+
+				if (Settings.Current.AreaRatioInner < Settings.Current.AreaRatioOuter)
+				{
+					arguments += String.Format(" {0} {1}",
+						Settings.Current.AreaRatioInner,
+						Settings.Current.AreaRatioOuter);
+				}
+
 				using (var proc = new Process()
 				{
 					StartInfo = new ProcessStartInfo()
 					{
 						FileName = nativeExePath,
 						Verb = "RunAs", // Run as administrator.
-						Arguments = String.Format("{0} {1} {2} {3} {4}",
-							Settings.Current.PhysicalDrive,
-							Settings.Current.BlockSize,
-							Settings.Current.BlockOffset * blockOffsetMultiple,
-							Settings.Current.AreaSize,
-							Settings.Current.AreaLocation),
-
+						Arguments = arguments,
 						UseShellExecute = false,
 						CreateNoWindow = true,
 						//WindowStyle = ProcessWindowStyle.Hidden,
@@ -159,54 +167,76 @@ namespace DiskGazer.Models
 					// This is normal when this application is not run by administrator.
 					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get handle to disk.");
 
-				// Move pointer.
-				long areaLocationBytes = (long)Settings.Current.AreaLocation * 1024L * 1024L; // Bytes                
-				long blockOffsetBytes = (long)Settings.Current.BlockOffset * (long)blockOffsetMultiple * 1024L; // Bytes
-				areaLocationBytes += blockOffsetBytes;
-
-				var result1 = W32.SetFilePointerEx(
-					hFile,
-					areaLocationBytes,
-					IntPtr.Zero,
-					W32.FILE_BEGIN);
-
-				if (result1 == false)
-					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to move pointer.");
-
-				// Measure disk transfer rate (sequential read).
-				var areaSizeActual = Settings.Current.AreaSize; // Area size for actual reading
+				// Prepare parameters.
+				var areaSizeActual = Settings.Current.AreaSize; // Area size for actual reading (MiB)
 				if (0 < Settings.Current.BlockOffset)
 				{
 					areaSizeActual -= 1; // 1 is for the last MiB of area. If offset, it may exceed disk size.
 				}
 
-				var numLoop = (areaSizeActual * 1024) / Settings.Current.BlockSize; // Number of loops
+				int readNum = (areaSizeActual * 1024) / Settings.Current.BlockSize; // Number of reads
+
+				int loopOuter = 1; // Number of outer loops
+				int loopInner = readNum; // Number of inner loops
+
+				if (Settings.Current.AreaRatioInner < Settings.Current.AreaRatioOuter)
+				{
+					loopOuter = (areaSizeActual * 1024) / (Settings.Current.BlockSize * Settings.Current.AreaRatioOuter);
+					loopInner = Settings.Current.AreaRatioInner;
+
+					readNum = loopInner * loopOuter;
+				}
+
+				long areaLocationBytes = (long)Settings.Current.AreaLocation * 1024L * 1024L; // Bytes
+				long blockOffsetBytes = (long)Settings.Current.BlockOffset * (long)blockOffsetMultiple * 1024L; // Bytes
+				long jumpBytes = (long)Settings.Current.BlockSize * (long)Settings.Current.AreaRatioOuter * 1024L; // Bytes
+
+				areaLocationBytes += blockOffsetBytes;
 
 				uint buffSize = (uint)Settings.Current.BlockSize * 1024U; // Buffer size (Bytes)
 				var buff = new byte[buffSize]; // Buffer
 				uint readSize = 0U;
 
 				var sw = new Stopwatch();
-				var lapTime = new TimeSpan[numLoop + 1]; // 1 is for starting time.
+				var lapTime = new TimeSpan[readNum + 1]; // 1 is for leading zero time.
+				lapTime[0] = TimeSpan.Zero; // Leading zero time
 
-				lapTime[0] = TimeSpan.FromSeconds(0);
-
-				for (int i = 1; i <= numLoop; i++)
+				for (int i = 0; i < loopOuter; i++)
 				{
-					sw.Start();
+					if (0 < i)
+					{
+						areaLocationBytes += jumpBytes;
+					}
 
-					var result2 = W32.ReadFile(
+					// Move pointer.
+					var result1 = W32.SetFilePointerEx(
 						hFile,
-						buff,
-						buffSize,
-						ref readSize,
-						IntPtr.Zero);
+						areaLocationBytes,
+						IntPtr.Zero,
+						W32.FILE_BEGIN);
 
-					if (result2 == false)
-						throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to measure disk transfer rate.");
+					if (result1 == false)
+						throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to move pointer.");
 
-					sw.Stop();
-					lapTime[i] = sw.Elapsed;
+					// Measure disk transfer rate (sequential read).
+					for (int j = 1; j <= loopInner; j++)
+					{
+						sw.Start();
+
+						var result2 = W32.ReadFile(
+							hFile,
+							buff,
+							buffSize,
+							ref readSize,
+							IntPtr.Zero);
+
+						if (result2 == false)
+							throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to measure disk transfer rate.");
+
+						sw.Stop();
+
+						lapTime[i * loopInner + j] = sw.Elapsed;
+					}
 				}
 
 				hFile.Close(); // CloseHandle is inappropriate to close SafeFileHandle.
@@ -214,10 +244,10 @@ namespace DiskGazer.Models
 				// ----------------
 				// Process results.
 				// ----------------
-				// Calculate each transfer rate.
-				var data = new double[numLoop];
+				// Calculate each transfer rate.				
+				var data = new double[readNum];
 
-				for (int i = 1; i <= numLoop; i++)
+				for (int i = 1; i <= readNum; i++)
 				{
 					var timeEach = (lapTime[i] - lapTime[i - 1]).TotalSeconds; // Second
 					var scoreEach = Math.Floor(buffSize / timeEach) / 1000000D; // MB/s
@@ -226,28 +256,30 @@ namespace DiskGazer.Models
 				}
 
 				// Calculate total transfer rate (just for reference).
-				var timeTotal = lapTime[numLoop].TotalSeconds; // Second
-				var scoreTotal = Math.Floor(((double)areaSizeActual * 1024D * 1024D) / timeTotal) / 1000000D; // MB/s
+				var totalTime = lapTime[readNum].TotalSeconds; // Second
+				var totalRead = (double)Settings.Current.BlockSize * (double)readNum * 1024D; // Bytes
+
+				var totalScore = Math.Floor(totalRead / totalTime) / 1000000D; // MB/s
 
 				// Compose outcome.
 				var outcome = "[Start data]" + Environment.NewLine;
 
-				int j = 0;
-				for (int i = 0; i < numLoop; i++)
+				int k = 0;
+				for (int i = 0; i < readNum; i++)
 				{
 					outcome += String.Format("{0:f6} ", data[i]); // Data have 6 decimal places.
 
-					j++;
-					if ((j == 6) |
-						(i == numLoop - 1))
+					k++;
+					if ((k == 6) |
+						(i == readNum - 1))
 					{
-						j = 0;
+						k = 0;
 						outcome += Environment.NewLine;
 					}
 				}
 
 				outcome += "[End data]" + Environment.NewLine;
-				outcome += String.Format("Total {0:f6} MB/s", scoreTotal);
+				outcome += String.Format("Total {0:f6} MB/s", totalScore);
 
 				rawData.Result = ReadResult.Success;
 				rawData.Outcome = outcome;

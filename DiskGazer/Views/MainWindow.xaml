@@ -8,13 +8,13 @@
         x:Name="MainWindowRoot"
         Title="{Binding Source={x:Static views:ProductInfo.NameVersionMiddle}, Mode=OneWay}"
         FontFamily="Verdana" FontSize="11"
-        Height="460" Width="540"
+        Height="460" Width="600"
         Icon="/DiskGazer;component/Resources/Gazer.ico"
         Loaded="OnLoaded" SizeChanged="OnSizeChanged">
 
     <Window.Resources>
         <ResourceDictionary>
-            <!-- Converters -->
+            <!-- Converters -->            
             <converters:DoubleScaleConverter x:Key="DoubleScaleConverterKey"/>
             <converters:TripleDigitConverter x:Key="TripleDigitConverterKey"/>
             <converters:ReadMethodToBooleanConverter x:Key="ReadMethodToBooleanConverterKey"/>
@@ -70,22 +70,22 @@
                     <MenuItem Header="Send log to clipboard"
                               Command="{Binding SendLogClipboardCommand}"/>
                     <Separator/>
-                    
+
+                    <!-- Rescan disks -->
+                    <MenuItem Header="Rescan disks"
+                              Command="{Binding RescanCommand}"
+                              IsEnabled="{Binding Op.IsReady, Mode=OneWay}">
+                        <MenuItem.Icon>
+                            <Image Source="/DiskGazer;component/Resources/refresh_16xLG.png"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator/>
+
                     <!-- Options -->
                     <MenuItem Header="Options">
                         <MenuItem.Icon>
                             <Image Source="/DiskGazer;component/Resources/gear_16xLG.png"/>
                         </MenuItem.Icon>
-                        <MenuItem Header="Rescan disks"
-                                  Command="{Binding RescanCommand}"
-                                  IsEnabled="{Binding Op.IsReady, Mode=OneWay}">
-                            <MenuItem.Icon>
-                                <Image Source="/DiskGazer;component/Resources/refresh_16xLG.png"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="Open monitor window"
-                                  Command="ApplicationCommands.Open"/>
-                        <Separator/>
 
                         <!-- Read method -->
                         <StackPanel>
@@ -128,6 +128,10 @@
                         <MenuItem Header="Save screenshot and log automatically"
                                   IsCheckable="True"
                                   IsChecked="{Binding SettingsCurrent.WillSaveScreenshotLog, Mode=TwoWay}"/>
+                        <Separator/>
+
+                        <MenuItem Header="Open monitor window"
+                                  Command="ApplicationCommands.Open"/>
                         <MenuItem Header="Indicate window/chart size"
                                   IsCheckable="True"
                                   IsChecked="{Binding WillIndicateSize, ElementName=MainWindowRoot, Mode=TwoWay}"/>
@@ -244,6 +248,7 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
 
@@ -322,12 +327,12 @@
                                 <Setter Property="VerticalContentAlignment" Value="Center"/>
                             </Style>
                         </ComboBox.ItemContainerStyle>
-                    </ComboBox>
+                    </ComboBox>                    
                 </StackPanel>
 
                 <!-- Area size -->
                 <Grid Grid.Column="2" Grid.Row="1" Grid.RowSpan="2"
-                      Margin="5,1,0,0" HorizontalAlignment="Right" VerticalAlignment="Top">
+                      Margin="5,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Top">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition/>
@@ -362,7 +367,7 @@
 
                 <!-- Area location -->
                 <Grid Grid.Column="3" Grid.Row="1" Grid.RowSpan="2"
-                      Margin="6,1,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                      Margin="6,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition/>
@@ -394,6 +399,14 @@
                         Value="{Binding AreaLocation, Mode=TwoWay, Converter={StaticResource TripleDigitConverterKey}, ConverterParameter=2}"
                         IsEnabled="{Binding Op.IsReady, Mode=OneWay}"/>
                 </Grid>
+
+                <!-- Area ratio -->
+                <ComboBox Grid.Column="4" Grid.Row="1"
+                          x:Name="ComboBoxAreaRatio"
+                          Width="54" Margin="5,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                          ItemsSource="{Binding MenuAreaRatio, Mode=OneTime}"
+                          SelectedIndex="{Binding MenuAreaRatioIndex, Mode=TwoWay}"
+                          IsEnabled="{Binding Op.IsReady, Mode=OneWay}"/>
 
                 <!-- Scores -->
                 <StackPanel Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2"

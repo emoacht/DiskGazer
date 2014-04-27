@@ -200,8 +200,8 @@
 
     <!-- Score TextBox -->
     <Style x:Key="TextBoxScore" TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
-        <Setter Property="Foreground" Value="#FF000000"/>
-        <Setter Property="Background" Value="#FFE5E5E5"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Background" Value="#FF3C3C3C"/>
         <Setter Property="IsReadOnly" Value="True"/>
     </Style>
 
