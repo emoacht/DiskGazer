@@ -313,7 +313,7 @@
                         SelectedItem="{Binding MenuBlockSizeItem, Mode=TwoWay}"
                         IsEnabled="{Binding Op.IsReady, Mode=OneWay}"/>
 
-                    <!-- Block offset -->                    
+                    <!-- Block offset -->
                     <ComboBox
                         x:Name="ComboBoxBlockOffset"
                         Width="54" Margin="5,0,0,0"

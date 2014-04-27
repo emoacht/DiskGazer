@@ -227,9 +227,9 @@ namespace DiskGazer.Models
 			// ------
 			// Status
 			// ------
-			string status = null; // Null is to indicate that no status exists. 
+			string status = null; // Null is to indicate that no inner status exists.
 
-			// Prepare progress numbers.
+			// Prepare progress figures.
 			var strProgress = String.Format(" {0}/{1}", rawData.Run, Settings.Current.NumRun);
 
 			if (1 < NumStep)
@@ -243,10 +243,10 @@ namespace DiskGazer.Models
 					if (0 < currentSpeed)
 					{
 						var remainingSteps = NumStep * (Settings.Current.NumRun - rawData.Run + 1) - rawData.Step + 1;
-						var remainingBytes = ((long)Settings.Current.AreaSize * 1024L * 1024L) * remainingSteps; // Bytes
-						var remainingTime = (int)((remainingBytes / currentSpeed) / 1000000D); // Second
+						var remainingBytes = ((double)Settings.Current.AreaSize * 1024D * (double)remainingSteps * (double)Settings.Current.AreaRatioInner / (double)Settings.Current.AreaRatioOuter) * 1024D; // Bytes
+						var remainingTime = (remainingBytes / currentSpeed) / 1000000D; // Second
 
-						strTime = String.Format(" Time {0:HH:mm:ss}", DateTime.MinValue.AddSeconds(remainingTime));
+						strTime = String.Format(" Remaining {0:HH:mm:ss}", DateTime.MinValue.AddSeconds(remainingTime));
 					}
 
 					status = String.Format("Reading{0}{1}", strProgress, strTime);
@@ -260,7 +260,7 @@ namespace DiskGazer.Models
 			// ------------
 			// Inner status
 			// ------------
-			string innerStatus = null; // Null is to indicate that no inner status exists. 
+			string innerStatus = null; // Null is to indicate that no inner status exists.
 
 			if (!String.IsNullOrWhiteSpace(rawData.Outcome) || !String.IsNullOrEmpty(rawData.Message))
 			{
