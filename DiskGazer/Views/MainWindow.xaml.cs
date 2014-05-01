@@ -332,13 +332,23 @@ namespace DiskGazer.Views
 				},
 				new List<GridElement>()
 				{
-					new GridElement("Media type (WMI)"),
-					new GridElement(info.MediaType, HorizontalAlignment.Right),
+					new GridElement("Media type (WMI Win32_DiskDrive)"),
+					new GridElement(info.MediaTypeDiskDrive, HorizontalAlignment.Right),
 				},
 				new List<GridElement>()
 				{
 					new GridElement("Fixed/Removable (P/Invoke)"),
 					new GridElement(info.IsRemovable ? "Removable" : "Fixed", HorizontalAlignment.Right),
+				},
+				new List<GridElement>()
+				{
+					new GridElement("Media type (WMI MSFT_PhysicalDisk)"),
+					new GridElement(info.MediaTypePhysicalDiskDescription, HorizontalAlignment.Right),
+				},
+				new List<GridElement>()
+				{
+					new GridElement("Spindle Speed (WMI)"),
+					new GridElement(info.SpindleSpeedDescription, HorizontalAlignment.Right),
 				},
 				new List<GridElement>()
 				{

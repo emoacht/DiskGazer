@@ -5,6 +5,8 @@ using System.Management;
 using System.Text;
 using System.Threading.Tasks;
 
+using DiskGazer.Helper;
+
 namespace DiskGazer.Models
 {
 	internal static class DiskSearcher
@@ -14,24 +16,32 @@ namespace DiskGazer.Models
 		/// </summary>
 		internal static List<DiskInfo> Search()
 		{
-			const string strPhysical = "PHYSICALDRIVE";
-
 			var diskRosterPre = new List<DiskInfo>();
 
-			var drives = new ManagementObjectSearcher("SELECT * FROM Win32_DiskDrive");
+			SearchDiskDrive(ref diskRosterPre);
+			SearchPhysicalDisk(ref diskRosterPre);
 
-			foreach (var drive in drives.Get())
+			return diskRosterPre;
+		}
+
+		/// <summary>
+		/// Search drives by WMI (Win32_DiskDrive).
+		/// </summary>
+		private static void SearchDiskDrive(ref List<DiskInfo> diskRosterPre)
+		{
+			var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_DiskDrive");
+
+			foreach (var drive in searcher.Get())
 			{
-				if (drive["DeviceID"] == null)
+				if (drive["Index"] == null) // Index number of physical drive
 					continue;
 
-				var strDeviceId = drive["DeviceID"].ToString();
-				int numDeviceId;
-				if (!int.TryParse(strDeviceId.Substring(strDeviceId.IndexOf(strPhysical, StringComparison.InvariantCulture) + strPhysical.Length), out numDeviceId))
+				int numIndex;
+				if (!int.TryParse(drive["Index"].ToString(), out numIndex))
 					continue;
 
 				var info = new DiskInfo();
-				info.PhysicalDrive = numDeviceId;
+				info.PhysicalDrive = numIndex;
 
 				if (drive["Model"] != null)
 				{
@@ -45,23 +55,62 @@ namespace DiskGazer.Models
 
 				if (drive["MediaType"] != null)
 				{
-					info.MediaType = drive["MediaType"].ToString();
+					info.MediaTypeDiskDrive = drive["MediaType"].ToString();
 				}
 
 				if (drive["Size"] != null)
 				{
-					var strSize = drive["Size"].ToString();
 					long numSize;
-					if (long.TryParse(strSize, out numSize))
-					{
+					if (long.TryParse(drive["Size"].ToString(), out numSize))
 						info.SizeWMI = numSize;
-					}
 				}
 
 				diskRosterPre.Add(info);
 			}
+		}
 
-			return diskRosterPre;
+		/// <summary>
+		/// Search drives and supplement information by WMI (MSFT_PhysicalDisk).
+		/// </summary>
+		/// <remarks>Windows Storage Management API is only available for Windows 8 or newer.</remarks>
+		private static void SearchPhysicalDisk(ref List<DiskInfo> diskRosterPre)
+		{
+			if (!OsVersion.IsEightOrNewer)
+				return;
+
+			var scope = new ManagementScope("\\\\.\\root\\microsoft\\windows\\storage");
+			scope.Connect();
+
+			var searcher = new ManagementObjectSearcher("SELECT * FROM MSFT_PhysicalDisk");
+			searcher.Scope = scope;
+
+			foreach (var drive in searcher.Get())
+			{
+				if (drive["DeviceId"] == null) // Index number of physical drive
+					continue;
+
+				int numId;
+				if (!int.TryParse(drive["DeviceId"].ToString(), out numId))
+					continue;
+
+				var info = diskRosterPre.FirstOrDefault(x => x.PhysicalDrive == numId);
+				if (info == null)
+					continue;
+
+				if (drive["MediaType"] != null)
+				{
+					int numMediaType;
+					if (int.TryParse(drive["MediaType"].ToString(), out numMediaType))
+						info.MediaTypePhysicalDisk = numMediaType;
+				}
+
+				if (drive["SpindleSpeed"] != null)
+				{
+					uint numSpindleSpeed;
+					if (uint.TryParse(drive["SpindleSpeed"].ToString(), out numSpindleSpeed))
+						info.SpindleSpeed = numSpindleSpeed;
+				}
+			}
 		}
 	}
 }

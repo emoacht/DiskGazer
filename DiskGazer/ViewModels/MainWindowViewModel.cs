@@ -583,7 +583,9 @@ namespace DiskGazer.ViewModels
 
 					infoNew.Model = infoPre.Model;
 					infoNew.InterfaceType = infoPre.InterfaceType;
-					infoNew.MediaType = infoPre.MediaType;
+					infoNew.MediaTypeDiskDrive = infoPre.MediaTypeDiskDrive;
+					infoNew.MediaTypePhysicalDisk = infoPre.MediaTypePhysicalDisk;
+					infoNew.SpindleSpeed = infoPre.SpindleSpeed;
 					infoNew.SizeWMI = infoPre.SizeWMI;
 
 					// Add disk information to disk roster.
@@ -890,7 +892,7 @@ namespace DiskGazer.ViewModels
 				MessageBox.Show("Failed to send log to clipboard. " + ex.Message,
 								ProductInfo.Title, MessageBoxButton.OK, MessageBoxImage.Error);
 			}
-		}		
+		}
 
 		private System.Drawing.Bitmap GetScreenshot()
 		{

@@ -19,7 +19,7 @@ namespace DiskGazer.Models
 		public int PhysicalDrive { get; set; }
 
 		/// <summary>
-		/// Model by WMI
+		/// Model by WMI (Win32_DiskDrive)
 		/// </summary>
 		public string Model { get; set; } 
 		
@@ -74,7 +74,7 @@ namespace DiskGazer.Models
 		}
 
 		/// <summary>
-		/// Interface type by WMI
+		/// Interface type by WMI (Win32_DiskDrive)
 		/// </summary>
 		public string InterfaceType { set; get; }
 
@@ -84,14 +84,67 @@ namespace DiskGazer.Models
 		public string BusType { set; get; }
  
 		/// <summary>
-		/// Media type by WMI
+		/// Media type by WMI (Win32_DiskDrive)
 		/// </summary>
-		public string MediaType { set; get; }
-
+		public string MediaTypeDiskDrive { set; get; }
+		
 		/// <summary>
 		/// Whether removable disk by P/Invoke
 		/// </summary>
 		public bool IsRemovable { set; get; }
+
+		/// <summary>
+		/// Media type by WMI (MSFT_PhysicalDisk)
+		/// </summary>
+		/// <remarks>HDD or SSD</remarks>
+		public int? MediaTypePhysicalDisk { set; get; }
+
+		/// <summary>
+		/// Description of media type
+		/// </summary>
+		public string MediaTypePhysicalDiskDescription
+		{
+			get
+			{
+				switch (MediaTypePhysicalDisk)
+				{
+					case null:
+						return "Not available";
+					case 3:
+						return "HDD";
+					case 4:
+						return "SSD";
+					default: // 0
+						return "Unspecified";
+				}
+			}
+		}
+
+		/// <summary>
+		/// Spindle speed by WMI (MSFT_PhysicalDisk)
+		/// </summary>
+		public uint? SpindleSpeed { set; get; }
+
+		/// <summary>
+		/// Description of spindle speed
+		/// </summary>
+		public string SpindleSpeedDescription
+		{
+			get
+			{
+				switch (SpindleSpeed)
+				{
+					case null:
+						return "Not available";
+					case UInt32.MaxValue:
+						return "Unknown";
+					case 0:
+						return "Non-rotational media";
+					default:
+						return String.Format("{0} RPM", SpindleSpeed);
+				}
+			}
+		}
 
 		/// <summary>
 		/// Nominal media rotation rate by P/Invoke
@@ -109,13 +162,10 @@ namespace DiskGazer.Models
 				{
 					case null:
 						return "Not supported";
-
 					case 0:
 						return "Rate not reported";
-
 					case 1:
 						return "Non-rotating media";
-
 					default:
 						return String.Format("{0} RPM", NominalMediaRotationRate);
 				}
@@ -123,12 +173,12 @@ namespace DiskGazer.Models
 		}
 
 		/// <summary>
-		/// Size by WMI (Bytes)
+		/// Size (Bytes) by WMI (Win32_DiskDrive)
 		/// </summary>
 		public long SizeWMI { get; set; }
 
 		/// <summary>
-		/// Size by P/Invoke (Bytes)
+		/// Size (Bytes) by P/Invoke
 		/// </summary>
 		public long SizePInvoke { get; set; }
 

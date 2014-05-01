@@ -18,5 +18,14 @@ namespace DiskGazer.Helper
 		{
 			get { return (6 <= os.Version.Major); }
 		}
+
+		/// <summary>
+		/// Check if OS is Windows 8 or newer.
+		/// </summary>
+		/// <remarks>Windows 8 = version 6.2</remarks>
+		public static bool IsEightOrNewer
+		{
+			get { return (6 <= os.Version.Major) && (2 <= os.Version.Minor); }
+		}
 	}
 }
