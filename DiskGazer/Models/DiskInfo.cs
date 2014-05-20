@@ -16,6 +16,10 @@ namespace DiskGazer.Models
 		/// <summary>
 		/// Index number of Physical drive
 		/// </summary>
+		/// <remarks>
+		/// "Index" in Wi32_DiskDrive
+		/// "DeviceId" in MSFT_PhysicalDisk
+		/// </remarks>
 		public int PhysicalDrive { get; set; }
 
 		/// <summary>
@@ -76,28 +80,28 @@ namespace DiskGazer.Models
 		/// <summary>
 		/// Interface type by WMI (Win32_DiskDrive)
 		/// </summary>
-		public string InterfaceType { set; get; }
+		public string InterfaceType { get; set; }
 
 		/// <summary>
 		/// Bus type by P/Invoke
 		/// </summary>
-		public string BusType { set; get; }
- 
+		public string BusType { get; set; }
+
 		/// <summary>
 		/// Media type by WMI (Win32_DiskDrive)
 		/// </summary>
-		public string MediaTypeDiskDrive { set; get; }
-		
+		public string MediaTypeDiskDrive { get; set; }
+
 		/// <summary>
 		/// Whether removable disk by P/Invoke
 		/// </summary>
-		public bool IsRemovable { set; get; }
+		public bool IsRemovable { get; set; }
 
 		/// <summary>
 		/// Media type by WMI (MSFT_PhysicalDisk)
 		/// </summary>
 		/// <remarks>HDD or SSD</remarks>
-		public int? MediaTypePhysicalDisk { set; get; }
+		public int? MediaTypePhysicalDisk { get; set; }
 
 		/// <summary>
 		/// Description of media type
@@ -123,7 +127,7 @@ namespace DiskGazer.Models
 		/// <summary>
 		/// Spindle speed by WMI (MSFT_PhysicalDisk)
 		/// </summary>
-		public uint? SpindleSpeed { set; get; }
+		public uint? SpindleSpeed { get; set; }
 
 		/// <summary>
 		/// Description of spindle speed
