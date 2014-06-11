@@ -847,12 +847,14 @@ namespace DiskGazer.ViewModels
 		{
 			try
 			{
-				var log = await Task.Run(() => ComposeLog());
-
-				using (var sw = new StreamWriter(filePath, false, Encoding.UTF8))
-				{
-					await sw.WriteAsync(log);
-				}
+				await Task.Run(() => ComposeLog())
+					.ContinueWith(async composition =>
+					{
+						using (var sw = new StreamWriter(filePath, false, Encoding.UTF8))
+						{
+							await sw.WriteAsync(composition.Result);
+						}
+					});
 			}
 			catch (Exception ex)
 			{
