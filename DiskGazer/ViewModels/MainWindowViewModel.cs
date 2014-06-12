@@ -26,15 +26,20 @@ namespace DiskGazer.ViewModels
 		private readonly List<DiskInfo> diskRoster = new List<DiskInfo>();
 
 		/// <summary>
-		/// Scores of runs
+		/// Scores of runs (private)
+		/// </summary>
+		/// <remarks>Current score is always diskScores[0].</remarks>
+		private readonly List<DiskScore> diskScores = new List<DiskScore>() { new DiskScore() };
+
+		/// <summary>
+		/// Scores of runs (internal)
 		/// </summary>
 		/// <remark>Current score is always DiskScores[0].</remark>
-		internal List<DiskScore> DiskScores
+		internal IReadOnlyList<DiskScore> DiskScores
 		{
-			get { return _diskScores ?? (_diskScores = new List<DiskScore>() { new DiskScore() }); }
+			get { return diskScores; }
 		}
-		private List<DiskScore> _diskScores;
-
+		
 		public Operation Op
 		{
 			get { return _op ?? (_op = new Operation()); }
@@ -50,7 +55,7 @@ namespace DiskGazer.ViewModels
 			InitializeTask = InitializeAsync();
 		}
 
-		public Task InitializeTask { get; private set; }
+		private Task InitializeTask { get; set; }
 
 		private async Task InitializeAsync()
 		{
@@ -254,13 +259,13 @@ namespace DiskGazer.ViewModels
 			if (Settings.Current.AreaSize != sizeCopy)
 			{
 				Settings.Current.AreaSize = sizeCopy;
-				RaisePropertyChanged("AreaSize");
+				RaisePropertyChanged(()=> AreaSize);
 			}
 
 			if (Settings.Current.AreaLocation != locationCopy)
 			{
 				Settings.Current.AreaLocation = locationCopy;
-				RaisePropertyChanged("AreaLocation");
+				RaisePropertyChanged(() => AreaLocation);
 			}
 		}
 
@@ -486,7 +491,7 @@ namespace DiskGazer.ViewModels
 
 		private bool CanSaveLogFileExecute()
 		{
-			return (DiskScores[0].Data != null);
+			return (diskScores[0].Data != null);
 		}
 
 		#endregion
@@ -507,7 +512,50 @@ namespace DiskGazer.ViewModels
 
 		private bool CanSendLogClipboardExecute()
 		{
-			return (DiskScores[0].Data != null);
+			return (diskScores[0].Data != null);
+		}
+
+		#endregion
+
+
+		#region Pin current chart line
+
+		public DelegateCommand PinLineCommand
+		{
+			get { return _pinLineCommand ?? (_pinLineCommand = new DelegateCommand(PinLineExecute, CanPinLineExecute)); }
+		}
+		private DelegateCommand _pinLineCommand;
+
+		private void PinLineExecute()
+		{
+			diskScores[0].IsPinned = true;
+		}
+
+		private bool CanPinLineExecute()
+		{
+			return (diskScores[0].Data != null);
+		}
+
+		#endregion
+
+
+		#region Clear all chart lines
+
+		public DelegateCommand ClearLinesCommand
+		{
+			get { return _clearLinesCommand ?? (_clearLinesCommand = new DelegateCommand(ClearLinesExecute, CanClearLinesExecute)); }
+		}
+		private DelegateCommand _clearLinesCommand;
+
+		private void ClearLinesExecute()
+		{
+			diskScores.Clear();
+			diskScores.Add(new DiskScore()); // Make diskScores[0] always exist.
+		}
+
+		private bool CanClearLinesExecute()
+		{
+			return true;
 		}
 
 		#endregion
@@ -583,7 +631,9 @@ namespace DiskGazer.ViewModels
 
 					infoNew.Model = infoPre.Model;
 					infoNew.InterfaceType = infoPre.InterfaceType;
-					infoNew.MediaType = infoPre.MediaType;
+					infoNew.MediaTypeDiskDrive = infoPre.MediaTypeDiskDrive;
+					infoNew.MediaTypePhysicalDisk = infoPre.MediaTypePhysicalDisk;
+					infoNew.SpindleSpeed = infoPre.SpindleSpeed;
 					infoNew.SizeWMI = infoPre.SizeWMI;
 
 					// Add disk information to disk roster.
@@ -649,27 +699,27 @@ namespace DiskGazer.ViewModels
 			}
 
 			// Prepare to store settings and data.
-			if (!DiskScores[0].IsPinned)
+			if (!diskScores[0].IsPinned)
 			{
-				DiskScores[0] = new DiskScore();
+				diskScores[0] = new DiskScore();
 			}
 			else // If preceding score is pinned.
 			{
-				DiskScores.Insert(0, new DiskScore());
+				diskScores.Insert(0, new DiskScore());
 			}
 
-			DiskScores[0].Disk = CurrentDisk.Clone();
-			DiskScores[0].StartTime = DateTime.Now;
+			diskScores[0].Disk = CurrentDisk.Clone();
+			diskScores[0].StartTime = DateTime.Now;
 
-			DiskScores[0].BlockSize = Settings.Current.BlockSize;
-			DiskScores[0].BlockOffset = Settings.Current.BlockOffset;
-			DiskScores[0].AreaSize = Settings.Current.AreaSize;
-			DiskScores[0].AreaLocation = Settings.Current.AreaLocation;
-			DiskScores[0].AreaRatioInner = Settings.Current.AreaRatioInner;
-			DiskScores[0].AreaRatioOuter = Settings.Current.AreaRatioOuter;
+			diskScores[0].BlockSize = Settings.Current.BlockSize;
+			diskScores[0].BlockOffset = Settings.Current.BlockOffset;
+			diskScores[0].AreaSize = Settings.Current.AreaSize;
+			diskScores[0].AreaLocation = Settings.Current.AreaLocation;
+			diskScores[0].AreaRatioInner = Settings.Current.AreaRatioInner;
+			diskScores[0].AreaRatioOuter = Settings.Current.AreaRatioOuter;
 
-			DiskScores[0].NumRun = Settings.Current.NumRun;
-			DiskScores[0].Method = Settings.Current.Method;
+			diskScores[0].NumRun = Settings.Current.NumRun;
+			diskScores[0].Method = Settings.Current.Method;
 
 			// Reset scores and chart.
 			UpdateScores();
@@ -720,7 +770,7 @@ namespace DiskGazer.ViewModels
 			// Update scores and chart.
 			if ((info.Data != null) && !Op.IsCanceled)
 			{
-				DiskScores[0].Data = info.Data;
+				diskScores[0].Data = info.Data;
 
 				UpdateScores();
 				mainWindow.DrawChart(DrawMode.DrawNewChart);
@@ -743,7 +793,7 @@ namespace DiskGazer.ViewModels
 
 		private void UpdateScores()
 		{
-			if (DiskScores[0].Data == null)
+			if (diskScores[0].Data == null)
 			{
 				ScoreMax = 0;
 				ScoreMin = 0;
@@ -751,9 +801,9 @@ namespace DiskGazer.ViewModels
 			}
 			else
 			{
-				ScoreMax = DiskScores[0].Data.Values.Max();
-				ScoreMin = DiskScores[0].Data.Values.Min();
-				ScoreAvg = DiskScores[0].Data.Values.Average();
+				ScoreMax = diskScores[0].Data.Values.Max();
+				ScoreMin = diskScores[0].Data.Values.Min();
+				ScoreAvg = diskScores[0].Data.Values.Average();
 			}
 		}
 
@@ -769,7 +819,7 @@ namespace DiskGazer.ViewModels
 		{
 			const string folderName = "result";
 			var folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, folderName);
-			var filePath = Path.Combine(folderPath, DiskScores[0].StartTime.ToString("yyyyMMddHHmmss")); // File path except extension
+			var filePath = Path.Combine(folderPath, diskScores[0].StartTime.ToString("yyyyMMddHHmmss")); // File path except extension
 
 			try
 			{
@@ -845,12 +895,14 @@ namespace DiskGazer.ViewModels
 		{
 			try
 			{
-				var log = await Task.Run(() => ComposeLog());
-
-				using (var sw = new StreamWriter(filePath, false, Encoding.UTF8))
-				{
-					await sw.WriteAsync(log);
-				}
+				await Task.Run(() => ComposeLog())
+					.ContinueWith(async composition =>
+					{
+						using (var sw = new StreamWriter(filePath, false, Encoding.UTF8))
+						{
+							await sw.WriteAsync(composition.Result);
+						}
+					});
 			}
 			catch (Exception ex)
 			{
@@ -890,7 +942,7 @@ namespace DiskGazer.ViewModels
 				MessageBox.Show("Failed to send log to clipboard. " + ex.Message,
 								ProductInfo.Title, MessageBoxButton.OK, MessageBoxImage.Error);
 			}
-		}		
+		}
 
 		private System.Drawing.Bitmap GetScreenshot()
 		{
@@ -917,24 +969,24 @@ namespace DiskGazer.ViewModels
 
 		private string ComposeLog()
 		{
-			if (DiskScores[0].Data == null)
+			if (diskScores[0].Data == null)
 				return String.Empty;
 
 			// Compose header.
 			var headerElements = new string[]
 			{
 				String.Format("[{0}]", ProductInfo.NameVersionMiddle),
-				String.Format("Disk model     : {0}", DiskScores[0].Disk.Name),
-				String.Format("Bus type       : {0}", DiskScores[0].Disk.BusType),
-				String.Format("Disk capacity  : {0:f2} GiB", (double)DiskScores[0].Disk.Size / 1024D), // Convert MiB to GiB.
-				String.Format("Block size     : {0} KiB", DiskScores[0].BlockSize),
-				String.Format("Block offset   : {0} KiB", DiskScores[0].BlockOffset),
-				String.Format("Area size      : {0} GiB", (double)DiskScores[0].AreaSize / 1024D), // Convert MiB to GiB.
-				String.Format("Area location  : {0} GiB", (double)DiskScores[0].AreaLocation / 1024D), // Convert MiB to GiB.
-				String.Format("Area ratio     : {0} / {1}", DiskScores[0].AreaRatioInner, DiskScores[0].AreaRatioOuter),
-				String.Format("Number of runs : {0}", DiskScores[0].NumRun),
-				String.Format("Method to run  : {0}", DiskScores[0].Method.ToString().Replace("_", "/")),
-				String.Format("Start time     : {0:yyyy/MM/dd HH:mm:ss}", DiskScores[0].StartTime),
+				String.Format("Disk model     : {0}", diskScores[0].Disk.Name),
+				String.Format("Bus type       : {0}", diskScores[0].Disk.BusType),
+				String.Format("Disk capacity  : {0:f2} GiB", (double)diskScores[0].Disk.Size / 1024D), // Convert MiB to GiB.
+				String.Format("Block size     : {0} KiB", diskScores[0].BlockSize),
+				String.Format("Block offset   : {0} KiB", diskScores[0].BlockOffset),
+				String.Format("Area size      : {0} GiB", (double)diskScores[0].AreaSize / 1024D), // Convert MiB to GiB.
+				String.Format("Area location  : {0} GiB", (double)diskScores[0].AreaLocation / 1024D), // Convert MiB to GiB.
+				String.Format("Area ratio     : {0} / {1}", diskScores[0].AreaRatioInner, diskScores[0].AreaRatioOuter),
+				String.Format("Number of runs : {0}", diskScores[0].NumRun),
+				String.Format("Method to run  : {0}", diskScores[0].Method.ToString().Replace("_", "/")),
+				String.Format("Start time     : {0:yyyy/MM/dd HH:mm:ss}", diskScores[0].StartTime),
 				String.Format("Maximum read   : {0:f2} MB/s", ScoreMax),
 				String.Format("Minimum read   : {0:f2} MB/s", ScoreMin),
 				String.Format("Average read   : {0:f2} MB/s", ScoreAvg),
@@ -946,7 +998,7 @@ namespace DiskGazer.ViewModels
 			// Compose body.
 			const string bodyElementTop = "Location (MiB), Sequential read (MB/s)";
 
-			var body = new SortedList<double, double>(DiskScores[0].Data)
+			var body = new SortedList<double, double>(diskScores[0].Data)
 				.Select(x => String.Format("{0}, {1:f6}", x.Key, x.Value))
 				.Aggregate(bodyElementTop, (total, next) => total + Environment.NewLine + next);
 

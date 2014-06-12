@@ -21,7 +21,7 @@ namespace DiskGazer.Views
 		/// <summary>
 		/// Scores of runs
 		/// </summary>
-		private List<DiskScore> DiskScores
+		private IReadOnlyList<DiskScore> DiskScores
 		{
 			get { return mainWindowViewModel.DiskScores; }
 		}
@@ -332,13 +332,23 @@ namespace DiskGazer.Views
 				},
 				new List<GridElement>()
 				{
-					new GridElement("Media type (WMI)"),
-					new GridElement(info.MediaType, HorizontalAlignment.Right),
+					new GridElement("Media type (WMI Win32_DiskDrive)"),
+					new GridElement(info.MediaTypeDiskDrive, HorizontalAlignment.Right),
 				},
 				new List<GridElement>()
 				{
 					new GridElement("Fixed/Removable (P/Invoke)"),
 					new GridElement(info.IsRemovable ? "Removable" : "Fixed", HorizontalAlignment.Right),
+				},
+				new List<GridElement>()
+				{
+					new GridElement("Media type (WMI MSFT_PhysicalDisk)"),
+					new GridElement(info.MediaTypePhysicalDiskDescription, HorizontalAlignment.Right),
+				},
+				new List<GridElement>()
+				{
+					new GridElement("Spindle Speed (WMI)"),
+					new GridElement(info.SpindleSpeedDescription, HorizontalAlignment.Right),
 				},
 				new List<GridElement>()
 				{
@@ -429,7 +439,8 @@ namespace DiskGazer.Views
 		private const double chartMaxDefault = 200D;
 		private const double chartMinDefault = 0D;
 
-		private readonly Color[] colBar = new Color[] {
+		private readonly Color[] colBar = new Color[] // Colors for color bar
+		{
 			Color.FromRgb(255,  0,255),
 			Color.FromRgb(255,  0,153),
 			Color.FromRgb(255,  0,  0),
@@ -438,7 +449,8 @@ namespace DiskGazer.Views
 			Color.FromRgb(153,255,  0),
 			Color.FromRgb(  0,235,  0),
 			Color.FromRgb(  0,255,153),
-			Color.FromRgb(  0,255,255), }; // Colors for color bar
+			Color.FromRgb(  0,255,255),
+		};
 
 		private int indexColSelected = 8;
 
@@ -555,22 +567,24 @@ namespace DiskGazer.Views
 
 		private void MenuItemPinLine_Clicked(object sender, RoutedEventArgs e)
 		{
-			if (DiskScores[0].Data == null)
-				return;
+			// Ping current chart line.
+			if (mainWindowViewModel.PinLineCommand.CanExecute())
+			{
+				mainWindowViewModel.PinLineCommand.Execute();
 
-			// Pin current chart line.
-			DiskScores[0].IsPinned = true;
-
-			DrawChart(DrawMode.PinCurrentChart);
+				DrawChart(DrawMode.PinCurrentChart);
+			}
 		}
 
 		private void MenuItemClearLines_Clicked(object sender, RoutedEventArgs e)
 		{
 			// Clear all chart lines.
-			DiskScores.Clear();
-			DiskScores.Add(new DiskScore()); // Make DiskScores[0] always exist.
+			if (mainWindowViewModel.ClearLinesCommand.CanExecute())
+			{
+				mainWindowViewModel.ClearLinesCommand.Execute();
 
-			DrawChart(DrawMode.ClearCompletely);
+				DrawChart(DrawMode.ClearCompletely);
+			}
 		}
 
 		/// <summary>

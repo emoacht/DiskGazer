@@ -33,7 +33,7 @@ namespace DiskGazer.Models
 			private set
 			{
 				_isReading = value;
-				RaisePropertyChanged("IsReady");
+				RaisePropertyChanged(() => IsReady);
 			}
 		}
 		private bool _isReading;
@@ -47,7 +47,7 @@ namespace DiskGazer.Models
 			private set
 			{
 				_isAnalyzing = value;
-				RaisePropertyChanged("IsReady");
+				RaisePropertyChanged(() => IsReady);
 			}
 		}
 		private bool _isAnalyzing;

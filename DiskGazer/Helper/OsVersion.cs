@@ -8,15 +8,24 @@ namespace DiskGazer.Helper
 {
 	public static class OsVersion
 	{
-		private static readonly OperatingSystem os = Environment.OSVersion;
+		private static readonly Version ver = Environment.OSVersion.Version;
 
 		/// <summary>
-		/// Check if OS is Vista or newer.
+		/// Whether OS is Vista or newer
 		/// </summary>
 		/// <remarks>Windows Vista = version 6.0</remarks>
 		public static bool IsVistaOrNewer
 		{
-			get { return (6 <= os.Version.Major); }
+			get { return (6 <= ver.Major); }
+		}
+
+		/// <summary>
+		/// Whether OS is Windows 8 or newer
+		/// </summary>
+		/// <remarks>Windows 8 = version 6.2</remarks>
+		public static bool IsEightOrNewer
+		{
+			get { return ((6 == ver.Major) && (2 <= ver.Minor)) || (7 <= ver.Major); }
 		}
 	}
 }

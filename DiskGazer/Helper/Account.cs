@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+
 namespace DiskGazer.Helper
 {
 	public static class Account
@@ -18,6 +19,9 @@ namespace DiskGazer.Helper
 		#endregion
 
 
+		/// <summary>
+		/// Whether this application is run by administrator
+		/// </summary>
 		public static bool IsAdmin
 		{
 			get { return IsUserAnAdmin(); }
