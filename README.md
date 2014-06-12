@@ -16,7 +16,7 @@ The logic for sequential read test is based on that of [CrystalDiskMark][1] (3.0
 
 ##History
 
-Ver 0.4.0 2014-06-12
+Ver 0.4.2 2014-06-12
 
  - Refactoring
 
