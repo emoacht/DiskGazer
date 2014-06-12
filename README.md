@@ -16,6 +16,10 @@ The logic for sequential read test is based on that of [CrystalDiskMark][1] (3.0
 
 ##History
 
+Ver 0.4.0 2014-06-12
+
+ - Refactoring
+
 Ver 0.4.0 2014-04-26
 
  - Added area ratio function
@@ -26,8 +30,8 @@ Ver 0.3.1 2014-04-25
 
 Ver 0.3.0 2014-04-21
 
- - Modified internal code drastically.
- - Removed the limitation of area size.
+ - Modified internal code drastically
+ - Removed the limitation of area size
 
 Ver 0.2.1 2013-03-17
 
