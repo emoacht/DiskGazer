@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DiskGazer.Models
@@ -20,25 +21,62 @@ namespace DiskGazer.Models
 		private static readonly string nativeExePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, nativeExeFile);
 
 		/// <summary>
-		/// Check if executable file exists
+		/// Whether executable file exists
 		/// </summary>
-		/// <returns>True if exists</returns>
-		internal static bool ExistsNativeExe()
+		internal static bool NativeExeExists
 		{
-			return File.Exists(nativeExePath);
+			get { return File.Exists(nativeExePath); }
+		}
+
+		private static Process readProcess; // Process to run Win32 console application
+
+		/// <summary>
+		/// Read disk by native (asynchronously and with cancellation).
+		/// </summary>
+		/// <param name="rawData">Raw data</param>
+		/// <param name="token">Cancellation token</param>
+		internal static async Task<RawData> ReadDiskNativeAsync(RawData rawData, CancellationToken token)
+		{
+			var readTask = Task.Run(() => ReadDiskNative(rawData));
+
+			var tcs = new TaskCompletionSource<bool>();
+
+			token.Register(() =>
+			{
+				try
+				{
+					if ((readProcess != null) && !readProcess.HasExited)
+						readProcess.Kill();
+				}
+				catch (InvalidOperationException ioe)
+				{
+					// If the process has been disposed, this exception will be thrown.
+					Debug.WriteLine("There is no associated process. {0}", ioe);
+				}
+
+				tcs.SetCanceled();
+			});
+
+			var cancelTask = tcs.Task;
+
+			var completedTask = await Task.WhenAny(readTask, cancelTask);
+			if (completedTask == cancelTask)
+				throw new OperationCanceledException("Read disk by native is canceled.");
+
+			return await readTask;
 		}
 
 		/// <summary>
-		/// Run by native.
+		/// Read disk by native (synchronously).
 		/// </summary>
 		/// <param name="rawData">Raw data</param>
-		internal static void ReadDiskNative(ref RawData rawData)
+		internal static RawData ReadDiskNative(RawData rawData)
 		{
-			if (!ExistsNativeExe())
+			if (!NativeExeExists)
 			{
 				rawData.Result = ReadResult.Failure;
 				rawData.Message = String.Format("Cannot find {0}.", nativeExeFile);
-				return;
+				return rawData;
 			}
 
 			var blockOffsetMultiple = rawData.BlockOffsetMultiple;
@@ -59,7 +97,7 @@ namespace DiskGazer.Models
 						Settings.Current.AreaRatioOuter);
 				}
 
-				using (var proc = new Process()
+				using (readProcess = new Process()
 				{
 					StartInfo = new ProcessStartInfo()
 					{
@@ -73,11 +111,11 @@ namespace DiskGazer.Models
 					},
 				})
 				{
-					proc.Start();
-					var outcome = proc.StandardOutput.ReadToEnd();
-					proc.WaitForExit();
+					readProcess.Start();
+					var outcome = readProcess.StandardOutput.ReadToEnd();
+					readProcess.WaitForExit();
 
-					rawData.Result = ((proc.HasExited) & (proc.ExitCode == 0))
+					rawData.Result = ((readProcess.HasExited) & (readProcess.ExitCode == 0))
 						? ReadResult.Success
 						: ReadResult.Failure;
 
@@ -99,6 +137,8 @@ namespace DiskGazer.Models
 				rawData.Result = ReadResult.Failure;
 				rawData.Message = String.Format("Failed to execute {0}. {1}", nativeExeFile, ex.Message);
 			}
+
+			return rawData;
 		}
 
 		private static double[] FindData(string outcome)
@@ -113,7 +153,8 @@ namespace DiskGazer.Models
 				return null;
 
 			var buff = outcome
-				.Substring(startPoint + startSign.Length, ((endPoint - 1) - (startPoint + startSign.Length))).Trim()
+				.Substring(startPoint + startSign.Length, ((endPoint - 1) - (startPoint + startSign.Length)))
+				.Trim()
 				.Split(new string[] { " ", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
 			return buff
@@ -136,10 +177,21 @@ namespace DiskGazer.Models
 		#region P/Invoke
 
 		/// <summary>
-		/// Run by P/Invoke.
+		/// Read disk by P/Invoke (asynchronously and with cancellation).
 		/// </summary>
 		/// <param name="rawData">Raw data</param>
-		internal static void ReadDiskPInvoke(ref RawData rawData)
+		/// <param name="token">Cancellation token</param>
+		internal static async Task<RawData> ReadDiskPInvokeAsync(RawData rawData, CancellationToken token)
+		{
+			return await Task.Run(() => ReadDiskPInvoke(rawData, token));
+		}
+
+		/// <summary>
+		/// Read disk by P/Invoke (synchronously and with cancellation).
+		/// </summary>
+		/// <param name="rawData">Raw data</param>
+		/// <param name="token">Cancellation token</param>
+		internal static RawData ReadDiskPInvoke(RawData rawData, CancellationToken token)
 		{
 			var blockOffsetMultiple = rawData.BlockOffsetMultiple;
 
@@ -221,6 +273,8 @@ namespace DiskGazer.Models
 					// Measure disk transfer rate (sequential read).
 					for (int j = 1; j <= loopInner; j++)
 					{
+						token.ThrowIfCancellationRequested();
+
 						sw.Start();
 
 						var result2 = W32.ReadFile(
@@ -239,7 +293,7 @@ namespace DiskGazer.Models
 					}
 				}
 
-				hFile.Close(); // CloseHandle is inappropriate to close SafeFileHandle.
+				token.ThrowIfCancellationRequested();
 
 				// ----------------
 				// Process results.
@@ -290,7 +344,7 @@ namespace DiskGazer.Models
 				rawData.Result = ReadResult.Failure;
 				rawData.Message = String.Format("{0} (Code: {1}).", ex.Message.Substring(0, ex.Message.Length - 1), ex.ErrorCode);
 			}
-			catch (Exception ex)
+			catch (Exception ex) // Including OperationCanceledException
 			{
 				rawData.Result = ReadResult.Failure;
 				rawData.Message = ex.Message;
@@ -298,8 +352,12 @@ namespace DiskGazer.Models
 			finally
 			{
 				if (hFile != null)
-					hFile.Dispose(); // To assure SafeFileHandle to be disposed.
+					// CloseHandle is inappropriate to close SafeFileHandle.
+					// Dispose method is not necessary because Close method will call it internally.
+					hFile.Close();
 			}
+
+			return rawData;
 		}
 
 		#endregion

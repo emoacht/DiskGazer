@@ -381,7 +381,7 @@ namespace DiskGazer.Views
 				var rowNew = new RowDefinition() { Height = System.Windows.GridLength.Auto };
 				gridInner.RowDefinitions.Add(rowNew);
 			}
-			for (int i = 0; i < body.Select(x => x.Count).Max(); i++) // Columns
+			for (int i = 0; i < body.Max(x => x.Count); i++) // Columns
 			{
 				var columnNew = new ColumnDefinition() { Width = System.Windows.GridLength.Auto };
 				gridInner.ColumnDefinitions.Add(columnNew);
@@ -855,7 +855,7 @@ namespace DiskGazer.Views
 						// Slide chart line to current location so as to make it visible.
 						foreach (var seriesTwo in diskChart.Series)
 						{
-							var slideLength = Settings.Current.AreaLocation - seriesTwo.Points.Select(x => x.XValue).Min();
+							var slideLength = Settings.Current.AreaLocation - seriesTwo.Points.Min(x => x.XValue);
 
 							foreach (var point in seriesTwo.Points)
 							{
@@ -874,7 +874,7 @@ namespace DiskGazer.Views
 									var scoreTwo = DiskScores.FirstOrDefault(d => d.Guid == seriesTwo.Name);
 									if (scoreTwo != null)
 									{
-										var slideLength = scoreTwo.AreaLocation - seriesTwo.Points.Select(p => p.XValue).Min();
+										var slideLength = scoreTwo.AreaLocation - seriesTwo.Points.Min(p => p.XValue);
 
 										foreach (var point in seriesTwo.Points)
 										{

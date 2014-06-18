@@ -63,9 +63,11 @@ namespace DiskGazer.Models
 		private ConcurrentQueue<RawData> rawDataQueue; // Queue of raw data
 
 		private readonly List<Dictionary<double, double>> diskScoresRun = new List<Dictionary<double, double>>(); // Temporary scores of runs
-		private readonly List<Dictionary<double, double>> diskScoresStep = new List<Dictionary<double, double>>(); // Temporary scores of steps
+		private KeyValuePair<double, double>[] diskScoresStep; // Temporary scores of steps
+		private int diskScoresStepCount = 0; // Number of temporary scores of steps
 
 		private CancellationTokenSource tokenSource;
+		private bool isTokenSourceDisposed;
 
 		private double currentSpeed; // Current and latest transfer rate (MB/s)
 
@@ -87,6 +89,7 @@ namespace DiskGazer.Models
 			try
 			{
 				tokenSource = new CancellationTokenSource();
+				isTokenSourceDisposed = false;
 
 				// Read and analyze disk in parallel.
 				var readTask = ReadAsnyc(progress, tokenSource.Token);
@@ -108,14 +111,8 @@ namespace DiskGazer.Models
 
 				if (tokenSource != null)
 				{
-					try
-					{
-						tokenSource.Dispose();
-					}
-					finally
-					{
-						tokenSource = null;
-					}
+					isTokenSourceDisposed = true;
+					tokenSource.Dispose();
 				}
 			}
 		}
@@ -124,7 +121,7 @@ namespace DiskGazer.Models
 		{
 			IsCanceled = true;
 
-			if ((tokenSource == null) || (tokenSource.IsCancellationRequested))
+			if (isTokenSourceDisposed || (tokenSource.IsCancellationRequested))
 				return;
 
 			try
@@ -190,11 +187,11 @@ namespace DiskGazer.Models
 					switch (Settings.Current.Method)
 					{
 						case ReadMethod.Native:
-							await Task.Run(() => DiskReader.ReadDiskNative(ref rawData));
+							rawData = await DiskReader.ReadDiskNativeAsync(rawData, token);
 							break;
 
 						case ReadMethod.P_Invoke:
-							await Task.Run(() => DiskReader.ReadDiskPInvoke(ref rawData));
+							rawData = await DiskReader.ReadDiskPInvokeAsync(rawData, token);
 							break;
 					}
 
@@ -306,7 +303,7 @@ namespace DiskGazer.Models
 					RawData rawData;
 					if (!rawDataQueue.TryDequeue(out rawData))
 						throw new Exception("Failed to dequeue raw data from queue.");
-					
+
 					// Update progress before analyzing.
 					var innerStatusIn = String.Format("[{0}/{1} - {2}/{3} Analyzer In]",
 						rawData.Run, Settings.Current.NumRun,
@@ -316,10 +313,10 @@ namespace DiskGazer.Models
 
 					await Task.Run(() => AnalyzeBase(rawData, progress, token));
 
-					// Update progress after analyzing.
-					var innerStatusOut = String.Format("[{0}/{1} - {2}/{3} Analyzer Out]",
+					// Update progress after analyzing.					
+					var innerStatusOut = String.Format("[{0}/{1} - {2}/{3} Analyzer Out ({4})]",
 						diskScoresRun.Count, Settings.Current.NumRun,
-						diskScoresStep.Count, NumStep);
+						diskScoresStepCount, NumStep, diskScoresStep.Count());
 
 					progress.Report(new ProgressInfo(innerStatusOut, false));
 				}
@@ -341,62 +338,64 @@ namespace DiskGazer.Models
 
 		private void AnalyzeBase(RawData rawData, IProgress<ProgressInfo> progress, CancellationToken token)
 		{
-			var score = CombineLocationData(rawData.BlockOffsetMultiple, rawData.Data);
+			var score = CombineLocationData(rawData.BlockOffsetMultiple, rawData.Data).ToArray();
 
 			if ((score == null) || !score.Any())
 				return;
-			
+
 			token.ThrowIfCancellationRequested();
 
 			// ------------------------
 			// Process scores of steps.
 			// ------------------------
-			var diskScoresStepAveraged = new Dictionary<double, double>();
+			Dictionary<double, double> diskScoresStepAveraged;
 
 			try
 			{
 				if (rawData.BlockOffsetMultiple == 0) // If initial step of run
 				{
-					// Clear scores of steps to prevent duplication of locations (keys).
-					diskScoresStep.Clear();
-
 					// Store initial score.
-					diskScoresStep.Add(score);
+					diskScoresStep = score;
+					diskScoresStepCount = 1;
 
-					diskScoresStepAveraged = diskScoresStep[0];
+					diskScoresStepAveraged = diskScoresStep.ToDictionary(pair => pair.Key, pair => pair.Value);
 				}
 				else
 				{
-					diskScoresStep.Add(score);
-
-					// Prepare one combined and sequential score from scores.
-					var diskScoresStepCombined = diskScoresStep
-						.AsParallel()
-						.SelectMany(dict => dict)
+					// Combine scores into one sequential score.
+					diskScoresStep = diskScoresStep
+						.Concat(score)
 						.OrderBy(x => x.Key) // Order by locations.
-						.ToDictionary(pair => pair.Key, pair => pair.Value);
+						.ToArray();
+					diskScoresStepCount++;
 
 					// Prepare score of averaged transfer rates (values) of locations (keys) within block size length.
+					diskScoresStepAveraged = new Dictionary<double, double>();
+
 					var blockSizeMibiBytes = (double)Settings.Current.BlockSize / 1024D; // Convert KiB to MiB.
 
-					foreach (var data in diskScoresStepCombined)
+					foreach (var data in diskScoresStep.Select((body, index) => new { body, index }))
 					{
 						var dataCopy = data;
 
-						var dataArray = diskScoresStepCombined
-							.AsParallel()
-							.Where(x => (x.Key <= dataCopy.Key) & (dataCopy.Key < x.Key + blockSizeMibiBytes))
-							.Select(x => x.Value)
-							.ToArray();
+						var valueList = new List<double>();
+						var index = dataCopy.index;
+						var keyBottom = dataCopy.body.Key - blockSizeMibiBytes;
 
-						if ((3 <= dataArray.Length) && // Removing outliers from data less than 3 makes no sense.
-							 Settings.Current.WillRemoveOutlier)
+						do
+						{
+							valueList.Add(diskScoresStep[index].Value);
+							index--;
+
+						} while ((0 <= index) && (keyBottom < diskScoresStep[index].Key));
+
+						if (Settings.Current.WillRemoveOutlier && (3 <= valueList.Count)) // Removing outliers from data less than 3 makes no sense.
 						{
 							// Remove outliers using average and standard deviation.
-							dataArray = RemoveOutlier(dataArray, 2); // This multiple (2) is to be considered.
+							valueList = RemoveOutlier(valueList, 2).ToList(); // This multiple (2) is to be considered.
 						}
 
-						diskScoresStepAveraged.Add(data.Key, dataArray.Average());
+						diskScoresStepAveraged.Add(dataCopy.body.Key, valueList.Average());
 					}
 				}
 			}
@@ -405,7 +404,7 @@ namespace DiskGazer.Models
 				Debug.WriteLine("Failed to process scores of steps. {0}", ex);
 				throw;
 			}
-			
+
 			token.ThrowIfCancellationRequested();
 
 			// -----------------------
@@ -434,21 +433,19 @@ namespace DiskGazer.Models
 					var diskScoresRunAll = diskScoresRun
 						.AsParallel()
 						.SelectMany(dict => dict)
-						.ToLookup(pair => pair.Key, pair => pair.Value)
-						.ToDictionary(group => group.Key, group => group.ToArray());
+						.ToLookup(pair => pair.Key, pair => pair.Value);
 
 					// Prepare score of averaged transfer rates (values) over all runs.
 					var diskScoresRunAllAveraged = new Dictionary<double, double>();
 
 					foreach (var data in diskScoresRunAll)
 					{
-						var dataArray = data.Value;
+						var dataArray = data.ToArray();
 
-						if ((3 <= dataArray.Length) && // Removing outliers from data less than 3 makes no sense.
-							Settings.Current.WillRemoveOutlier)
+						if (Settings.Current.WillRemoveOutlier && (3 <= dataArray.Length)) // Removing outliers from data less than 3 makes no sense.
 						{
 							// Remove outliers using average and standard deviation.
-							dataArray = RemoveOutlier(dataArray, 2); // This multiple (2) is to be considered.
+							dataArray = RemoveOutlier(dataArray, 2).ToArray(); // This multiple (2) is to be considered.
 						}
 
 						diskScoresRunAllAveraged.Add(data.Key, dataArray.Average());
@@ -464,13 +461,8 @@ namespace DiskGazer.Models
 			}
 		}
 
-		private Dictionary<double, double> CombineLocationData(int blockOffsetNum, double[] data)
+		private IEnumerable<KeyValuePair<double, double>> CombineLocationData(int blockOffsetNum, double[] data)
 		{
-			if (data == null)
-				return null;
-
-			var score = new Dictionary<double, double>();
-
 			var areaLocationPlus = Settings.Current.AreaLocation + ((double)Settings.Current.BlockOffset * (double)blockOffsetNum) / 1024D; // MiB
 			var blockSizeMibiBytes = Settings.Current.BlockSize / 1024D; // Convert KiB to MiB.
 
@@ -487,13 +479,11 @@ namespace DiskGazer.Models
 					multiple = Settings.Current.AreaRatioOuter * (multiple / Settings.Current.AreaRatioInner) + remainder;
 				}
 
-				score.Add(areaLocationPlus + (blockSizeMibiBytes * multiple), data[i]);
+				yield return new KeyValuePair<double, double>(areaLocationPlus + (blockSizeMibiBytes * multiple), data[i]);
 			}
-
-			return score;
 		}
 
-		private double[] RemoveOutlier(double[] source, double rangeMultiple)
+		private IEnumerable<double> RemoveOutlier(IEnumerable<double> source, double rangeMultiple)
 		{
 			var average = source.Average();
 			var rangeLength = source.StandardDeviation() * rangeMultiple;
@@ -501,9 +491,7 @@ namespace DiskGazer.Models
 			var rangeLowest = average - rangeLength;
 			var rangeHighest = average + rangeLength;
 
-			return source
-				.Where(x => (rangeLowest <= x) && (x <= rangeHighest))
-				.ToArray();
+			return source.Where(x => (rangeLowest <= x) && (x <= rangeHighest));
 		}
 
 		#endregion
