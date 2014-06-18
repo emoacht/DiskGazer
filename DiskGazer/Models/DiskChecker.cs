@@ -135,8 +135,6 @@ namespace DiskGazer.Models
 				{
 					// None. It is normal that IOCTL_ATA_PASS_THROUGH fails when used to external or removable media.
 				}
-
-				hFile.Close(); // CloseHandle is inappropriate to close SafeFileHandle.
 			}
 			catch (Win32Exception ex)
 			{
@@ -151,7 +149,9 @@ namespace DiskGazer.Models
 			finally
 			{
 				if (hFile != null)
-					hFile.Dispose(); // To assure SafeFileHandle to be disposed.
+					// CloseHandle is inappropriate to close SafeFileHandle.
+					// Dispose method is not necessary because Close method will call it internally.
+					hFile.Close();
 			}
 
 			return info;

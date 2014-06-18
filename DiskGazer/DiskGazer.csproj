@@ -86,7 +86,7 @@
     <Compile Include="Common\NotificationObject.cs" />
     <Compile Include="Helper\Account.cs" />
     <Compile Include="Helper\DoubleExtension.cs" />
-    <Compile Include="Helper\EnumerableDoubleExtension.cs" />
+    <Compile Include="Helper\EnumerableExtension.cs" />
     <Compile Include="Helper\OsVersion.cs" />
     <Compile Include="Views\WindowSupplement.cs" />
     <Compile Include="Models\DiskChecker.cs" />

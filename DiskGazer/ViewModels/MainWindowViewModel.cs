@@ -691,7 +691,7 @@ namespace DiskGazer.ViewModels
 				return;
 			}
 
-			if ((Settings.Current.Method == ReadMethod.Native) && !DiskReader.ExistsNativeExe())
+			if ((Settings.Current.Method == ReadMethod.Native) && !DiskReader.NativeExeExists)
 			{
 				MessageBox.Show("Win32 console application for native method is not found.",
 								ProductInfo.Title, MessageBoxButton.OK, MessageBoxImage.Information);
@@ -835,8 +835,8 @@ namespace DiskGazer.ViewModels
 
 			// Save screenshot to file.
 			System.Drawing.Bitmap screenshot = GetScreenshot();
-
-			SaveScreenshotFileBase(screenshot, String.Format("{0}.png", filePath));
+			if (screenshot != null)
+				SaveScreenshotFileBase(screenshot, String.Format("{0}.png", filePath));
 
 			// Save log to file.
 			await SaveLogFileBase(String.Format("{0}.txt", filePath));
@@ -848,6 +848,8 @@ namespace DiskGazer.ViewModels
 		private void SaveScreenshotFile()
 		{
 			System.Drawing.Bitmap screenshot = GetScreenshot();
+			if (screenshot == null)
+				return;
 			
 			var sfd = new SaveFileDialog()
 			{
@@ -856,9 +858,7 @@ namespace DiskGazer.ViewModels
 			};
 
 			if (sfd.ShowDialog() == true)
-			{
 				SaveScreenshotFileBase(screenshot, sfd.FileName);
-			}
 		}
 
 		private void SaveScreenshotFileBase(System.Drawing.Bitmap screenshot, string filePath)
@@ -886,9 +886,7 @@ namespace DiskGazer.ViewModels
 			};
 
 			if (sfd.ShowDialog() == true)
-			{
 				await SaveLogFileBase(sfd.FileName);
-			}
 		}
 
 		private async Task SaveLogFileBase(string filePath)
@@ -932,7 +930,7 @@ namespace DiskGazer.ViewModels
 						tcs.SetException(ex);
 					}
 				});
-				thread.SetApartmentState(ApartmentState.STA);
+				thread.SetApartmentState(ApartmentState.STA); // Clipboard class requires STA thread.
 				thread.Start();
 
 				await tcs.Task;
@@ -946,25 +944,23 @@ namespace DiskGazer.ViewModels
 
 		private System.Drawing.Bitmap GetScreenshot()
 		{
-			System.Drawing.Bitmap screenshot = null;
-
 			try
 			{
 				var rct = WindowSupplement.GetWindowRect(mainWindow);
 
-				screenshot = new System.Drawing.Bitmap((int)rct.Width, (int)rct.Height);
+				var screenshot = new System.Drawing.Bitmap((int)rct.Width, (int)rct.Height);
 				using (var g = System.Drawing.Graphics.FromImage(screenshot))
 				{
 					g.CopyFromScreen(new System.Drawing.Point((int)rct.Left, (int)rct.Top), System.Drawing.Point.Empty, screenshot.Size);
 				}
+				return screenshot;
 			}
 			catch (Exception ex)
 			{
 				MessageBox.Show("Failed to save screenshot. " + ex.Message,
 								ProductInfo.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+				return null;
 			}
-
-			return screenshot;
 		}
 
 		private string ComposeLog()
