@@ -18,14 +18,6 @@ namespace DiskGazer.Views
 {
 	public partial class MainWindow : Window
 	{
-		/// <summary>
-		/// Scores of runs
-		/// </summary>
-		private IReadOnlyList<DiskScore> DiskScores
-		{
-			get { return mainWindowViewModel.DiskScores; }
-		}
-
 		private readonly MainWindowViewModel mainWindowViewModel;
 
 		public MainWindow()
@@ -395,9 +387,7 @@ namespace DiskGazer.Views
 				for (int j = 0; j < gridInner.ColumnDefinitions.Count; j++)
 				{
 					if (j <= body[i].Count - 1)
-					{
 						gridInner.Children.Add(CreateTextBlock(body[i][j], i, j));
-					}
 				}
 			}
 		}
@@ -434,10 +424,16 @@ namespace DiskGazer.Views
 
 		#region Chart
 
+		private IReadOnlyList<DiskScore> DiskScores
+		{
+			get { return mainWindowViewModel.DiskScores; }
+		}
+
 		private Chart diskChart;
-		private const double chartUnit = 50; // Unit length of Y axis
-		private const double chartMaxDefault = 200D;
-		private const double chartMinDefault = 0D;
+
+		private const double chartUnit = 50D; // Unit length of Y axis
+		private const double chartMaxDefault = 200D; // Default maximum value of Y axis
+		private const double chartMinDefault = 0D;   // Default minimum value of Y axis
 
 		private readonly Color[] colBar = new Color[] // Colors for color bar
 		{
@@ -452,10 +448,10 @@ namespace DiskGazer.Views
 			Color.FromRgb(  0,255,255),
 		};
 
-		private int indexColSelected = 8;
+		private int indexColSelected = 8; // Index of color
 
 		/// <summary>
-		/// Maximum value of Y axle of chart
+		/// Maximum value of Y axle
 		/// </summary>
 		public double ChartMax
 		{
@@ -475,9 +471,7 @@ namespace DiskGazer.Views
 
 						if ((window.SliderChartMax.IsFocused | window.SliderChartMax.IsMouseOver) &&
 							(window.SliderChartMin.Value + chartUnit > (double)e.NewValue))
-						{
 							window.SliderChartMin.Value = (double)e.NewValue - chartUnit;
-						}
 
 						if (window.IsChartMaxFixed)
 							window.AdjustChartAppearance();
@@ -485,7 +479,7 @@ namespace DiskGazer.Views
 					(d, baseValue) => Math.Round((double)baseValue / chartUnit) * chartUnit));
 
 		/// <summary>
-		/// Minimum value of Y axle of chart
+		/// Minimum value of Y axle
 		/// </summary>
 		public double ChartMin
 		{
@@ -505,9 +499,7 @@ namespace DiskGazer.Views
 
 						if ((window.SliderChartMin.IsFocused | window.SliderChartMin.IsMouseOver) &&
 							((double)e.NewValue + chartUnit > window.SliderChartMax.Value))
-						{
 							window.SliderChartMax.Value = (double)e.NewValue + chartUnit;
-						}
 
 						if (window.IsChartMinFixed)
 							window.AdjustChartAppearance();
@@ -971,9 +963,7 @@ namespace DiskGazer.Views
 					{
 						var button = sender as Button;
 						if (button != null)
-						{
 							indexColSelected = (int)button.Tag;
-						}
 
 						ManageColorBar();
 					};
