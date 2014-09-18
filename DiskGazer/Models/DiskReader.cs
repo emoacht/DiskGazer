@@ -37,7 +37,7 @@ namespace DiskGazer.Models
 		/// <param name="token">Cancellation token</param>
 		internal static async Task<RawData> ReadDiskNativeAsync(RawData rawData, CancellationToken token)
 		{
-			var readTask = Task.Run(() => ReadDiskNative(rawData));
+			var readTask = Task.Run(() => ReadDiskNative(rawData), token);
 
 			var tcs = new TaskCompletionSource<bool>();
 
@@ -183,7 +183,7 @@ namespace DiskGazer.Models
 		/// <param name="token">Cancellation token</param>
 		internal static async Task<RawData> ReadDiskPInvokeAsync(RawData rawData, CancellationToken token)
 		{
-			return await Task.Run(() => ReadDiskPInvoke(rawData, token));
+			return await Task.Run(() => ReadDiskPInvoke(rawData, token), token);
 		}
 
 		/// <summary>
@@ -239,13 +239,13 @@ namespace DiskGazer.Models
 					readNum = loopInner * loopOuter;
 				}
 
-				long areaLocationBytes = (long)Settings.Current.AreaLocation * 1024L * 1024L; // Bytes
-				long blockOffsetBytes = (long)Settings.Current.BlockOffset * (long)blockOffsetMultiple * 1024L; // Bytes
-				long jumpBytes = (long)Settings.Current.BlockSize * (long)Settings.Current.AreaRatioOuter * 1024L; // Bytes
+				var areaLocationBytes = (long)Settings.Current.AreaLocation * 1024L * 1024L; // Bytes
+				var blockOffsetBytes = (long)Settings.Current.BlockOffset * (long)blockOffsetMultiple * 1024L; // Bytes
+				var jumpBytes = (long)Settings.Current.BlockSize * (long)Settings.Current.AreaRatioOuter * 1024L; // Bytes
 
 				areaLocationBytes += blockOffsetBytes;
 
-				uint buffSize = (uint)Settings.Current.BlockSize * 1024U; // Buffer size (Bytes)
+				var buffSize = (uint)Settings.Current.BlockSize * 1024U; // Buffer size (Bytes)
 				var buff = new byte[buffSize]; // Buffer
 				uint readSize = 0U;
 

@@ -71,7 +71,7 @@ namespace DiskGazer.ViewModels
 		public string Status
 		{
 			get { return _status; }
-			set
+			private set
 			{
 				_status = value;
 				RaisePropertyChanged();
@@ -85,7 +85,7 @@ namespace DiskGazer.ViewModels
 		public string InnerStatus
 		{
 			get { return _innerStatus; }
-			set
+			private set
 			{
 				_innerStatus = value;
 				RaisePropertyChanged();
@@ -104,7 +104,7 @@ namespace DiskGazer.ViewModels
 		public double ScoreMax
 		{
 			get { return _scoreMax; }
-			set
+			private set
 			{
 				_scoreMax = value;
 				RaisePropertyChanged();
@@ -118,7 +118,7 @@ namespace DiskGazer.ViewModels
 		public double ScoreMin
 		{
 			get { return _scoreMin; }
-			set
+			private set
 			{
 				_scoreMin = value;
 				RaisePropertyChanged();
@@ -132,7 +132,7 @@ namespace DiskGazer.ViewModels
 		public double ScoreAvg
 		{
 			get { return _scoreAvg; }
-			set
+			private set
 			{
 				_scoreAvg = value;
 				RaisePropertyChanged();
@@ -274,7 +274,7 @@ namespace DiskGazer.ViewModels
 
 		#region Area fineness
 
-		public double[] MenuAreaFineness
+		public IReadOnlyCollection<double> MenuAreaFineness
 		{
 			get { return new double[] { 1, 0.5, 0.25 }; } // GiB
 		}
@@ -326,7 +326,7 @@ namespace DiskGazer.ViewModels
 
 		#region Number of runs
 
-		public int[] MenuNumRun
+		public IReadOnlyCollection<int> MenuNumRun
 		{
 			get { return new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 }; }
 		}
@@ -336,7 +336,7 @@ namespace DiskGazer.ViewModels
 
 		#region Block size
 
-		public int[] MenuBlockSize
+		public IReadOnlyCollection<int> MenuBlockSize
 		{
 			get { return _menuBlockSize ?? (_menuBlockSize = new int[] { 1024, 512, 256, 128, 64, 32 }); } //MiB
 		}
@@ -551,6 +551,7 @@ namespace DiskGazer.ViewModels
 		{
 			diskScores.Clear();
 			diskScores.Add(new DiskScore()); // Make diskScores[0] always exist.
+			UpdateScores();
 		}
 
 		private bool CanClearLinesExecute()
@@ -681,7 +682,6 @@ namespace DiskGazer.ViewModels
 		/// <summary>
 		/// Start reading and analyzing disk.
 		/// </summary>
-		/// <returns></returns>
 		private async Task RunAsync()
 		{
 			if (!Account.IsAdmin)
@@ -736,7 +736,7 @@ namespace DiskGazer.ViewModels
 			}
 
 			// Save screenshot and log.
-			if (Settings.Current.WillSaveScreenshotLog && !Op.IsCanceled)
+			if (Settings.Current.SavesScreenshotLog && !Op.IsCanceled)
 			{
 				// Wait for rendering of scores and chart.
 				// (Synchronously start empty action of lower priority than rendering.) 

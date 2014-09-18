@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace DiskGazer.Helper
 {
@@ -13,10 +15,14 @@ namespace DiskGazer.Helper
 		/// <returns>Median</returns>
 		public static double Median(this IEnumerable<double> source)
 		{
-			if ((source == null) || !source.Any())
+			if (source == null)
 				throw new ArgumentNullException("source");
 
-			var sourceArray = source.OrderBy(x => x).ToArray();
+			var buff = source as double[] ?? source.ToArray();
+			if (!buff.Any())
+				throw new ArgumentNullException("source");
+
+			var sourceArray = buff.OrderBy(x => x).ToArray();
 
 			var medianIndex = sourceArray.Length / 2;
 
@@ -32,12 +38,16 @@ namespace DiskGazer.Helper
 		/// <returns>Standard deviation</returns>
 		public static double StandardDeviation(this IEnumerable<double> source)
 		{
-			if ((source == null) || !source.Any())
+			if (source == null)
 				throw new ArgumentNullException("source");
 
-			var averageValue = source.Average();
+			var buff = source as double[] ?? source.ToArray();
+			if (!buff.Any())
+				throw new ArgumentNullException("source");
 
-			return Math.Sqrt(source.Average(x => Math.Pow(x - averageValue, 2)));
+			var averageValue = buff.Average();
+
+			return Math.Sqrt(buff.Average(x => Math.Pow(x - averageValue, 2)));
 		}
 	}
 }

@@ -126,7 +126,7 @@ namespace DiskGazer.Models
 					out bytesReturned3,
 					IntPtr.Zero);
 
-				if (result3 != false)
+				if (result3)
 				{
 					const int index = 217; // Word index of nominal media rotation rate (1 means non-rotating media.)
 					info.NominalMediaRotationRate = ataQuery.data[index];
