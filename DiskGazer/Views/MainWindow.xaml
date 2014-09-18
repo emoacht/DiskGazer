@@ -121,13 +121,13 @@
 
                         <MenuItem Header="Remove outliers from data"
                                   IsCheckable="True"
-                                  IsChecked="{Binding SettingsCurrent.WillRemoveOutlier, Mode=TwoWay}"/>
+                                  IsChecked="{Binding SettingsCurrent.RemovesOutlier, Mode=TwoWay}"/>
                         <MenuItem Header="Slide chart line to current location"
                                   IsCheckable="True"
                                   IsChecked="{Binding WillSlideLine, ElementName=MainWindowRoot, Mode=TwoWay}"/>
                         <MenuItem Header="Save screenshot and log automatically"
                                   IsCheckable="True"
-                                  IsChecked="{Binding SettingsCurrent.WillSaveScreenshotLog, Mode=TwoWay}"/>
+                                  IsChecked="{Binding SettingsCurrent.SavesScreenshotLog, Mode=TwoWay}"/>
                         <Separator/>
 
                         <MenuItem Header="Open monitor window"
@@ -214,13 +214,10 @@
                           Header="_Help">
                     <!-- Disk information -->
                     <MenuItem x:Name="MenuItemDiskInfo"
-                              Header="Disk information">
-                        <MenuItem.Icon>
-                            <Image Source="/DiskGazer;component/Resources/LightBulb_16xLG.png"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
+                              Header="Disk information"/>
                     <Separator/>
 
+                    <!-- About -->
                     <MenuItem Header="{Binding Source={x:Static views:ProductInfo.Title}, Mode=OneWay}" HeaderStringFormat="About {0}">
                         <StackPanel Margin="0,4"
                                     Orientation="Vertical">
@@ -420,7 +417,7 @@
                         Style="{StaticResource TextBoxScore}"
                         VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
                         Text="{Binding ScoreMax, Mode=OneWay, StringFormat={}{0:f2}}"
-                        WillLeaveBlankIfZero="True"/>
+                        LeavesBlankIfZero="True"/>
                     <TextBlock
                         Margin="5,0,0,0" VerticalAlignment="Center"
                         Text="Min"/>
@@ -429,7 +426,7 @@
                         Style="{StaticResource TextBoxScore}"
                         VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
                         Text="{Binding ScoreMin, Mode=OneWay, StringFormat={}{0:f2}}"
-                        WillLeaveBlankIfZero="True"/>
+                        LeavesBlankIfZero="True"/>
                     <TextBlock
                         Margin="5,0,0,0" VerticalAlignment="Center"
                         Text="Avg"/>
@@ -438,7 +435,7 @@
                         Style="{StaticResource TextBoxScore}"
                         VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
                         Text="{Binding ScoreAvg, Mode=OneWay, StringFormat={}{0:f2}}"
-                        WillLeaveBlankIfZero="True"/>
+                        LeavesBlankIfZero="True"/>
                 </StackPanel>
             </Grid>
         </Grid>

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 using DiskGazer.Common;
 
@@ -152,30 +152,30 @@ namespace DiskGazer.Models
 		/// <summary>
 		/// Whether to remove outliers
 		/// </summary>
-		public bool WillRemoveOutlier
+		public bool RemovesOutlier
 		{
-			get { return _willRemoveOutlier; }
+			get { return _removesOutlier; }
 			set
 			{
-				_willRemoveOutlier = value;
+				_removesOutlier = value;
 				RaisePropertyChanged();
 			}
 		}
-		private bool _willRemoveOutlier = true;
+		private bool _removesOutlier = true;
 
 		/// <summary>
 		/// Whether to save screenshot and log automatically.
 		/// </summary>
-		public bool WillSaveScreenshotLog
+		public bool SavesScreenshotLog
 		{
-			get { return _willSaveScreenshotLog; }
+			get { return _savesScreenshotLog; }
 			set
 			{
-				_willSaveScreenshotLog = value;
+				_savesScreenshotLog = value;
 				RaisePropertyChanged();
 			}
 		}
-		private bool _willSaveScreenshotLog = false;
+		private bool _savesScreenshotLog;
 
 		#endregion
 	}

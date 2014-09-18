@@ -200,9 +200,7 @@ namespace DiskGazer.Models
 		public int CompareTo(DiskInfo other)
 		{
 			if (other == null)
-			{
 				return 1;
-			}
 
 			return this.PhysicalDrive.CompareTo(other.PhysicalDrive);
 		}

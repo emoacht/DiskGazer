@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -228,10 +227,14 @@ namespace DiskGazer.Views
 		/// <summary>
 		/// Get rate of current DPI of a specified window against 96.
 		/// </summary>
-		/// <param name="source">Source window</param>
-		internal static double GetDpiRate(Window source)
+		/// <param name="window">Source window</param>
+		internal static double GetDpiRate(Window window)
 		{
-			return PresentationSource.FromVisual(source).CompositionTarget.TransformToDevice.M22;
+			var source = PresentationSource.FromVisual(window);
+			if ((source == null) || (source.CompositionTarget == null))
+				return 1D; // Fall back
+
+			return source.CompositionTarget.TransformToDevice.M11;
 		}
 	}
 }

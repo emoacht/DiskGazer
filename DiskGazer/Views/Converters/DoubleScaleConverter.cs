@@ -12,18 +12,15 @@ using DiskGazer.Helper;
 namespace DiskGazer.Views.Converters
 {
 	/// <summary>
-	/// Convert Double to scale of Double.
+	/// Convert Double to number of scale (decimals) of Double.
 	/// </summary>
 	[ValueConversion(typeof(double), typeof(int))]
 	public class DoubleScaleConverter : IValueConverter
 	{
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{
-			if (value == null)
-				return DependencyProperty.UnsetValue;
-
 			double num;
-			if (!double.TryParse(value.ToString(), out num))
+			if ((value == null) || !double.TryParse(value.ToString(), out num))
 				return DependencyProperty.UnsetValue;
 
 			return num.Scale();

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,17 +34,23 @@ namespace DiskGazer.Views.Controls
 				"ScaleNumber",
 				typeof(int),
 				typeof(TextBoxDoubleFormat),
-				new FrameworkPropertyMetadata(-1, // -1 means not specified;
-					(d, e) => ((TextBoxDoubleFormat)d).GetBindingExpression(TextBox.TextProperty).UpdateTarget())); 
+				new FrameworkPropertyMetadata(
+					-1, // -1 means not specified;
+					(d, e) =>
+					{
+						var expression = ((TextBoxDoubleFormat)d).GetBindingExpression(TextBox.TextProperty);
+						if (expression != null)
+							expression.UpdateTarget();
+					}));
 
-		public bool WillLeaveBlankIfZero
+		public bool LeavesBlankIfZero
 		{
-			get { return (bool)GetValue(WillLeaveBlankIfZeroProperty); }
-			set { SetValue(WillLeaveBlankIfZeroProperty, value); }
+			get { return (bool)GetValue(LeavesBlankIfZeroProperty); }
+			set { SetValue(LeavesBlankIfZeroProperty, value); }
 		}
-		public static readonly DependencyProperty WillLeaveBlankIfZeroProperty =
+		public static readonly DependencyProperty LeavesBlankIfZeroProperty =
 			DependencyProperty.Register(
-				"WillLeaveBlankIfZero",
+				"LeavesBlankIfZero",
 				typeof(bool),
 				typeof(TextBoxDoubleFormat),
 				new FrameworkPropertyMetadata(false));
@@ -68,10 +73,10 @@ namespace DiskGazer.Views.Controls
 		private static object CoerceFormat(DependencyObject d, object baseValue)
 		{
 			double num;
-			if (!double.TryParse(baseValue.ToString(), out num))
+			if ((baseValue == null) || !double.TryParse(baseValue.ToString(), out num))
 				return baseValue;
 
-			if ((num == 0D) && ((TextBoxDoubleFormat)d).WillLeaveBlankIfZero)
+			if ((num == 0D) && ((TextBoxDoubleFormat)d).LeavesBlankIfZero)
 				return String.Empty;
 
 			int scaleNumber = ((TextBoxDoubleFormat)d).ScaleNumber;

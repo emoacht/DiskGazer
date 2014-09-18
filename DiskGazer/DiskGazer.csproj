@@ -211,9 +211,6 @@
     <Resource Include="Resources\Camera_16xLG.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\LightBulb_16xLG.png" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Resources\gear_16xLG.png" />
   </ItemGroup>
   <ItemGroup>

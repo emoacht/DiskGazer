@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -394,8 +394,8 @@ namespace DiskGazer.Views
 
 		private struct GridElement
 		{
-			public string Text;
-			public HorizontalAlignment Alignment;
+			public readonly string Text;
+			public readonly HorizontalAlignment Alignment;
 
 			public GridElement(string text, HorizontalAlignment alignment = HorizontalAlignment.Left)
 			{
@@ -1004,8 +1004,7 @@ namespace DiskGazer.Views
 				}
 
 				// Open Monitor Window.
-				monitorWindow = new MonitorWindow();
-				monitorWindow.Owner = this;
+				monitorWindow = new MonitorWindow { Owner = this };
 				monitorWindow.Show();
 			}
 			catch (Exception ex)

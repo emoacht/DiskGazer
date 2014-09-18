@@ -27,7 +27,7 @@ namespace DiskGazer.Views.Converters
 		/// <returns>Boolean</returns>
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{
-			if (!(value is ReadMethod))
+			if (!(value is ReadMethod) || (parameter == null))
 				return DependencyProperty.UnsetValue;
 
 			return ((ReadMethod)value).ToString().Equals(parameter.ToString(), StringComparison.OrdinalIgnoreCase);
@@ -43,7 +43,7 @@ namespace DiskGazer.Views.Converters
 		/// <returns>ReadMethod</returns>
 		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
 		{
-			if (!(value is bool) || !(bool)value)
+			if (!(value is bool) || !(bool)value || (parameter == null))
 				return DependencyProperty.UnsetValue;
 
 			ReadMethod method;

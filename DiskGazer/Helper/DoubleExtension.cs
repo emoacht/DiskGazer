@@ -9,7 +9,7 @@ namespace DiskGazer.Helper
 	public static class DoubleExtension
 	{
 		/// <summary>
-		/// Get the number of scale (fractional portion) of Double
+		/// Get the number of scale (decimals) of Double.
 		/// </summary>
 		/// <param name="source">Source Double</param>
 		/// <returns>Number of scale</returns>

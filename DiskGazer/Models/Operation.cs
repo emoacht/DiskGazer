@@ -101,10 +101,6 @@ namespace DiskGazer.Models
 			{
 				// None.
 			}
-			catch
-			{
-				throw;
-			}
 			finally
 			{
 				progress.Report(new ProgressInfo(String.Empty));
@@ -295,7 +291,7 @@ namespace DiskGazer.Models
 					if (rawDataQueue.IsEmpty)
 					{
 						// Wait for new data.
-						await Task.Delay(waitTime);
+						await Task.Delay(waitTime, token);
 						continue;
 					}
 
@@ -311,7 +307,7 @@ namespace DiskGazer.Models
 
 					progress.Report(new ProgressInfo(innerStatusIn, false));
 
-					await Task.Run(() => AnalyzeBase(rawData, progress, token));
+					await Task.Run(() => AnalyzeBase(rawData, progress, token), token);
 
 					// Update progress after analyzing.					
 					var innerStatusOut = String.Format("[{0}/{1} - {2}/{3} Analyzer Out ({4})]",
@@ -340,7 +336,7 @@ namespace DiskGazer.Models
 		{
 			var score = CombineLocationData(rawData.BlockOffsetMultiple, rawData.Data).ToArray();
 
-			if ((score == null) || !score.Any())
+			if (!score.Any())
 				return;
 
 			token.ThrowIfCancellationRequested();
@@ -389,7 +385,7 @@ namespace DiskGazer.Models
 
 						} while ((0 <= index) && (keyBottom < diskScoresStep[index].Key));
 
-						if (Settings.Current.WillRemoveOutlier && (3 <= valueList.Count)) // Removing outliers from data less than 3 makes no sense.
+						if (Settings.Current.RemovesOutlier && (3 <= valueList.Count)) // Removing outliers from data less than 3 makes no sense.
 						{
 							// Remove outliers using average and standard deviation.
 							valueList = RemoveOutlier(valueList, 2).ToList(); // This multiple (2) is to be considered.
@@ -442,7 +438,7 @@ namespace DiskGazer.Models
 					{
 						var dataArray = data.ToArray();
 
-						if (Settings.Current.WillRemoveOutlier && (3 <= dataArray.Length)) // Removing outliers from data less than 3 makes no sense.
+						if (Settings.Current.RemovesOutlier && (3 <= dataArray.Length)) // Removing outliers from data less than 3 makes no sense.
 						{
 							// Remove outliers using average and standard deviation.
 							dataArray = RemoveOutlier(dataArray, 2).ToArray(); // This multiple (2) is to be considered.
@@ -461,7 +457,7 @@ namespace DiskGazer.Models
 			}
 		}
 
-		private IEnumerable<KeyValuePair<double, double>> CombineLocationData(int blockOffsetNum, double[] data)
+		private static IEnumerable<KeyValuePair<double, double>> CombineLocationData(int blockOffsetNum, double[] data)
 		{
 			var areaLocationPlus = Settings.Current.AreaLocation + ((double)Settings.Current.BlockOffset * (double)blockOffsetNum) / 1024D; // MiB
 			var blockSizeMibiBytes = Settings.Current.BlockSize / 1024D; // Convert KiB to MiB.
@@ -483,15 +479,17 @@ namespace DiskGazer.Models
 			}
 		}
 
-		private IEnumerable<double> RemoveOutlier(IEnumerable<double> source, double rangeMultiple)
+		private static IEnumerable<double> RemoveOutlier(IEnumerable<double> source, double rangeMultiple)
 		{
-			var average = source.Average();
-			var rangeLength = source.StandardDeviation() * rangeMultiple;
+			var buff = source as double[] ?? source.ToArray();
+
+			var average = buff.Average();
+			var rangeLength = buff.StandardDeviation() * rangeMultiple;
 
 			var rangeLowest = average - rangeLength;
 			var rangeHighest = average + rangeLength;
 
-			return source.Where(x => (rangeLowest <= x) && (x <= rangeHighest));
+			return buff.Where(x => (rangeLowest <= x) && (x <= rangeHighest));
 		}
 
 		#endregion
@@ -499,7 +497,7 @@ namespace DiskGazer.Models
 
 		#region Helper
 
-		private int NumStep // Number of steps for block offset. Minimum number will be 1.
+		private static int NumStep // Number of steps for block offset. Minimum number will be 1.
 		{
 			get
 			{

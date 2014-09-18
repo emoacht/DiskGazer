@@ -682,7 +682,6 @@ namespace DiskGazer.ViewModels
 		/// <summary>
 		/// Start reading and analyzing disk.
 		/// </summary>
-		/// <returns></returns>
 		private async Task RunAsync()
 		{
 			if (!Account.IsAdmin)
@@ -737,7 +736,7 @@ namespace DiskGazer.ViewModels
 			}
 
 			// Save screenshot and log.
-			if (Settings.Current.WillSaveScreenshotLog && !Op.IsCanceled)
+			if (Settings.Current.SavesScreenshotLog && !Op.IsCanceled)
 			{
 				// Wait for rendering of scores and chart.
 				// (Synchronously start empty action of lower priority than rendering.) 
