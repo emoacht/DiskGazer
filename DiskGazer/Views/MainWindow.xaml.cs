@@ -93,13 +93,9 @@ namespace DiskGazer.Views
 					(d, e) =>
 					{
 						if ((bool)e.NewValue)
-						{
 							((MainWindow)d).IndicateWindowChartSize();
-						}
 						else
-						{
 							((MainWindow)d).ShowStatus("");
-						}
 					}));
 
 		/// <summary>
