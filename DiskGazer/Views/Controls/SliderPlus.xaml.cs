@@ -162,6 +162,7 @@ namespace DiskGazer.Views.Controls
 		private void OnClick(object sender, RoutedEventArgs e)
 		{
 			var direction = e.Source.Equals(DownButton) ? Direction.Down : Direction.Up;
+
 			SetValue(direction);
 		}
 

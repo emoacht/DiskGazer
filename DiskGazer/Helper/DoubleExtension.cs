@@ -9,16 +9,16 @@ namespace DiskGazer.Helper
 	public static class DoubleExtension
 	{
 		/// <summary>
-		/// Get the number of scale (decimals) of Double.
+		/// Get the number of scale (decimals) of double.
 		/// </summary>
-		/// <param name="source">Source Double</param>
+		/// <param name="source">Source double</param>
 		/// <returns>Number of scale</returns>
 		public static int Scale(this double source)
 		{
 			if (double.IsNaN(source) || double.IsInfinity(source))
-				throw new NotSupportedException("Not supported value.");
+				throw new NotSupportedException("Value is not a number or evaluates to infinity.");
 
-			const int max = 15; // Number of significant figures in Double
+			const int max = 15; // Number of significant figures in double
 
 			for (int i = 0; i < max; i++)
 			{

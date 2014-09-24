@@ -195,7 +195,7 @@ namespace DiskGazer.Models
 		}
 
 
-		#region IComparable Member
+		#region IComparable member
 
 		public int CompareTo(DiskInfo other)
 		{
@@ -208,7 +208,7 @@ namespace DiskGazer.Models
 		#endregion
 
 
-		#region ICloneable Member
+		#region ICloneable member
 
 		public DiskInfo Clone()
 		{

@@ -11,7 +11,7 @@ namespace DiskGazer.Helper
 		/// <summary>
 		/// Calculate median.
 		/// </summary>
-		/// <param name="source">Source Enumerable Double</param>
+		/// <param name="source">Source Enumerable double</param>
 		/// <returns>Median</returns>
 		public static double Median(this IEnumerable<double> source)
 		{
@@ -34,7 +34,7 @@ namespace DiskGazer.Helper
 		/// <summary>
 		/// Calculate standard deviation.
 		/// </summary>
-		/// <param name="source">Source Enumerable Double</param>
+		/// <param name="source">Source Enumerable double</param>
 		/// <returns>Standard deviation</returns>
 		public static double StandardDeviation(this IEnumerable<double> source)
 		{

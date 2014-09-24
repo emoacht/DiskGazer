@@ -18,7 +18,7 @@ namespace DiskGazer.Views.Converters
 	public class ReadMethodToBooleanConverter : IValueConverter
 	{
 		/// <summary>
-		/// Return true when source ReadMethod name matches target ReadMethod name string.
+		/// Return true when source ReadMethod name matches target ReadMethod name.
 		/// </summary>
 		/// <param name="value">Source ReadMethod</param>
 		/// <param name="targetType"></param>
@@ -34,7 +34,7 @@ namespace DiskGazer.Views.Converters
 		}
 
 		/// <summary>
-		/// If true, return ReadMethod whose name is the same as target ReadMethod name string. 
+		/// If true, return ReadMethod whose name is the same as target ReadMethod name.
 		/// </summary>
 		/// <param name="value">Source Boolean</param>
 		/// <param name="targetType"></param>

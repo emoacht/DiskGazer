@@ -10,7 +10,7 @@ using System.Windows.Data;
 namespace DiskGazer.Views.Converters
 {
 	/// <summary>
-	/// Convert Int to Double divided by 1024.
+	/// Convert int to double divided by 1024.
 	/// </summary>
 	[ValueConversion(typeof(int), typeof(double))]
 	public class TripleDigitConverter : IValueConverter
@@ -18,13 +18,13 @@ namespace DiskGazer.Views.Converters
 		private const double tripleDigitFactor = 1024D;
 
 		/// <summary>
-		/// Divide a Int by 1024 and then truncate the Double.
+		/// Divide an int by 1024 and then truncate the double.
 		/// </summary>
-		/// <param name="value">Source Int</param>
+		/// <param name="value">Source int</param>
 		/// <param name="targetType"></param>
 		/// <param name="parameter">Number of scale (decimals) (optional)</param>
 		/// <param name="culture"></param>
-		/// <returns>Outcome Double</returns>
+		/// <returns>Outcome double</returns>
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{
 			int num;

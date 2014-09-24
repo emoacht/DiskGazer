@@ -35,7 +35,7 @@ namespace DiskGazer.Views.Controls
 				typeof(int),
 				typeof(TextBoxDoubleFormat),
 				new FrameworkPropertyMetadata(
-					-1, // -1 means not specified;
+					-1, // -1 means not specified.
 					(d, e) =>
 					{
 						var expression = ((TextBoxDoubleFormat)d).GetBindingExpression(TextBox.TextProperty);
