@@ -58,7 +58,7 @@ namespace DiskGazer.Views.Controls
 		#endregion
 
 
-		public TextBoxDoubleFormat() : base() { }
+		public TextBoxDoubleFormat() { }
 
 		static TextBoxDoubleFormat()
 		{
