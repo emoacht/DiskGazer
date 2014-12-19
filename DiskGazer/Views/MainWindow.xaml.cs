@@ -431,7 +431,7 @@ namespace DiskGazer.Views
 		private const double chartMaxDefault = 200D; // Default maximum value of Y axis
 		private const double chartMinDefault = 0D;   // Default minimum value of Y axis
 
-		private readonly Color[] colBar = new Color[] // Colors for color bar
+		private readonly Color[] colBar = // Colors for color bar
 		{
 			Color.FromRgb(255,  0,255),
 			Color.FromRgb(255,  0,153),

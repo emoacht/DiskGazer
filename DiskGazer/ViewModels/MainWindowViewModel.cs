@@ -276,7 +276,7 @@ namespace DiskGazer.ViewModels
 
 		public IReadOnlyCollection<double> MenuAreaFineness
 		{
-			get { return new double[] { 1, 0.5, 0.25 }; } // GiB
+			get { return new[] { 1, 0.5, 0.25 }; } // GiB
 		}
 
 		public int AreaFineness
@@ -328,7 +328,7 @@ namespace DiskGazer.ViewModels
 
 		public IReadOnlyCollection<int> MenuNumRun
 		{
-			get { return new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 }; }
+			get { return new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 }; }
 		}
 
 		#endregion
@@ -969,7 +969,7 @@ namespace DiskGazer.ViewModels
 				return String.Empty;
 
 			// Compose header.
-			var headerElements = new string[]
+			var headerElements = new[]
 			{
 				String.Format("[{0}]", ProductInfo.NameVersionMiddle),
 				String.Format("Disk model     : {0}", diskScores[0].Disk.Name),

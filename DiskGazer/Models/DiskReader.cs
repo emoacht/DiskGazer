@@ -155,7 +155,7 @@ namespace DiskGazer.Models
 			var buff = outcome
 				.Substring(startPoint + startSign.Length, ((endPoint - 1) - (startPoint + startSign.Length)))
 				.Trim()
-				.Split(new string[] { " ", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+				.Split(new[] { " ", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
 			return buff
 				.Select(x => double.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)) // Culture matters.
@@ -164,7 +164,7 @@ namespace DiskGazer.Models
 
 		private static string FindMessage(string outcome)
 		{
-			var strLine = outcome.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+			var strLine = outcome.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
 			return (strLine.Length >= 1)
 				? strLine[strLine.Length - 1] // Last line should contain error message.
