@@ -10,7 +10,7 @@ namespace DiskGazer.Views.Controls
 {
 	public class TextBoxDoubleFormat : TextBox
 	{
-		#region Dependency Property
+		#region Property
 
 		public string StringFormat
 		{

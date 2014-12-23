@@ -115,7 +115,7 @@ namespace DiskGazer.Models
 					var outcome = readProcess.StandardOutput.ReadToEnd();
 					readProcess.WaitForExit();
 
-					rawData.Result = ((readProcess.HasExited) & (readProcess.ExitCode == 0))
+					rawData.Result = (readProcess.HasExited & (readProcess.ExitCode == 0))
 						? ReadResult.Success
 						: ReadResult.Failure;
 

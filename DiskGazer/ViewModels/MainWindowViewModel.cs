@@ -202,25 +202,13 @@ namespace DiskGazer.ViewModels
 		public int AreaSize
 		{
 			get { return Settings.Current.AreaSize; }
-			set
-			{
-				SetAreaSizeLocation(size: value, location: AreaLocation, selection: AreaSelection.Size);
-
-				//Settings.Current.AreaSize = value;
-				//RaisePropertyChanged();
-			}
+			set { SetAreaSizeLocation(size: value, location: AreaLocation, selection: AreaSelection.Size); }
 		}
 
 		public int AreaLocation
 		{
 			get { return Settings.Current.AreaLocation; }
-			set
-			{
-				SetAreaSizeLocation(size: AreaSize, location: value, selection: AreaSelection.Location);
-
-				//Settings.Current.AreaLocation = value;
-				//RaisePropertyChanged();
-			}
+			set { SetAreaSizeLocation(size: AreaSize, location: value, selection: AreaSelection.Location); }
 		}
 
 		private enum AreaSelection
@@ -812,13 +800,14 @@ namespace DiskGazer.ViewModels
 
 		#region Screenshot and log
 
+		private const string resultFolderName = "result"; // Folder name to save screenshots and logs
+
 		/// <summary>
 		/// Save screenshot and log.
 		/// </summary>
 		private async Task SaveScreenshotLog()
 		{
-			const string folderName = "result";
-			var folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, folderName);
+			var folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, resultFolderName);
 			var filePath = Path.Combine(folderPath, diskScores[0].StartTime.ToString("yyyyMMddHHmmss")); // File path except extension
 
 			try

@@ -88,6 +88,7 @@
     <Compile Include="Helper\DoubleExtension.cs" />
     <Compile Include="Helper\EnumerableExtension.cs" />
     <Compile Include="Helper\OsVersion.cs" />
+    <Compile Include="Views\Controls\SliderPlus.cs" />
     <Compile Include="Views\WindowSupplement.cs" />
     <Compile Include="Models\DiskChecker.cs" />
     <Compile Include="Models\DiskInfo.cs" />
@@ -100,9 +101,6 @@
     <Compile Include="Models\ReadMethod.cs" />
     <Compile Include="Models\ReadResult.cs" />
     <Compile Include="Models\Settings.cs" />
-    <Compile Include="Views\Controls\SliderPlus.xaml.cs">
-      <DependentUpon>SliderPlus.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Views\Controls\TextBoxDoubleFormat.cs" />
     <Compile Include="Views\Converters\DoubleScaleConverter.cs" />
     <Compile Include="Views\Converters\TripleDigitConverter.cs" />
@@ -115,10 +113,6 @@
     <Compile Include="Views\ProductInfo.cs" />
     <Compile Include="Models\W32.cs" />
     <Compile Include="Views\W32.cs" />
-    <Page Include="Views\Controls\SliderPlus.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Views\Styles\Controls.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

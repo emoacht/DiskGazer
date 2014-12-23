@@ -47,8 +47,7 @@ namespace DiskGazer.Models
 				if (String.IsNullOrWhiteSpace(Product))
 					return Model;
 
-				if (String.IsNullOrWhiteSpace(Vendor) ||
-					Vendor.Contains("VID:"))
+				if (String.IsNullOrWhiteSpace(Vendor) || Vendor.Contains("VID:"))
 					return Product;
 
 				var name = String.Format("{0}{1}", Vendor, Product);
