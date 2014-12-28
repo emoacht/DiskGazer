@@ -281,8 +281,8 @@ namespace DiskGazer.Views
 			gridOuter.Children.Add(gridInner);
 
 			// Prepare contents.
-			var numWMI = info.SizeWMI;
-			var numPInvoke = info.SizePInvoke;
+			var infoSizeWMI = info.SizeWMI;
+			var infoSizePInvoke = info.SizePInvoke;
 
 			var header = new GridElement(String.Format("[{0}]", info.Name));
 
@@ -346,20 +346,20 @@ namespace DiskGazer.Views
 				new List<GridElement>()
 				{
 					new GridElement("Capacity (WMI)"),
-					new GridElement(String.Format("{0} Bytes", numWMI), HorizontalAlignment.Right),
-					new GridElement(String.Format("({0:f3} MiB)", (double)numWMI / (1024 * 1024)), HorizontalAlignment.Right),
+					new GridElement(String.Format("{0} Bytes", infoSizeWMI), HorizontalAlignment.Right),
+					new GridElement(String.Format("({0:f3} MiB)", (double)infoSizeWMI / (1024 * 1024)), HorizontalAlignment.Right),
 				},
 				new List<GridElement>()
 				{
 					new GridElement("Capacity (P/Invoke)"),
-					new GridElement(String.Format("{0} Bytes", numPInvoke), HorizontalAlignment.Right),
-					new GridElement(String.Format("({0:f3} MiB)", (double)numPInvoke / (1024 * 1024)), HorizontalAlignment.Right),
+					new GridElement(String.Format("{0} Bytes", infoSizePInvoke), HorizontalAlignment.Right),
+					new GridElement(String.Format("({0:f3} MiB)", (double)infoSizePInvoke / (1024 * 1024)), HorizontalAlignment.Right),
 				},
 				new List<GridElement>()
 				{
 					new GridElement("Difference"),
-					new GridElement(String.Format("{0} Bytes", (numPInvoke - numWMI)), HorizontalAlignment.Right),
-					new GridElement(String.Format("({0:f3} MiB)", (double)(numPInvoke - numWMI) / (1024 * 1024)), HorizontalAlignment.Right),
+					new GridElement(String.Format("{0} Bytes", (infoSizePInvoke - infoSizeWMI)), HorizontalAlignment.Right),
+					new GridElement(String.Format("({0:f3} MiB)", (double)(infoSizePInvoke - infoSizeWMI) / (1024 * 1024)), HorizontalAlignment.Right),
 				},
 			};
 
