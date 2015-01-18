@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace DiskGazer.Helper
 {
+	/// <summary>
+	/// Account information
+	/// </summary>
 	public static class Account
 	{
 		#region Win32

@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace DiskGazer.Helper
 {
+	/// <summary>
+	/// OS version information
+	/// </summary>
 	public static class OsVersion
 	{
 		private static readonly Version ver = Environment.OSVersion.Version;

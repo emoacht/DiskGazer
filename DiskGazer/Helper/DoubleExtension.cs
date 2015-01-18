@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace DiskGazer.Helper
 {
+	/// <summary>
+	/// Extension method for Double
+	/// </summary>
 	public static class DoubleExtension
 	{
 		/// <summary>
