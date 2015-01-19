@@ -312,7 +312,7 @@ namespace DiskGazer.ViewModels
 		#endregion
 
 
-		#region Number of runs
+		#region The number of runs
 
 		public IReadOnlyCollection<int> MenuNumRun
 		{

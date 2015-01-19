@@ -286,7 +286,7 @@
                 <StackPanel Grid.Column="1" Grid.Row="1"
                             Margin="0" HorizontalAlignment="Left" VerticalAlignment="Top"
                             Orientation="Horizontal">
-                    <!-- Number of runs -->
+                    <!-- The number of runs -->
                     <TextBlock
                         x:Name="TextNumRun"
                         Margin="0" VerticalAlignment="Center"

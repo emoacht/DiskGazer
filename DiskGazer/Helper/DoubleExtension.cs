@@ -7,21 +7,21 @@ using System.Threading.Tasks;
 namespace DiskGazer.Helper
 {
 	/// <summary>
-	/// Extension method for Double
+	/// Extension method for double
 	/// </summary>
 	public static class DoubleExtension
 	{
 		/// <summary>
-		/// Get the number of scale (decimals) of double.
+		/// Get the number of scale (decimals) of Double.
 		/// </summary>
-		/// <param name="source">Source double</param>
-		/// <returns>Number of scale</returns>
+		/// <param name="source">Source Double</param>
+		/// <returns>The number of scale</returns>
 		public static int Scale(this double source)
 		{
 			if (double.IsNaN(source) || double.IsInfinity(source))
 				throw new NotSupportedException("Value is not a number or evaluates to infinity.");
 
-			const int max = 15; // Number of significant figures in double
+			const int max = 15; // The number of significant figures in Double
 
 			for (int i = 0; i < max; i++)
 			{

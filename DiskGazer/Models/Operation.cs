@@ -64,7 +64,7 @@ namespace DiskGazer.Models
 
 		private readonly List<Dictionary<double, double>> diskScoresRun = new List<Dictionary<double, double>>(); // Temporary scores of runs
 		private KeyValuePair<double, double>[] diskScoresStep; // Temporary scores of steps
-		private int diskScoresStepCount = 0; // Number of temporary scores of steps
+		private int diskScoresStepCount = 0; // The number of temporary scores of steps
 
 		private CancellationTokenSource tokenSource;
 		private bool isTokenSourceDisposed;
@@ -497,7 +497,7 @@ namespace DiskGazer.Models
 
 		#region Helper
 
-		private static int NumStep // Number of steps for block offset. Minimum number will be 1.
+		private static int NumStep // The number of steps for block offset. The minimum number will be 1.
 		{
 			get
 			{
