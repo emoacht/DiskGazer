@@ -46,10 +46,13 @@ Ver 0.2.1 2013-03-17
 
  - Initial release
 
+##License
+
+ - MIT License
+
 ##Other
 
  - Menu icons: [Visual Studio Image Library][2]
- - License: MIT License
 
 [1]: http://crystalmark.info/
 [2]: http://msdn.microsoft.com/en-us/library/ms246582.aspx
