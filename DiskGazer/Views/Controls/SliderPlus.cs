@@ -95,7 +95,7 @@ namespace DiskGazer.Views.Controls
 						if (buff > innerSlider.Maximum)
 							buff = innerSlider.Maximum;
 
-						((SliderPlus)d).innerSliderValue = buff; // This must be changed on ahead.
+						((SliderPlus)d)._innerSliderValue = buff; // This must be changed on ahead.
 						innerSlider.Value = buff;
 					}));
 
@@ -208,11 +208,11 @@ namespace DiskGazer.Views.Controls
 			UpButton = this.GetTemplateChild("PART_UpButton") as RepeatButton;
 		}
 
-		private double innerSliderValue;
+		private double _innerSliderValue;
 
 		private void OnSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
 		{
-			if (InnerSlider.Value == innerSliderValue)
+			if (InnerSlider.Value == _innerSliderValue)
 				return;
 
 			Value = Math.Round(InnerSlider.Value / SmallChange) * SmallChange;

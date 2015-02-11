@@ -87,7 +87,7 @@ namespace DiskGazer.Views.Controls
 			var stringFormat = ((TextBoxDoubleFormat)d).StringFormat;
 			if (!String.IsNullOrEmpty(stringFormat))
 				return String.Format(stringFormat, num);
-			
+
 			return baseValue;
 		}
 	}

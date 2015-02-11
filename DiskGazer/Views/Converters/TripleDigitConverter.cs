@@ -15,7 +15,7 @@ namespace DiskGazer.Views.Converters
 	[ValueConversion(typeof(int), typeof(double))]
 	public class TripleDigitConverter : IValueConverter
 	{
-		private const double tripleDigitFactor = 1024D;
+		private const double _tripleDigitFactor = 1024D;
 
 		/// <summary>
 		/// Divide an int by 1024 and then truncate the double.
@@ -39,7 +39,7 @@ namespace DiskGazer.Views.Converters
 					divider = Math.Pow(10D, numScale);
 			}
 
-			return Math.Truncate((double)num * divider / tripleDigitFactor) / divider;
+			return Math.Truncate((double)num * divider / _tripleDigitFactor) / divider;
 		}
 
 		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -48,7 +48,7 @@ namespace DiskGazer.Views.Converters
 			if ((value == null) || !double.TryParse(value.ToString(), out num))
 				return DependencyProperty.UnsetValue;
 
-			return (int)Math.Truncate(num * tripleDigitFactor);
+			return (int)Math.Truncate(num * _tripleDigitFactor);
 		}
 	}
 }

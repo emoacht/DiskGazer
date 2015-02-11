@@ -1,5 +1,4 @@
-﻿using Microsoft.Win32.SafeHandles;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -7,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Win32.SafeHandles;
 
 namespace DiskGazer.Models
 {
@@ -18,7 +18,7 @@ namespace DiskGazer.Models
 		/// <param name="physicalDrive">Index number of physical drive</param>
 		internal static DiskInfo GetDiskInfo(int physicalDrive)
 		{
-			var info = new DiskInfo() { PhysicalDrive = physicalDrive };
+			var info = new DiskInfo { PhysicalDrive = physicalDrive };
 
 			SafeFileHandle hFile = null;
 

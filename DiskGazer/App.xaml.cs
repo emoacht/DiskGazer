@@ -39,7 +39,7 @@ namespace DiskGazer
 		}
 
 
-		#region Unhandled exception
+		#region Exception
 
 		private static void ReportException(object sender, Exception exception)
 		{

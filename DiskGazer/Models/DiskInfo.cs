@@ -25,13 +25,13 @@ namespace DiskGazer.Models
 		/// <summary>
 		/// Model by WMI (Win32_DiskDrive)
 		/// </summary>
-		public string Model { get; set; } 
-		
+		public string Model { get; set; }
+
 		/// <summary>
 		/// Vendor ID by P/Invoke
 		/// </summary>
 		public string Vendor { get; set; }
-		
+
 		/// <summary>
 		/// Product ID by P/Invoke
 		/// </summary>

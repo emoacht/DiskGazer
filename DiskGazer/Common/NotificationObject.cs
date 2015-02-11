@@ -11,9 +11,6 @@ namespace DiskGazer.Common
 {
 	public abstract class NotificationObject : INotifyPropertyChanged
 	{
-		protected NotificationObject()
-		{ }
-
 		public event PropertyChangedEventHandler PropertyChanged;
 
 		protected virtual void RaisePropertyChanged<T>(Expression<Func<T>> propertyExpression)
@@ -32,9 +29,7 @@ namespace DiskGazer.Common
 		{
 			var handler = this.PropertyChanged;
 			if (handler != null)
-			{
 				handler(this, new PropertyChangedEventArgs(propertyName));
-			}
 		}
 	}
 }
