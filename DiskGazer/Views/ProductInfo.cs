@@ -95,12 +95,12 @@ namespace DiskGazer.Views
 
 		public static string NameVersionShort
 		{
-			get { return String.Format("{0} {1}.{2}", Title, Version.Major, Version.Minor); }
+			get { return String.Format("{0} {1}", Title, Version.ToString(2)); }
 		}
 
 		public static string NameVersionMiddle
 		{
-			get { return String.Format("{0} {1}.{2}.{3}", Title, Version.Major, Version.Minor, Version.Build); }
+			get { return String.Format("{0} {1}", Title, Version.ToString(3)); }
 		}
 
 		public static string NameVersionLong
