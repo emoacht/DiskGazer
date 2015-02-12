@@ -18,20 +18,20 @@ namespace DiskGazer.Views
 			InitializeComponent();
 		}
 
-		private MainWindowViewModel mainWindowViewModel;
+		private MainWindowViewModel _mainWindowViewModel;
 
 		private void OnLoaded(object sender, RoutedEventArgs e)
 		{
 			this.MinWidth = this.ActualWidth;
 
-			mainWindowViewModel = this.Owner.DataContext as MainWindowViewModel;
-			if (mainWindowViewModel != null)
+			_mainWindowViewModel = this.Owner.DataContext as MainWindowViewModel;
+			if (_mainWindowViewModel != null)
 			{
 				this.TextBoxInnerStatus.SetBinding(
 					TextBox.TextProperty,
 					new Binding("InnerStatus")
 					{
-						Source = mainWindowViewModel,
+						Source = _mainWindowViewModel,
 						Mode = BindingMode.OneWay,
 					});
 			}

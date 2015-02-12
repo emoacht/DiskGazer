@@ -150,10 +150,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		areaSizeActual -= 1; // 1 is for the last MiB of area. If offset, it may exceed disk size.
 	}
 
-	long readNum = (areaSizeActual * 1024) / blockSize; // Number of reads
+	long readNum = (areaSizeActual * 1024) / blockSize; // The number of reads
 
-	int loopOuter = 1; // Number of outer loops
-	int loopInner = readNum; // Number of inner loops
+	int loopOuter = 1; // The number of outer loops
+	int loopInner = readNum; // The number of inner loops
 
 	if (areaRatioInner < areaRatioOuter)
 	{
@@ -289,4 +289,3 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	return 0;
 }
-

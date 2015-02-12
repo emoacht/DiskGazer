@@ -6,27 +6,69 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace DiskGazer.Views.Controls
 {
-	/// <summary>
-	/// Interaction logic for SliderPlus.xaml
-	/// </summary>
-	public partial class SliderPlus : UserControl
+	[TemplatePart(Name = "PART_InnerSlider", Type = typeof(Slider))]
+	[TemplatePart(Name = "PART_DownButton", Type = typeof(RepeatButton))]
+	[TemplatePart(Name = "PART_UpButton", Type = typeof(RepeatButton))]
+	public class SliderPlus : Control
 	{
-		public SliderPlus()
+		#region Template Part
+
+		private Slider InnerSlider
 		{
-			InitializeComponent();
+			get { return _innerSlider; }
+			set
+			{
+				if (_innerSlider != null)
+					_innerSlider.ValueChanged -= new RoutedPropertyChangedEventHandler<double>(OnSliderValueChanged);
+
+				_innerSlider = value;
+
+				if (_innerSlider != null)
+					_innerSlider.ValueChanged += new RoutedPropertyChangedEventHandler<double>(OnSliderValueChanged);
+			}
 		}
+		private Slider _innerSlider;
+
+		private RepeatButton DownButton
+		{
+			get { return _downButton; }
+			set
+			{
+				if (_downButton != null)
+					_downButton.Click -= new RoutedEventHandler(OnButtonClick);
+
+				_downButton = value;
+
+				if (_downButton != null)
+					_downButton.Click += new RoutedEventHandler(OnButtonClick);
+			}
+		}
+		private RepeatButton _downButton;
+
+		private RepeatButton UpButton
+		{
+			get { return _upButton; }
+			set
+			{
+				if (_upButton != null)
+					_upButton.Click -= new RoutedEventHandler(OnButtonClick);
+
+				_upButton = value;
+
+				if (_upButton != null)
+					_upButton.Click += new RoutedEventHandler(OnButtonClick);
+			}
+		}
+		private RepeatButton _upButton;
+
+		#endregion
 
 
-		#region Dependency Property
-		
+		#region Property
+
 		public double Value
 		{
 			get { return (double)GetValue(ValueProperty); }
@@ -41,8 +83,11 @@ namespace DiskGazer.Views.Controls
 					0D,
 					(d, e) =>
 					{
-						var buff = Math.Round((double)e.NewValue);
 						var innerSlider = ((SliderPlus)d).InnerSlider;
+						if (innerSlider == null)
+							return;
+
+						var buff = Math.Round((double)e.NewValue);
 
 						if (buff < innerSlider.Minimum)
 							buff = innerSlider.Minimum;
@@ -50,7 +95,7 @@ namespace DiskGazer.Views.Controls
 						if (buff > innerSlider.Maximum)
 							buff = innerSlider.Maximum;
 
-						((SliderPlus)d).innerSliderValue = buff; // This must be changed on ahead.
+						((SliderPlus)d)._innerSliderValue = buff; // This must be changed on ahead.
 						innerSlider.Value = buff;
 					}));
 
@@ -66,8 +111,11 @@ namespace DiskGazer.Views.Controls
 					10D,
 					(d, e) =>
 					{
-						var buff = Math.Floor((double)e.NewValue);
 						var innerSlider = ((SliderPlus)d).InnerSlider;
+						if (innerSlider == null)
+							return;
+
+						var buff = Math.Floor((double)e.NewValue);
 
 						var maximumThreshold = Math.Ceiling(innerSlider.Minimum) + 1D;
 						if (buff < maximumThreshold)
@@ -88,8 +136,11 @@ namespace DiskGazer.Views.Controls
 					0D,
 					(d, e) =>
 					{
-						var buff = Math.Ceiling((double)e.NewValue);
 						var innerSlider = ((SliderPlus)d).InnerSlider;
+						if (innerSlider == null)
+							return;
+
+						var buff = Math.Ceiling((double)e.NewValue);
 
 						var minimumThreshold = Math.Floor(innerSlider.Maximum) - 1D;
 						if (buff < minimumThreshold)
@@ -141,17 +192,6 @@ namespace DiskGazer.Views.Controls
 		#endregion
 
 
-		private double innerSliderValue;
-
-		private void InnerSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-		{
-			if (InnerSlider.Value == innerSliderValue)
-				return;
-
-			Value = Math.Round(InnerSlider.Value / SmallChange) * SmallChange;
-		}
-
-
 		private enum Direction
 		{
 			Down,
@@ -159,9 +199,29 @@ namespace DiskGazer.Views.Controls
 		}
 
 
-		private void OnClick(object sender, RoutedEventArgs e)
+		public override void OnApplyTemplate()
+		{
+			base.OnApplyTemplate();
+
+			InnerSlider = this.GetTemplateChild("PART_InnerSlider") as Slider;
+			DownButton = this.GetTemplateChild("PART_DownButton") as RepeatButton;
+			UpButton = this.GetTemplateChild("PART_UpButton") as RepeatButton;
+		}
+
+		private double _innerSliderValue;
+
+		private void OnSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+		{
+			if (InnerSlider.Value == _innerSliderValue)
+				return;
+
+			Value = Math.Round(InnerSlider.Value / SmallChange) * SmallChange;
+		}
+
+		private void OnButtonClick(object sender, RoutedEventArgs e)
 		{
 			var direction = e.Source.Equals(DownButton) ? Direction.Down : Direction.Up;
+
 			SetValue(direction);
 		}
 

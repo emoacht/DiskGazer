@@ -25,13 +25,13 @@ namespace DiskGazer.Models
 		/// <summary>
 		/// Model by WMI (Win32_DiskDrive)
 		/// </summary>
-		public string Model { get; set; } 
-		
+		public string Model { get; set; }
+
 		/// <summary>
 		/// Vendor ID by P/Invoke
 		/// </summary>
 		public string Vendor { get; set; }
-		
+
 		/// <summary>
 		/// Product ID by P/Invoke
 		/// </summary>
@@ -47,8 +47,7 @@ namespace DiskGazer.Models
 				if (String.IsNullOrWhiteSpace(Product))
 					return Model;
 
-				if (String.IsNullOrWhiteSpace(Vendor) ||
-					Vendor.Contains("VID:"))
+				if (String.IsNullOrWhiteSpace(Vendor) || Vendor.Contains("VID:"))
 					return Product;
 
 				var name = String.Format("{0}{1}", Vendor, Product);
@@ -195,7 +194,7 @@ namespace DiskGazer.Models
 		}
 
 
-		#region IComparable Member
+		#region IComparable member
 
 		public int CompareTo(DiskInfo other)
 		{
@@ -208,7 +207,7 @@ namespace DiskGazer.Models
 		#endregion
 
 
-		#region ICloneable Member
+		#region ICloneable member
 
 		public DiskInfo Clone()
 		{

@@ -12,7 +12,7 @@ using DiskGazer.Helper;
 namespace DiskGazer.Views.Converters
 {
 	/// <summary>
-	/// Convert Double to number of scale (decimals) of Double.
+	/// Convert double to the number of scale (decimals) of double.
 	/// </summary>
 	[ValueConversion(typeof(double), typeof(int))]
 	public class DoubleScaleConverter : IValueConverter

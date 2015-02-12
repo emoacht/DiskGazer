@@ -1,5 +1,4 @@
-﻿using Microsoft.Win32.SafeHandles;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -10,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Win32.SafeHandles;
 
 namespace DiskGazer.Models
 {
@@ -17,18 +17,18 @@ namespace DiskGazer.Models
 	{
 		#region Native
 
-		private const string nativeExeFile = "Gazer.exe"; // Executable file of Win32 console application
-		private static readonly string nativeExePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, nativeExeFile);
+		private const string _nativeExeFile = "Gazer.exe"; // Executable file of Win32 console application
+		private static readonly string _nativeExePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, _nativeExeFile);
 
 		/// <summary>
 		/// Whether executable file exists
 		/// </summary>
 		internal static bool NativeExeExists
 		{
-			get { return File.Exists(nativeExePath); }
+			get { return File.Exists(_nativeExePath); }
 		}
 
-		private static Process readProcess; // Process to run Win32 console application
+		private static Process _readProcess; // Process to run Win32 console application
 
 		/// <summary>
 		/// Read disk by native (asynchronously and with cancellation).
@@ -45,8 +45,8 @@ namespace DiskGazer.Models
 			{
 				try
 				{
-					if ((readProcess != null) && !readProcess.HasExited)
-						readProcess.Kill();
+					if ((_readProcess != null) && !_readProcess.HasExited)
+						_readProcess.Kill();
 				}
 				catch (InvalidOperationException ioe)
 				{
@@ -75,7 +75,7 @@ namespace DiskGazer.Models
 			if (!NativeExeExists)
 			{
 				rawData.Result = ReadResult.Failure;
-				rawData.Message = String.Format("Cannot find {0}.", nativeExeFile);
+				rawData.Message = String.Format("Cannot find {0}.", _nativeExeFile);
 				return rawData;
 			}
 
@@ -97,11 +97,11 @@ namespace DiskGazer.Models
 						Settings.Current.AreaRatioOuter);
 				}
 
-				using (readProcess = new Process()
+				using (_readProcess = new Process
 				{
-					StartInfo = new ProcessStartInfo()
+					StartInfo = new ProcessStartInfo
 					{
-						FileName = nativeExePath,
+						FileName = _nativeExePath,
 						Verb = "RunAs", // Run as administrator.
 						Arguments = arguments,
 						UseShellExecute = false,
@@ -111,11 +111,11 @@ namespace DiskGazer.Models
 					},
 				})
 				{
-					readProcess.Start();
-					var outcome = readProcess.StandardOutput.ReadToEnd();
-					readProcess.WaitForExit();
+					_readProcess.Start();
+					var outcome = _readProcess.StandardOutput.ReadToEnd();
+					_readProcess.WaitForExit();
 
-					rawData.Result = ((readProcess.HasExited) & (readProcess.ExitCode == 0))
+					rawData.Result = (_readProcess.HasExited & (_readProcess.ExitCode == 0))
 						? ReadResult.Success
 						: ReadResult.Failure;
 
@@ -135,7 +135,7 @@ namespace DiskGazer.Models
 			catch (Exception ex)
 			{
 				rawData.Result = ReadResult.Failure;
-				rawData.Message = String.Format("Failed to execute {0}. {1}", nativeExeFile, ex.Message);
+				rawData.Message = String.Format("Failed to execute {0}. {1}", _nativeExeFile, ex.Message);
 			}
 
 			return rawData;
@@ -155,7 +155,7 @@ namespace DiskGazer.Models
 			var buff = outcome
 				.Substring(startPoint + startSign.Length, ((endPoint - 1) - (startPoint + startSign.Length)))
 				.Trim()
-				.Split(new string[] { " ", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+				.Split(new[] { " ", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
 			return buff
 				.Select(x => double.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)) // Culture matters.
@@ -164,7 +164,7 @@ namespace DiskGazer.Models
 
 		private static string FindMessage(string outcome)
 		{
-			var strLine = outcome.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+			var strLine = outcome.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
 			return (strLine.Length >= 1)
 				? strLine[strLine.Length - 1] // Last line should contain error message.
@@ -226,10 +226,10 @@ namespace DiskGazer.Models
 					areaSizeActual -= 1; // 1 is for the last MiB of area. If offset, it may exceed disk size.
 				}
 
-				int readNum = (areaSizeActual * 1024) / Settings.Current.BlockSize; // Number of reads
+				int readNum = (areaSizeActual * 1024) / Settings.Current.BlockSize; // The number of reads
 
-				int loopOuter = 1; // Number of outer loops
-				int loopInner = readNum; // Number of inner loops
+				int loopOuter = 1; // The number of outer loops
+				int loopInner = readNum; // The number of inner loops
 
 				if (Settings.Current.AreaRatioInner < Settings.Current.AreaRatioOuter)
 				{

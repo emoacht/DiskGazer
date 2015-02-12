@@ -12,9 +12,6 @@ using System.Windows;
 
 namespace DiskGazer
 {
-	/// <summary>
-	/// Interaction logic for App.xaml
-	/// </summary>
 	public partial class App : Application
 	{
 		public App()
@@ -42,7 +39,7 @@ namespace DiskGazer
 		}
 
 
-		#region Unhandled exception
+		#region Exception
 
 		private static void ReportException(object sender, Exception exception)
 		{

@@ -7,11 +7,13 @@ using System.Threading.Tasks;
 
 namespace DiskGazer.Helper
 {
+	/// <summary>
+	/// Account information
+	/// </summary>
 	public static class Account
 	{
 		#region Win32
 
-		// Check if this application is run by administrator.
 		[DllImport("Shell32.dll", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		private static extern bool IsUserAnAdmin();

@@ -10,7 +10,7 @@ namespace DiskGazer.Views.Controls
 {
 	public class TextBoxDoubleFormat : TextBox
 	{
-		#region Dependency Property
+		#region Property
 
 		public string StringFormat
 		{
@@ -35,7 +35,7 @@ namespace DiskGazer.Views.Controls
 				typeof(int),
 				typeof(TextBoxDoubleFormat),
 				new FrameworkPropertyMetadata(
-					-1, // -1 means not specified;
+					-1, // -1 means not specified.
 					(d, e) =>
 					{
 						var expression = ((TextBoxDoubleFormat)d).GetBindingExpression(TextBox.TextProperty);
@@ -58,7 +58,8 @@ namespace DiskGazer.Views.Controls
 		#endregion
 
 
-		public TextBoxDoubleFormat() : base() { }
+		public TextBoxDoubleFormat()
+		{ }
 
 		static TextBoxDoubleFormat()
 		{
@@ -86,7 +87,7 @@ namespace DiskGazer.Views.Controls
 			var stringFormat = ((TextBoxDoubleFormat)d).StringFormat;
 			if (!String.IsNullOrEmpty(stringFormat))
 				return String.Format(stringFormat, num);
-			
+
 			return baseValue;
 		}
 	}

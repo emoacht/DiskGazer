@@ -36,12 +36,12 @@ namespace DiskGazer.Models
 				if (drive["Index"] == null) // Index number of physical drive
 					continue;
 
-				int numIndex;
-				if (!int.TryParse(drive["Index"].ToString(), out numIndex))
+				int index;
+				if (!int.TryParse(drive["Index"].ToString(), out index))
 					continue;
 
 				var info = new DiskInfo();
-				info.PhysicalDrive = numIndex;
+				info.PhysicalDrive = index;
 
 				if (drive["Model"] != null)
 				{
