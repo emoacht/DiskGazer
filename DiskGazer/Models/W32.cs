@@ -1,6 +1,6 @@
-﻿using Microsoft.Win32.SafeHandles;
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
 namespace DiskGazer.Models
 {
@@ -172,8 +172,6 @@ namespace DiskGazer.Models
 			BusTypeMaxReserved = 0x7F
 		}
 
-		public const uint ATA_FLAGS_DATA_IN = 0x02;
-
 		[StructLayout(LayoutKind.Sequential)]
 		public struct ATAIdentifyDeviceQuery
 		{
@@ -186,7 +184,7 @@ namespace DiskGazer.Models
 		public struct ATA_PASS_THROUGH_EX
 		{
 			public ushort Length;
-			public ushort AtaFlags;
+			public ATA_FLAGS AtaFlags;
 			public byte PathId;
 			public byte TargetId;
 			public byte Lun;
@@ -199,6 +197,17 @@ namespace DiskGazer.Models
 			public byte[] PreviousTaskFile;
 			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
 			public byte[] CurrentTaskFile;
+		}
+
+		[Flags]
+		public enum ATA_FLAGS : ushort
+		{
+			ATA_FLAGS_DRDY_REQUIRED = 1,
+			ATA_FLAGS_DATA_IN = 2,
+			ATA_FLAGS_DATA_OUT = 4,
+			ATA_FLAGS_48BIT_COMMAND = 8,
+			ATA_FLAGS_USE_DMA = 16,
+			ATA_FLAGS_NO_MULTIPLE = 32
 		}
 
 		// Move pointer.

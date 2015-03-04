@@ -216,15 +216,15 @@ namespace DiskGazer.Models
 					IntPtr.Zero);
 
 				if (hFile == null || hFile.IsInvalid)
+				{
 					// This is normal when this application is not run by administrator.
 					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get handle to disk.");
+				}
 
 				// Prepare parameters.
 				var areaSizeActual = Settings.Current.AreaSize; // Area size for actual reading (MiB)
 				if (0 < Settings.Current.BlockOffset)
-				{
 					areaSizeActual -= 1; // 1 is for the last MiB of area. If offset, it may exceed disk size.
-				}
 
 				int readNum = (areaSizeActual * 1024) / Settings.Current.BlockSize; // The number of reads
 
@@ -256,9 +256,7 @@ namespace DiskGazer.Models
 				for (int i = 0; i < loopOuter; i++)
 				{
 					if (0 < i)
-					{
 						areaLocationBytes += jumpBytes;
-					}
 
 					// Move pointer.
 					var result1 = W32.SetFilePointerEx(
@@ -352,9 +350,11 @@ namespace DiskGazer.Models
 			finally
 			{
 				if (hFile != null)
+				{
 					// CloseHandle is inappropriate to close SafeFileHandle.
 					// Dispose method is not necessary because Close method will call it internally.
 					hFile.Close();
+				}
 			}
 
 			return rawData;

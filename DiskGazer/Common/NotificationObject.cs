@@ -25,7 +25,7 @@ namespace DiskGazer.Common
 			RaisePropertyChanged(memberExpression.Member.Name);
 		}
 
-		protected virtual void RaisePropertyChanged([CallerMemberName]string propertyName = null)
+		protected virtual void RaisePropertyChanged([CallerMemberName] string propertyName = null)
 		{
 			var handler = this.PropertyChanged;
 			if (handler != null)

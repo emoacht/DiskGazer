@@ -106,7 +106,7 @@ namespace DiskGazer.Models
 				ataQuery.data = new ushort[256];
 
 				ataQuery.header.Length = (ushort)Marshal.SizeOf(typeof(W32.ATA_PASS_THROUGH_EX));
-				ataQuery.header.AtaFlags = (ushort)W32.ATA_FLAGS_DATA_IN;
+				ataQuery.header.AtaFlags = W32.ATA_FLAGS.ATA_FLAGS_DATA_IN;
 				ataQuery.header.DataTransferLength = (uint)ataQuery.data.Length * 2; // Size of "data" in bytes
 				ataQuery.header.TimeOutValue = 3; // Sec
 				ataQuery.header.DataBufferOffset = Marshal.OffsetOf(typeof(W32.ATAIdentifyDeviceQuery), "data");
@@ -149,9 +149,11 @@ namespace DiskGazer.Models
 			finally
 			{
 				if (hFile != null)
+				{
 					// CloseHandle is inappropriate to close SafeFileHandle.
 					// Dispose method is not necessary because Close method will call it internally.
 					hFile.Close();
+				}
 			}
 
 			return info;
