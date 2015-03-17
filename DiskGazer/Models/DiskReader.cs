@@ -209,7 +209,7 @@ namespace DiskGazer.Models
 
 				// Get handle to disk.
 				hFile = NativeMethod.CreateFile(
-					String.Format("\\\\.\\PhysicalDrive{0}", Settings.Current.PhysicalDrive),
+					String.Format(@"\\.\PhysicalDrive{0}", Settings.Current.PhysicalDrive),
 					NativeMethod.GENERIC_READ, // Administrative privilege is required.
 					0,
 					IntPtr.Zero,

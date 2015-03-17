@@ -27,7 +27,7 @@ namespace DiskGazer.Models
 			try
 			{
 				hFile = NativeMethod.CreateFile(
-					String.Format("\\\\.\\PhysicalDrive{0}", physicalDrive),
+					String.Format(@"\\.\PhysicalDrive{0}", physicalDrive),
 					NativeMethod.GENERIC_READ | NativeMethod.GENERIC_WRITE, // Administrative privilege is required. GENERIC_WRITE is for IOCTL_ATA_PASS_THROUGH.
 					NativeMethod.FILE_SHARE_READ | NativeMethod.FILE_SHARE_WRITE,
 					IntPtr.Zero,
