@@ -111,8 +111,8 @@
     </Compile>
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="Views\ProductInfo.cs" />
-    <Compile Include="Models\W32.cs" />
-    <Compile Include="Views\W32.cs" />
+    <Compile Include="Models\Win32\NativeMethod.cs" />
+    <Compile Include="Views\Win32\NativeMethod.cs" />
     <Page Include="Views\Styles\Controls.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -210,6 +210,7 @@
   <ItemGroup>
     <Resource Include="Resources\refresh_16xLG.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

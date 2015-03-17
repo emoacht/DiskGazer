@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
 
+using DiskGazer.Models.Win32;
+
 namespace DiskGazer.Models
 {
 	internal static class DiskChecker
@@ -24,13 +26,13 @@ namespace DiskGazer.Models
 
 			try
 			{
-				hFile = W32.CreateFile(
+				hFile = NativeMethod.CreateFile(
 					String.Format("\\\\.\\PhysicalDrive{0}", physicalDrive),
-					W32.GENERIC_READ | W32.GENERIC_WRITE, // Administrative privilege is required. GENERIC_WRITE is for IOCTL_ATA_PASS_THROUGH.
-					W32.FILE_SHARE_READ | W32.FILE_SHARE_WRITE,
+					NativeMethod.GENERIC_READ | NativeMethod.GENERIC_WRITE, // Administrative privilege is required. GENERIC_WRITE is for IOCTL_ATA_PASS_THROUGH.
+					NativeMethod.FILE_SHARE_READ | NativeMethod.FILE_SHARE_WRITE,
 					IntPtr.Zero,
-					W32.OPEN_EXISTING,
-					W32.FILE_ATTRIBUTE_NORMAL,
+					NativeMethod.OPEN_EXISTING,
+					NativeMethod.FILE_ATTRIBUTE_NORMAL,
 					IntPtr.Zero);
 
 				if (hFile == null || hFile.IsInvalid)
@@ -42,20 +44,20 @@ namespace DiskGazer.Models
 				// ---------------------------------
 				// Use IOCTL_STORAGE_QUERY_PROPERTY.
 				// ---------------------------------
-				var storageQuery = new W32.STORAGE_PROPERTY_QUERY();
-				storageQuery.PropertyId = W32.StorageDeviceProperty;
-				storageQuery.QueryType = W32.PropertyStandardQuery;
+				var storageQuery = new NativeMethod.STORAGE_PROPERTY_QUERY();
+				storageQuery.PropertyId = NativeMethod.StorageDeviceProperty;
+				storageQuery.QueryType = NativeMethod.PropertyStandardQuery;
 
-				W32.STORAGE_DEVICE_DESCRIPTOR storageDescriptor;
+				NativeMethod.STORAGE_DEVICE_DESCRIPTOR storageDescriptor;
 				uint bytesReturned1;
 
-				var result1 = W32.DeviceIoControl(
+				var result1 = NativeMethod.DeviceIoControl(
 					hFile,
-					W32.IOCTL_STORAGE_QUERY_PROPERTY,
+					NativeMethod.IOCTL_STORAGE_QUERY_PROPERTY,
 					ref storageQuery,
-					(uint)Marshal.SizeOf(typeof(W32.STORAGE_PROPERTY_QUERY)),
+					(uint)Marshal.SizeOf(typeof(NativeMethod.STORAGE_PROPERTY_QUERY)),
 					out storageDescriptor,
-					(uint)Marshal.SizeOf(typeof(W32.STORAGE_DEVICE_DESCRIPTOR)),
+					(uint)Marshal.SizeOf(typeof(NativeMethod.STORAGE_DEVICE_DESCRIPTOR)),
 					out bytesReturned1,
 					IntPtr.Zero);
 
@@ -83,9 +85,9 @@ namespace DiskGazer.Models
 				long diskSize;
 				uint bytesReturned2;
 
-				var result2 = W32.DeviceIoControl(
+				var result2 = NativeMethod.DeviceIoControl(
 					hFile,
-					W32.IOCTL_DISK_GET_LENGTH_INFO,
+					NativeMethod.IOCTL_DISK_GET_LENGTH_INFO,
 					IntPtr.Zero,
 					0,
 					out diskSize,
@@ -102,27 +104,27 @@ namespace DiskGazer.Models
 				// ---------------------------
 				// Use IOCTL_ATA_PASS_THROUGH.
 				// ---------------------------
-				var ataQuery = new W32.ATAIdentifyDeviceQuery();
+				var ataQuery = new NativeMethod.ATAIdentifyDeviceQuery();
 				ataQuery.data = new ushort[256];
 
-				ataQuery.header.Length = (ushort)Marshal.SizeOf(typeof(W32.ATA_PASS_THROUGH_EX));
-				ataQuery.header.AtaFlags = W32.ATA_FLAGS.ATA_FLAGS_DATA_IN;
+				ataQuery.header.Length = (ushort)Marshal.SizeOf(typeof(NativeMethod.ATA_PASS_THROUGH_EX));
+				ataQuery.header.AtaFlags = NativeMethod.ATA_FLAGS.ATA_FLAGS_DATA_IN;
 				ataQuery.header.DataTransferLength = (uint)ataQuery.data.Length * 2; // Size of "data" in bytes
 				ataQuery.header.TimeOutValue = 3; // Sec
-				ataQuery.header.DataBufferOffset = Marshal.OffsetOf(typeof(W32.ATAIdentifyDeviceQuery), "data");
+				ataQuery.header.DataBufferOffset = Marshal.OffsetOf(typeof(NativeMethod.ATAIdentifyDeviceQuery), "data");
 				ataQuery.header.PreviousTaskFile = new byte[8];
 				ataQuery.header.CurrentTaskFile = new byte[8];
 				ataQuery.header.CurrentTaskFile[6] = 0xec; // ATA IDENTIFY DEVICE
 
 				uint bytesReturned3;
 
-				var result3 = W32.DeviceIoControl(
+				var result3 = NativeMethod.DeviceIoControl(
 					hFile,
-					W32.IOCTL_ATA_PASS_THROUGH,
+					NativeMethod.IOCTL_ATA_PASS_THROUGH,
 					ref ataQuery,
-					(uint)Marshal.SizeOf(typeof(W32.ATAIdentifyDeviceQuery)),
+					(uint)Marshal.SizeOf(typeof(NativeMethod.ATAIdentifyDeviceQuery)),
 					ref ataQuery,
-					(uint)Marshal.SizeOf(typeof(W32.ATAIdentifyDeviceQuery)),
+					(uint)Marshal.SizeOf(typeof(NativeMethod.ATAIdentifyDeviceQuery)),
 					out bytesReturned3,
 					IntPtr.Zero);
 
@@ -172,35 +174,35 @@ namespace DiskGazer.Models
 			return Encoding.ASCII.GetString(source, indexStart, indexEnd - indexStart);
 		}
 
-		private static string ConvertBusTypeToString(W32.STORAGE_BUS_TYPE type)
+		private static string ConvertBusTypeToString(NativeMethod.STORAGE_BUS_TYPE type)
 		{
 			switch (type)
 			{
-				case W32.STORAGE_BUS_TYPE.BusTypeScsi:
+				case NativeMethod.STORAGE_BUS_TYPE.BusTypeScsi:
 					return "SCSI";
-				case W32.STORAGE_BUS_TYPE.BusTypeAtapi:
+				case NativeMethod.STORAGE_BUS_TYPE.BusTypeAtapi:
 					return "ATAPI";
-				case W32.STORAGE_BUS_TYPE.BusTypeAta:
+				case NativeMethod.STORAGE_BUS_TYPE.BusTypeAta:
 					return "ATA";
-				case W32.STORAGE_BUS_TYPE.BusType1394:
+				case NativeMethod.STORAGE_BUS_TYPE.BusType1394:
 					return "1394";
-				case W32.STORAGE_BUS_TYPE.BusTypeSsa:
+				case NativeMethod.STORAGE_BUS_TYPE.BusTypeSsa:
 					return "SSA";
-				case W32.STORAGE_BUS_TYPE.BusTypeFibre:
+				case NativeMethod.STORAGE_BUS_TYPE.BusTypeFibre:
 					return "Fibre";
-				case W32.STORAGE_BUS_TYPE.BusTypeUsb:
+				case NativeMethod.STORAGE_BUS_TYPE.BusTypeUsb:
 					return "USB";
-				case W32.STORAGE_BUS_TYPE.BusTypeRAID:
+				case NativeMethod.STORAGE_BUS_TYPE.BusTypeRAID:
 					return "RAID";
-				case W32.STORAGE_BUS_TYPE.BusTypeiScsi:
+				case NativeMethod.STORAGE_BUS_TYPE.BusTypeiScsi:
 					return "iSCSI";
-				case W32.STORAGE_BUS_TYPE.BusTypeSas:
+				case NativeMethod.STORAGE_BUS_TYPE.BusTypeSas:
 					return "SAS";
-				case W32.STORAGE_BUS_TYPE.BusTypeSata:
+				case NativeMethod.STORAGE_BUS_TYPE.BusTypeSata:
 					return "SATA";
-				case W32.STORAGE_BUS_TYPE.BusTypeSd:
+				case NativeMethod.STORAGE_BUS_TYPE.BusTypeSd:
 					return "SD";
-				case W32.STORAGE_BUS_TYPE.BusTypeMmc:
+				case NativeMethod.STORAGE_BUS_TYPE.BusTypeMmc:
 					return "MMC";
 				default:
 					return String.Empty;

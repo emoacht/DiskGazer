@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace DiskGazer.Views
+namespace DiskGazer.Views.Win32
 {
-	public class W32
+	public class NativeMethod
 	{
 		// Get rectangle of window.
 		[DllImport("user32.dll", SetLastError = true)]
@@ -48,8 +44,6 @@ namespace DiskGazer.Views
 
 		public const int DWMWA_EXTENDED_FRAME_BOUNDS = 9;
 
-		public const int S_OK = 0x00000000;
-
 		// Get handle to foreground (focused) window.
 		[DllImport("user32.dll", SetLastError = true)]
 		public static extern IntPtr GetForegroundWindow();
@@ -57,12 +51,14 @@ namespace DiskGazer.Views
 		// Set foreground window.
 		[DllImport("user32.dll", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
-		public static extern bool SetForegroundWindow(IntPtr hWnd);
+		public static extern bool SetForegroundWindow(
+			IntPtr hWnd);
 
 		// Get process ID for thread that created that window.
 		[DllImport("user32.dll", SetLastError = true)]
-		public static extern uint GetWindowThreadProcessId(IntPtr hWnd,
-														   IntPtr lpdwProcessId);
+		public static extern uint GetWindowThreadProcessId(
+			IntPtr hWnd,
+			IntPtr lpdwProcessId);
 
 		// Attach thread to another thread.
 		[DllImport("user32.dll", SetLastError = true)]

@@ -11,6 +11,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
 
+using DiskGazer.Models.Win32;
+
 namespace DiskGazer.Models
 {
 	internal static class DiskReader
@@ -206,13 +208,13 @@ namespace DiskGazer.Models
 				// created by hiyohiyo (http://crystalmark.info/).
 
 				// Get handle to disk.
-				hFile = W32.CreateFile(
+				hFile = NativeMethod.CreateFile(
 					String.Format("\\\\.\\PhysicalDrive{0}", Settings.Current.PhysicalDrive),
-					W32.GENERIC_READ, // Administrative privilege is required.
+					NativeMethod.GENERIC_READ, // Administrative privilege is required.
 					0,
 					IntPtr.Zero,
-					W32.OPEN_EXISTING,
-					W32.FILE_ATTRIBUTE_NORMAL | W32.FILE_FLAG_NO_BUFFERING | W32.FILE_FLAG_SEQUENTIAL_SCAN,
+					NativeMethod.OPEN_EXISTING,
+					NativeMethod.FILE_ATTRIBUTE_NORMAL | NativeMethod.FILE_FLAG_NO_BUFFERING | NativeMethod.FILE_FLAG_SEQUENTIAL_SCAN,
 					IntPtr.Zero);
 
 				if (hFile == null || hFile.IsInvalid)
@@ -259,11 +261,11 @@ namespace DiskGazer.Models
 						areaLocationBytes += jumpBytes;
 
 					// Move pointer.
-					var result1 = W32.SetFilePointerEx(
+					var result1 = NativeMethod.SetFilePointerEx(
 						hFile,
 						areaLocationBytes,
 						IntPtr.Zero,
-						W32.FILE_BEGIN);
+						NativeMethod.FILE_BEGIN);
 
 					if (result1 == false)
 						throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to move pointer.");
@@ -275,7 +277,7 @@ namespace DiskGazer.Models
 
 						sw.Start();
 
-						var result2 = W32.ReadFile(
+						var result2 = NativeMethod.ReadFile(
 							hFile,
 							buff,
 							buffSize,
