@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace DiskGazer.Helper
 {
 	/// <summary>
-	/// Extension method for Enumerable
+	/// Extension method for <see cref="Enumerable"/>
 	/// </summary>
 	public static class EnumerableExtension
 	{

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace DiskGazer.Helper
 {
 	/// <summary>
-	/// Extension method for double
+	/// Extension method for <see cref="Double"/>
 	/// </summary>
 	public static class DoubleExtension
 	{
