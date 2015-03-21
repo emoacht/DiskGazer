@@ -9,34 +9,22 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 
-using DiskGazer.Views;
-
 namespace DiskGazer
 {
 	public partial class App : Application
 	{
 		public App()
 		{
-#if (!DEBUG)
-			AppDomain.CurrentDomain.UnhandledException += (sender, args) => RecordException(sender, args.ExceptionObject as Exception);
-#endif
+			if (!Debugger.IsAttached)
+				AppDomain.CurrentDomain.UnhandledException += (sender, args) => RecordException(sender, args.ExceptionObject as Exception);
 		}
 
 		protected override void OnStartup(StartupEventArgs e)
 		{
 			base.OnStartup(e);
 
-#if (!DEBUG)
-			this.DispatcherUnhandledException += (sender, args) => RecordException(sender, args.Exception);
-#endif
-
-			this.MainWindow = new MainWindow();
-			this.MainWindow.Show();
-		}
-
-		protected override void OnExit(ExitEventArgs e)
-		{
-			base.OnExit(e);
+			if (!Debugger.IsAttached)
+				this.DispatcherUnhandledException += (sender, args) => RecordException(sender, args.Exception);
 		}
 
 
