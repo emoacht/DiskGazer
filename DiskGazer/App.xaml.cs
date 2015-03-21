@@ -1,5 +1,4 @@
-﻿using DiskGazer.Views;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -10,6 +9,8 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 
+using DiskGazer.Views;
+
 namespace DiskGazer
 {
 	public partial class App : Application
@@ -17,7 +18,7 @@ namespace DiskGazer
 		public App()
 		{
 #if (!DEBUG)
-			AppDomain.CurrentDomain.UnhandledException += (sender, args) => ReportException(sender, args.ExceptionObject as Exception);
+			AppDomain.CurrentDomain.UnhandledException += (sender, args) => RecordException(sender, args.ExceptionObject as Exception);
 #endif
 		}
 
@@ -26,7 +27,7 @@ namespace DiskGazer
 			base.OnStartup(e);
 
 #if (!DEBUG)
-			this.DispatcherUnhandledException += (sender, args) => ReportException(sender, args.Exception);
+			this.DispatcherUnhandledException += (sender, args) => RecordException(sender, args.Exception);
 #endif
 
 			this.MainWindow = new MainWindow();
@@ -41,28 +42,31 @@ namespace DiskGazer
 
 		#region Exception
 
-		private static void ReportException(object sender, Exception exception)
+		private static void RecordException(object sender, Exception exception)
 		{
-			var filePath = Path.Combine(
-				Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-				"exception.log");
+			const string fileName = "exception.log";
+
+			var content = String.Format(@"[Date: {0} Sender: {1}]", DateTime.Now, sender) + Environment.NewLine
+				+ exception + Environment.NewLine + Environment.NewLine;
+
+			Trace.WriteLine(content);
+
+			var filePathAppData = Path.Combine(
+				Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+				Assembly.GetExecutingAssembly().GetName().Name,
+				fileName);
 
 			try
 			{
-				var content = String.Format(@"[Date: {0} Sender: {1}]", DateTime.Now, sender) + Environment.NewLine
-					+ exception + Environment.NewLine + Environment.NewLine;
+				var folderPathAppData = Path.GetDirectoryName(filePathAppData);
+				if (!Directory.Exists(folderPathAppData))
+					Directory.CreateDirectory(folderPathAppData);
 
-				Debug.WriteLine(content);
-
-				var folderPath = Path.GetDirectoryName(filePath);
-				if (!Directory.Exists(folderPath))
-					Directory.CreateDirectory(folderPath);
-
-				File.AppendAllText(filePath, content);
+				File.AppendAllText(filePathAppData, content);
 			}
 			catch (Exception ex)
 			{
-				Debug.WriteLine("Failed to report exception. {0}", ex);
+				Trace.WriteLine(String.Format("Failed to record exception to AppData. {0}", ex));
 			}
 		}
 
