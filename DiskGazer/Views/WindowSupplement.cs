@@ -212,18 +212,5 @@ namespace DiskGazer.Views
 
 			return true;
 		}
-
-		/// <summary>
-		/// Get rate of current DPI of a specified window against 96.
-		/// </summary>
-		/// <param name="window">Source window</param>
-		internal static double GetDpiRate(Window window)
-		{
-			var source = PresentationSource.FromVisual(window);
-			if ((source == null) || (source.CompositionTarget == null))
-				return 1D; // Fall back
-
-			return source.CompositionTarget.TransformToDevice.M11;
-		}
 	}
 }

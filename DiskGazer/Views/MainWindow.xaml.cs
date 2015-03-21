@@ -13,6 +13,7 @@ using System.Windows.Media;
 
 using DiskGazer.Models;
 using DiskGazer.ViewModels;
+using MonitorAware.Models;
 
 namespace DiskGazer.Views
 {
@@ -33,9 +34,6 @@ namespace DiskGazer.Views
 			CreateAddChart();
 			ManageColorBar();
 
-			this.MinWidth = this.ActualWidth;
-			this.MinHeight = this.ActualHeight;
-
 			if (_mainWindowViewModel != null)
 			{
 				this.SetBinding(
@@ -54,6 +52,19 @@ namespace DiskGazer.Views
 						Mode = BindingMode.OneWay,
 					});
 			}
+
+			this.SetBinding(
+				WindowDpiProperty,
+				new Binding("WindowHandler.WindowDpi")
+				{
+					Source = MonitorProperty,
+					Mode = BindingMode.OneWay
+				});
+
+			MonitorProperty.WindowHandler.DpiChanged += OnDpiChanged;
+
+			SetMinSize();
+			ForceChartRedraw();
 		}
 
 
@@ -111,6 +122,63 @@ namespace DiskGazer.Views
 				rct.Height,
 				innerPlotAreaSize.Width,
 				innerPlotAreaSize.Height));
+		}
+
+		/// <summary>
+		/// Window DPI
+		/// </summary>
+		public Dpi WindowDpi
+		{
+			get { return (Dpi)GetValue(WindowDpiProperty); }
+			set { SetValue(WindowDpiProperty, value); }
+		}
+		public static readonly DependencyProperty WindowDpiProperty =
+			DependencyProperty.Register(
+				"WindowDpi",
+				typeof(Dpi),
+				typeof(MainWindow),
+				new FrameworkPropertyMetadata(
+					Dpi.Default,
+					(d, e) =>
+					{
+						if (((Dpi)e.NewValue).Equals((Dpi)e.OldValue))
+							return;
+
+						var window = (MainWindow)d;
+						window.SetMinSize();
+						window.ForceChartRedraw();
+					}));
+
+
+		private double WindowDpiFactorY
+		{
+			get { return (double)MonitorProperty.WindowHandler.WindowDpi.Y / (double)Dpi.Default.Y; }
+		}
+
+		private void OnDpiChanged(object sender, DpiChangedEventArgs e)
+		{
+			ForceChartRedraw();
+		}
+
+		private void SetMinSize()
+		{
+			var window = new MainWindow();
+			try
+			{
+				this.MinWidth = window.Width * (double)MonitorProperty.WindowHandler.WindowDpi.X / (double)MonitorProperty.WindowHandler.SystemDpi.X;
+				this.MinHeight = window.Height * (double)MonitorProperty.WindowHandler.WindowDpi.Y / (double)MonitorProperty.WindowHandler.SystemDpi.Y;
+			}
+			finally
+			{
+				window.Close();
+			}
+		}
+
+		private void ForceChartRedraw()
+		{
+			// Force chart redraw (any other orthodox method does not work). This fires SizeChanged events twice though.
+			this.Height += 1;
+			this.Height -= 1;
 		}
 
 		private void MenuItemFile_SubmenuOpened(object sender, RoutedEventArgs e)
@@ -634,7 +702,7 @@ namespace DiskGazer.Views
 			// ------------------
 			// Width will be automatically resized except initial adjustment where it is required to set ChartArea.InnerPlotPosition.X.
 			_diskChart.Width = (int)WindowSupplement.GetClientAreaSize(this).Width;
-			_diskChart.Height = (int)(WindowSupplement.GetClientAreaSize(this).Height - this.GridDashboard.ActualHeight * WindowSupplement.GetDpiRate(this));
+			_diskChart.Height = (int)(WindowSupplement.GetClientAreaSize(this).Height - this.GridDashboard.ActualHeight * WindowDpiFactorY);
 
 			var chartAreaOne = _diskChart.ChartAreas[0];
 
@@ -725,7 +793,7 @@ namespace DiskGazer.Views
 			// --------------------------------
 			// Adjust scale intervals of Chart.
 			// --------------------------------
-			var shortest = 40D * WindowSupplement.GetDpiRate(this);
+			var shortest = 40D * WindowDpiFactorY;
 
 			// X axis
 			double innerX = _diskChart.Width * (chartAreaOne.InnerPlotPosition.Width / 100D);

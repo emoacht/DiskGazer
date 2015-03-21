@@ -22,8 +22,6 @@ namespace DiskGazer.Views
 
 		private void OnLoaded(object sender, RoutedEventArgs e)
 		{
-			this.MinWidth = this.ActualWidth;
-
 			_mainWindowViewModel = this.Owner.DataContext as MainWindowViewModel;
 			if (_mainWindowViewModel != null)
 			{
