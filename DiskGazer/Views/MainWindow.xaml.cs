@@ -73,30 +73,26 @@ namespace DiskGazer.Views
 		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 		{
 			if (_diskChart != null)
-			{
 				AdjustChartAppearance();
-			}
 
 			// Binding in XAML will not work when window is maximized.
 			this.MenuTop.Width = WindowSupplement.GetClientAreaSize(this).Width;
 
-			if (WillIndicateSize)
-			{
+			if (IndicatesSize)
 				IndicateWindowChartSize();
-			}
 		}
 
 		/// <summary>
 		/// Whether to indicate window/chart size
 		/// </summary>
-		public bool WillIndicateSize
+		public bool IndicatesSize
 		{
-			get { return (bool)GetValue(WillIndicateSizeProperty); }
-			set { SetValue(WillIndicateSizeProperty, value); }
+			get { return (bool)GetValue(IndicatesSizeProperty); }
+			set { SetValue(IndicatesSizeProperty, value); }
 		}
-		public static readonly DependencyProperty WillIndicateSizeProperty =
+		public static readonly DependencyProperty IndicatesSizeProperty =
 			DependencyProperty.Register(
-				"WillIndicateSize",
+				"IndicatesSize",
 				typeof(bool),
 				typeof(MainWindow),
 				new FrameworkPropertyMetadata(
@@ -106,7 +102,7 @@ namespace DiskGazer.Views
 						if ((bool)e.NewValue)
 							((MainWindow)d).IndicateWindowChartSize();
 						else
-							((MainWindow)d).ShowStatus("");
+							((MainWindow)d).ShowStatus(String.Empty);
 					}));
 
 		/// <summary>
@@ -495,7 +491,7 @@ namespace DiskGazer.Views
 
 		private Chart _diskChart;
 
-		private const double _chartUnit = 50D; // Unit length of Y axis
+		private const double _chartUnit = 50D;        // Unit length of Y axis
 		private const double _chartMaxDefault = 200D; // Default maximum value of Y axis
 		private const double _chartMinDefault = 0D;   // Default minimum value of Y axis
 
@@ -571,7 +567,7 @@ namespace DiskGazer.Views
 					(d, baseValue) => Math.Round((double)baseValue / _chartUnit) * _chartUnit));
 
 		/// <summary>
-		/// Whether maximum value of Y axle is fixed.
+		/// Whether maximum value of Y axle is fixed
 		/// </summary>
 		public bool IsChartMaxFixed
 		{
@@ -588,7 +584,7 @@ namespace DiskGazer.Views
 					(d, e) => ((MainWindow)d).AdjustChartAppearance()));
 
 		/// <summary>
-		/// Whether minimum value of Y axle is fixed.
+		/// Whether minimum value of Y axle is fixed
 		/// </summary>
 		public bool IsChartMinFixed
 		{
@@ -605,16 +601,16 @@ namespace DiskGazer.Views
 					(d, e) => ((MainWindow)d).AdjustChartAppearance()));
 
 		/// <summary>
-		/// Whether to slide chart line to current location so as to make it visible.
+		/// Whether to slide chart line to current location so as to make it visible
 		/// </summary>
-		public bool WillSlideLine
+		public bool SlidesLine
 		{
-			get { return (bool)GetValue(WillSlideLineProperty); }
-			set { SetValue(WillSlideLineProperty, value); }
+			get { return (bool)GetValue(SlidesLineProperty); }
+			set { SetValue(SlidesLineProperty, value); }
 		}
-		public static readonly DependencyProperty WillSlideLineProperty =
+		public static readonly DependencyProperty SlidesLineProperty =
 			DependencyProperty.Register(
-				"WillSlideLine",
+				"SlidesLine",
 				typeof(bool),
 				typeof(MainWindow),
 				new FrameworkPropertyMetadata(
@@ -627,7 +623,6 @@ namespace DiskGazer.Views
 			if (_mainWindowViewModel.PinLineCommand.CanExecute())
 			{
 				_mainWindowViewModel.PinLineCommand.Execute();
-
 				DrawChart(DrawMode.PinCurrentChart);
 			}
 		}
@@ -638,7 +633,6 @@ namespace DiskGazer.Views
 			if (_mainWindowViewModel.ClearLinesCommand.CanExecute())
 			{
 				_mainWindowViewModel.ClearLinesCommand.Execute();
-
 				DrawChart(DrawMode.ClearCompletely);
 			}
 		}
@@ -717,47 +711,37 @@ namespace DiskGazer.Views
 			double chartMax;
 			double chartMin;
 
-			if (!IsChartMaxFixed)
-			{
-				if (DiskScores[0].Data == null)
-				{
-					chartMax = _chartMaxDefault;
-				}
-				else
-				{
-					chartMax = Math.Ceiling(DiskScores[0].Data.Values.Max() / _chartUnit) * _chartUnit;
-				}
-			}
-			else
+			if (IsChartMaxFixed)
 			{
 				chartMax = ChartMax;
 			}
-
-			if (!IsChartMinFixed)
+			else
 			{
-				if (DiskScores[0].Data == null)
-				{
-					chartMin = _chartMinDefault;
-				}
-				else
-				{
-					chartMin = Math.Floor(DiskScores[0].Data.Values.Min() / _chartUnit) * _chartUnit;
-				}
+				chartMax = (DiskScores[0].Data != null)
+					? Math.Ceiling(DiskScores[0].Data.Values.Max() / _chartUnit) * _chartUnit
+					: _chartMaxDefault;
+			}
+
+			if (IsChartMinFixed)
+			{
+				chartMin = ChartMin;
 			}
 			else
 			{
-				chartMin = ChartMin;
+				chartMin = (DiskScores[0].Data != null)
+					? Math.Floor(DiskScores[0].Data.Values.Min() / _chartUnit) * _chartUnit
+					: _chartMinDefault;
 			}
 
 			if (chartMin + _chartUnit > chartMax) // If relationship between maximum and minimum values is screwed.
 			{
-				if ((chartMin == 0D) |  // Case where minimum value is already 0.
+				if ((chartMin == 0D) | // Case where minimum value is already 0.
 					(!IsChartMaxFixed &&
 					 IsChartMinFixed)) // Case where maximum value is not fixed and minimum value is fixed.
 				{
 					chartMax = chartMin + _chartUnit;
 				}
-				else                   // Any other case.
+				else // Any other case.
 				{
 					chartMin = chartMax - _chartUnit;
 				}
@@ -839,7 +823,7 @@ namespace DiskGazer.Views
 
 		private float GetPerc(double targetLength, int baseLength)
 		{
-			var sampleNum = targetLength / (double)baseLength; // This calculation must be done by double.
+			var sampleNum = targetLength / (double)baseLength;
 
 			return (float)sampleNum * 100F;
 		}
@@ -895,9 +879,7 @@ namespace DiskGazer.Views
 					// Remove seriesOne and Series that has no corresponding data anymore (if any).
 					var seriesOnes = _diskChart.Series.Where(x => !DiskScores.Skip(1).Select(y => y.Guid).Contains(x.Name)).ToArray();
 					for (int i = seriesOnes.Length - 1; i >= 0; i--)
-					{
 						_diskChart.Series.Remove(seriesOnes[i]);
-					}
 					break;
 			}
 
@@ -906,7 +888,7 @@ namespace DiskGazer.Views
 			{
 				case DrawMode.DrawNewChart:
 				case DrawMode.RefreshPinnedChart:
-					if (WillSlideLine)
+					if (SlidesLine)
 					{
 						// Slide chart line to current location so as to make it visible.
 						foreach (var seriesTwo in _diskChart.Series)
@@ -914,9 +896,7 @@ namespace DiskGazer.Views
 							var slideLength = Settings.Current.AreaLocation - seriesTwo.Points.Min(x => x.XValue);
 
 							foreach (var point in seriesTwo.Points)
-							{
 								point.XValue += slideLength;
-							}
 						}
 					}
 					else
@@ -933,9 +913,7 @@ namespace DiskGazer.Views
 										var slideLength = scoreTwo.AreaLocation - seriesTwo.Points.Min(p => p.XValue);
 
 										foreach (var point in seriesTwo.Points)
-										{
 											point.XValue += slideLength;
-										}
 									}
 								}
 								break;
@@ -984,9 +962,7 @@ namespace DiskGazer.Views
 								var dataList = new SortedList<double, double>(DiskScores[0].Data);
 
 								foreach (var data in dataList)
-								{
 									seriesOne.Points.AddXY(data.Key, data.Value);
-								}
 							}
 							break;
 					}
@@ -994,9 +970,7 @@ namespace DiskGazer.Views
 					_diskChart.Series.Add(seriesOne);
 
 					if (DiskScores[0].Data != null)
-					{
 						AdjustChartAppearance();
-					}
 					break;
 			}
 		}
