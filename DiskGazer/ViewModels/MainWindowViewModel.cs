@@ -326,7 +326,7 @@ namespace DiskGazer.ViewModels
 
 		public IReadOnlyCollection<int> MenuBlockSize
 		{
-			get { return _menuBlockSize ?? (_menuBlockSize = new int[] { 1024, 512, 256, 128, 64, 32 }); } //MiB
+			get { return _menuBlockSize ?? (_menuBlockSize = new[] { 1024, 512, 256, 128, 64, 32 }); } //MiB
 		}
 		private int[] _menuBlockSize;
 
@@ -716,7 +716,7 @@ namespace DiskGazer.ViewModels
 			try
 			{
 				// Start.
-				await Op.ReadAnalyzeAsync(new Progress<ProgressInfo>(x => UpdateProgress(x)));
+				await Op.ReadAnalyzeAsync(new Progress<ProgressInfo>(UpdateProgress));
 			}
 			catch (Exception ex)
 			{
@@ -750,7 +750,7 @@ namespace DiskGazer.ViewModels
 		/// </summary>
 		private void StopRun()
 		{
-			Op.StopReadAnalyze(new Progress<ProgressInfo>(x => UpdateProgress(x)));
+			Op.StopReadAnalyze(new Progress<ProgressInfo>(UpdateProgress));
 		}
 
 		private void UpdateProgress(ProgressInfo info)

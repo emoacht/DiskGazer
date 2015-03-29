@@ -5,14 +5,14 @@ namespace DiskGazer.Views.Win32
 {
 	public class NativeMethod
 	{
-		// Get rectangle of window.
+		// Get rectangle of a specified window.
 		[DllImport("User32.dll", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool GetWindowRect(
 			IntPtr hWnd,
 			out RECT lpRect);
 
-		// Get rectangle of window's client area.
+		// Get rectangle of client area of a specified window.
 		[DllImport("User32.dll", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool GetClientRect(
@@ -50,7 +50,7 @@ namespace DiskGazer.Views.Win32
 			[MarshalAs(UnmanagedType.Bool)]
 			ref bool pfEnabled);
 
-		// Get rectangle of window under DWM.
+		// Get rectangle of a specified window under DWM.
 		[DllImport("Dwmapi.dll", SetLastError = true)]
 		public static extern int DwmGetWindowAttribute(
 			IntPtr hwnd,
@@ -60,17 +60,17 @@ namespace DiskGazer.Views.Win32
 
 		public const int DWMWA_EXTENDED_FRAME_BOUNDS = 9;
 
-		// Get handle to foreground (focused) window.
+		// Get handle to the foreground (focused) window.
 		[DllImport("User32.dll", SetLastError = true)]
 		public static extern IntPtr GetForegroundWindow();
 
-		// Set foreground window.
+		// Set the foreground window.
 		[DllImport("User32.dll", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool SetForegroundWindow(
 			IntPtr hWnd);
 
-		// Get process ID for thread that created specified window.
+		// Get process ID for the thread that created a specified window.
 		[DllImport("User32.dll", SetLastError = true)]
 		public static extern uint GetWindowThreadProcessId(
 			IntPtr hWnd,
@@ -85,7 +85,7 @@ namespace DiskGazer.Views.Win32
 			[MarshalAs(UnmanagedType.Bool)]
 			bool fAttach);
 
-		// Set position, size and Z order of window.
+		// Set position, size and Z order of a specified window.
 		[DllImport("User32.dll", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool SetWindowPos(
@@ -101,7 +101,7 @@ namespace DiskGazer.Views.Win32
 		public const uint SWP_NOMOVE = 0x0002;
 		public const uint SWP_SHOWWINDOW = 0x0040;
 
-		// Get handle to window that contains specified point.
+		// Get handle to the window which contains a specified point.
 		[DllImport("User32.dll", SetLastError = true)]
 		public static extern IntPtr WindowFromPoint(
 			POINT Point);
@@ -113,7 +113,7 @@ namespace DiskGazer.Views.Win32
 			public int y;
 		}
 
-		// Get handle to ancestor of specified window.
+		// Get handle to the ancestor of a specified window.
 		[DllImport("User32.dll", SetLastError = true)]
 		public static extern IntPtr GetAncestor(
 			IntPtr Hwnd,

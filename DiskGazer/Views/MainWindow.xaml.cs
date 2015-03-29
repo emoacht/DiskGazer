@@ -821,21 +821,21 @@ namespace DiskGazer.Views
 			chartAreaOne.AxisY.MinorGrid.Interval = intervalY / 2;
 		}
 
-		private float GetPerc(double targetLength, int baseLength)
+		private static float GetPerc(double targetLength, int baseLength)
 		{
 			var sampleNum = targetLength / (double)baseLength;
 
 			return (float)sampleNum * 100F;
 		}
 
-		private Size TextSize(int num, System.Drawing.Font font)
+		private static Size TextSize(int num, System.Drawing.Font font)
 		{
 			var sampleText = Enumerable.Repeat("9", num).Aggregate((total, next) => total + next);
 
 			return TextSize(sampleText, font);
 		}
 
-		private Size TextSize(string text, System.Drawing.Font font)
+		private static Size TextSize(string text, System.Drawing.Font font)
 		{
 			// System.Windows.Media.FormattedText method is not accurate (too small).
 			var sampleSize = System.Windows.Forms.TextRenderer.MeasureText(text, font);

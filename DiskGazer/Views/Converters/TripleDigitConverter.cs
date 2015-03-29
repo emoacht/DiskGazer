@@ -20,11 +20,11 @@ namespace DiskGazer.Views.Converters
 		/// <summary>
 		/// Divide an int by 1024 and then truncate the double.
 		/// </summary>
-		/// <param name="value">Source int</param>
+		/// <param name="value">Int</param>
 		/// <param name="targetType"></param>
 		/// <param name="parameter">Number of scale (decimals) (optional)</param>
 		/// <param name="culture"></param>
-		/// <returns>Outcome double</returns>
+		/// <returns>Double</returns>
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{
 			int num;

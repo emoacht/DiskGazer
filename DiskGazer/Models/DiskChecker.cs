@@ -18,6 +18,7 @@ namespace DiskGazer.Models
 		/// Get disk information by P/Invoke.
 		/// </summary>
 		/// <param name="physicalDrive">Index number of physical drive</param>
+		/// <returns>Disk information</returns>
 		internal static DiskInfo GetDiskInfo(int physicalDrive)
 		{
 			var info = new DiskInfo { PhysicalDrive = physicalDrive };
@@ -34,7 +35,6 @@ namespace DiskGazer.Models
 					NativeMethod.OPEN_EXISTING,
 					NativeMethod.FILE_ATTRIBUTE_NORMAL,
 					IntPtr.Zero);
-
 				if (hFile == null || hFile.IsInvalid)
 				{
 					// This is normal when this application is not run by administrator.
@@ -60,7 +60,6 @@ namespace DiskGazer.Models
 					(uint)Marshal.SizeOf(typeof(NativeMethod.STORAGE_DEVICE_DESCRIPTOR)),
 					out bytesReturned1,
 					IntPtr.Zero);
-
 				if (result1 == false)
 					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get disk information.");
 
@@ -94,7 +93,6 @@ namespace DiskGazer.Models
 					(uint)Marshal.SizeOf(typeof(long)),
 					out bytesReturned2,
 					IntPtr.Zero);
-
 				if (result2 == false)
 					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get disk size.");
 
@@ -127,7 +125,6 @@ namespace DiskGazer.Models
 					(uint)Marshal.SizeOf(typeof(NativeMethod.ATAIdentifyDeviceQuery)),
 					out bytesReturned3,
 					IntPtr.Zero);
-
 				if (result3)
 				{
 					const int index = 217; // Word index of nominal media rotation rate (1 means non-rotating media.)

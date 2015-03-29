@@ -6,7 +6,7 @@ namespace DiskGazer.Models.Win32
 {
 	public class NativeMethod
 	{
-		// Get handle to disk.
+		// Get handle to a specified disk.
 		[DllImport("Kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true)]
 		public static extern SafeFileHandle CreateFile(
 			[MarshalAs(UnmanagedType.LPWStr)]
@@ -37,7 +37,7 @@ namespace DiskGazer.Models.Win32
 		public const uint FILE_FLAG_SEQUENTIAL_SCAN = 0x8000000;
 		public const uint FILE_FLAG_WRITE_THROUGH = 0x80000000;
 
-		// Get disk information.
+		// Get information on a specified disk.
 		[DllImport("Kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool DeviceIoControl(
@@ -50,7 +50,7 @@ namespace DiskGazer.Models.Win32
 			out uint lpBytesReturned,
 			IntPtr lpOverlapped);
 
-		// Get disk size.
+		// Get size of a specified disk.
 		[DllImport("Kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool DeviceIoControl(
@@ -210,7 +210,7 @@ namespace DiskGazer.Models.Win32
 			ATA_FLAGS_NO_MULTIPLE = 32
 		}
 
-		// Move pointer.
+		// Move a pointer.
 		[DllImport("Kernel32.dll", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool SetFilePointerEx(
@@ -223,7 +223,7 @@ namespace DiskGazer.Models.Win32
 		public const uint FILE_CURRENT = 1;
 		public const uint FILE_END = 2;
 
-		// Read from disk.
+		// Read from a specified disk.
 		[DllImport("Kernel32.dll", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool ReadFile(

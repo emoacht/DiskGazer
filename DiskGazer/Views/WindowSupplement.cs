@@ -101,52 +101,57 @@ namespace DiskGazer.Views
 			try
 			{
 				// Get process ID for target window's thread.
-				var targetWindowThreadId = NativeMethod.GetWindowThreadProcessId(
+				var targetWindowId = NativeMethod.GetWindowThreadProcessId(
 					handleWindow,
 					IntPtr.Zero);
-				if (targetWindowThreadId == 0)
-					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get process ID for this window.");
+				if (targetWindowId == 0)
+					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get process ID for target window.");
 
-				// Get process ID for foreground window's thread.
+				// Get process ID for the foreground window's thread.
 				var foregroundWindow = NativeMethod.GetForegroundWindow();
 				if (foregroundWindow == IntPtr.Zero)
-					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get handle to foreground window.");
+					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get handle to the foreground window.");
 
-				var foregroundWindowThreadId = NativeMethod.GetWindowThreadProcessId(
+				var foregroundWindowId = NativeMethod.GetWindowThreadProcessId(
 					foregroundWindow,
 					IntPtr.Zero);
-				if (foregroundWindowThreadId == 0)
-					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get process ID for foreground window.");
+				if (foregroundWindowId == 0)
+					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get process ID for the foreground window.");
 
-				if (targetWindowThreadId != foregroundWindowThreadId)
+				if (targetWindowId != foregroundWindowId)
 				{
-					// Attach target window's thread to foreground window's thread.
-					var result1 = NativeMethod.AttachThreadInput(
-						foregroundWindowThreadId,
-						targetWindowThreadId,
-						true);
-					if (!result1)
-						throw new Win32Exception(Marshal.GetLastWin32Error(), String.Format("Failed to attach thread ({0}) to thread ({1}).", foregroundWindowThreadId, targetWindowThreadId));
+					try
+					{
+						// Attach target window's thread to the foreground window's thread.
+						var result1 = NativeMethod.AttachThreadInput(
+							foregroundWindowId,
+							targetWindowId,
+							true);
+						if (!result1)
+							throw new Win32Exception(Marshal.GetLastWin32Error(), String.Format("Failed to attach thread ({0}) to thread ({1}).", foregroundWindowId, targetWindowId));
 
-					// Set position of target window.
-					var result2 = NativeMethod.SetWindowPos(
-						handleWindow,
-						IntPtr.Zero,
-						0,
-						0,
-						0,
-						0,
-						NativeMethod.SWP_NOSIZE | NativeMethod.SWP_NOMOVE | NativeMethod.SWP_SHOWWINDOW);
-					if (!result2)
-						throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to set position of this window.");
-
-					// Detach target window's thread from foreground window's thread.
-					var result3 = NativeMethod.AttachThreadInput(
-						foregroundWindowThreadId,
-						targetWindowThreadId,
-						false);
-					if (!result3)
-						throw new Win32Exception(Marshal.GetLastWin32Error(), String.Format("Failed to detach thread ({0}) from thread ({1}).", foregroundWindowThreadId, targetWindowThreadId));
+						// Set position of target window.
+						var result2 = NativeMethod.SetWindowPos(
+							handleWindow,
+							IntPtr.Zero,
+							0,
+							0,
+							0,
+							0,
+							NativeMethod.SWP_NOSIZE | NativeMethod.SWP_NOMOVE | NativeMethod.SWP_SHOWWINDOW);
+						if (!result2)
+							throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to set position of target window.");
+					}
+					finally
+					{
+						// Detach target window's thread from the foreground window's thread.
+						var result3 = NativeMethod.AttachThreadInput(
+							foregroundWindowId,
+							targetWindowId,
+							false);
+						if (!result3)
+							throw new Win32Exception(Marshal.GetLastWin32Error(), String.Format("Failed to detach thread ({0}) from thread ({1}).", foregroundWindowId, targetWindowId));
+					}
 				}
 			}
 			catch (Win32Exception ex)
@@ -180,7 +185,7 @@ namespace DiskGazer.Views
 					y = random.Next((int)targetRect.Top, (int)targetRect.Bottom),
 				});
 
-			// Check handles at the points.
+			// Check handles at each point.
 			var handleWindow = new WindowInteropHelper(target).Handle;
 
 			try
@@ -209,7 +214,7 @@ namespace DiskGazer.Views
 			}
 			catch (Win32Exception ex)
 			{
-				throw new Exception(String.Format("Failed to get handles where this window is supposed to be shown (Code: {0}).", ex.ErrorCode), ex);
+				throw new Exception(String.Format("Failed to get handles where target window is supposed to be shown (Code: {0}).", ex.ErrorCode), ex);
 			}
 		}
 	}

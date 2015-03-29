@@ -36,14 +36,15 @@ namespace DiskGazer.Models
 		/// Read disk by native (asynchronously and with cancellation).
 		/// </summary>
 		/// <param name="rawData">Raw data</param>
-		/// <param name="token">Cancellation token</param>
-		internal static async Task<RawData> ReadDiskNativeAsync(RawData rawData, CancellationToken token)
+		/// <param name="cancellationToken">Cancellation token</param>
+		/// <returns>Result data</returns>
+		internal static async Task<RawData> ReadDiskNativeAsync(RawData rawData, CancellationToken cancellationToken)
 		{
-			var readTask = Task.Run(() => ReadDiskNative(rawData), token);
+			var readTask = Task.Run(() => ReadDiskNative(rawData), cancellationToken);
 
 			var tcs = new TaskCompletionSource<bool>();
 
-			token.Register(() =>
+			cancellationToken.Register(() =>
 			{
 				try
 				{
@@ -72,6 +73,7 @@ namespace DiskGazer.Models
 		/// Read disk by native (synchronously).
 		/// </summary>
 		/// <param name="rawData">Raw data</param>
+		/// <returns>Result data</returns>
 		internal static RawData ReadDiskNative(RawData rawData)
 		{
 			if (!NativeExeExists)
@@ -101,7 +103,7 @@ namespace DiskGazer.Models
 
 				using (_readProcess = new Process
 				{
-					StartInfo = new ProcessStartInfo
+					StartInfo =
 					{
 						FileName = _nativeExePath,
 						Verb = "RunAs", // Run as administrator.
@@ -110,7 +112,7 @@ namespace DiskGazer.Models
 						CreateNoWindow = true,
 						//WindowStyle = ProcessWindowStyle.Hidden,
 						RedirectStandardOutput = true,
-					},
+					}
 				})
 				{
 					_readProcess.Start();
@@ -182,18 +184,20 @@ namespace DiskGazer.Models
 		/// Read disk by P/Invoke (asynchronously and with cancellation).
 		/// </summary>
 		/// <param name="rawData">Raw data</param>
-		/// <param name="token">Cancellation token</param>
-		internal static async Task<RawData> ReadDiskPInvokeAsync(RawData rawData, CancellationToken token)
+		/// <param name="cancellationToken">Cancellation token</param>
+		/// <returns>Result data</returns>
+		internal static async Task<RawData> ReadDiskPInvokeAsync(RawData rawData, CancellationToken cancellationToken)
 		{
-			return await Task.Run(() => ReadDiskPInvoke(rawData, token), token);
+			return await Task.Run(() => ReadDiskPInvoke(rawData, cancellationToken), cancellationToken);
 		}
 
 		/// <summary>
 		/// Read disk by P/Invoke (synchronously and with cancellation).
 		/// </summary>
 		/// <param name="rawData">Raw data</param>
-		/// <param name="token">Cancellation token</param>
-		internal static RawData ReadDiskPInvoke(RawData rawData, CancellationToken token)
+		/// <param name="cancellationToken">Cancellation token</param>
+		/// <returns>Result data</returns>
+		internal static RawData ReadDiskPInvoke(RawData rawData, CancellationToken cancellationToken)
 		{
 			var blockOffsetMultiple = rawData.BlockOffsetMultiple;
 
@@ -216,7 +220,6 @@ namespace DiskGazer.Models
 					NativeMethod.OPEN_EXISTING,
 					NativeMethod.FILE_ATTRIBUTE_NORMAL | NativeMethod.FILE_FLAG_NO_BUFFERING | NativeMethod.FILE_FLAG_SEQUENTIAL_SCAN,
 					IntPtr.Zero);
-
 				if (hFile == null || hFile.IsInvalid)
 				{
 					// This is normal when this application is not run by administrator.
@@ -266,14 +269,13 @@ namespace DiskGazer.Models
 						areaLocationBytes,
 						IntPtr.Zero,
 						NativeMethod.FILE_BEGIN);
-
 					if (result1 == false)
 						throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to move pointer.");
 
 					// Measure disk transfer rate (sequential read).
 					for (int j = 1; j <= loopInner; j++)
 					{
-						token.ThrowIfCancellationRequested();
+						cancellationToken.ThrowIfCancellationRequested();
 
 						sw.Start();
 
@@ -283,7 +285,6 @@ namespace DiskGazer.Models
 							buffSize,
 							ref readSize,
 							IntPtr.Zero);
-
 						if (result2 == false)
 							throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to measure disk transfer rate.");
 
@@ -293,7 +294,7 @@ namespace DiskGazer.Models
 					}
 				}
 
-				token.ThrowIfCancellationRequested();
+				cancellationToken.ThrowIfCancellationRequested();
 
 				// ----------------
 				// Process results.
