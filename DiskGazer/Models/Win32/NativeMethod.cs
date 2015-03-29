@@ -7,7 +7,7 @@ namespace DiskGazer.Models.Win32
 	public class NativeMethod
 	{
 		// Get handle to disk.
-		[DllImport("kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true)]
+		[DllImport("Kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true)]
 		public static extern SafeFileHandle CreateFile(
 			[MarshalAs(UnmanagedType.LPWStr)]
 			string lpFileName,
@@ -38,7 +38,7 @@ namespace DiskGazer.Models.Win32
 		public const uint FILE_FLAG_WRITE_THROUGH = 0x80000000;
 
 		// Get disk information.
-		[DllImport("kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
+		[DllImport("Kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool DeviceIoControl(
 			SafeFileHandle hDevice,
@@ -51,7 +51,7 @@ namespace DiskGazer.Models.Win32
 			IntPtr lpOverlapped);
 
 		// Get disk size.
-		[DllImport("kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
+		[DllImport("Kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool DeviceIoControl(
 			SafeFileHandle hDevice,
@@ -64,7 +64,7 @@ namespace DiskGazer.Models.Win32
 			IntPtr lpOverlapped);
 
 		// Get nominal media rotation rate.
-		[DllImport("kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
+		[DllImport("Kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool DeviceIoControl(
 			SafeFileHandle hDevice,
@@ -211,7 +211,7 @@ namespace DiskGazer.Models.Win32
 		}
 
 		// Move pointer.
-		[DllImport("kernel32.dll", SetLastError = true)]
+		[DllImport("Kernel32.dll", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool SetFilePointerEx(
 			SafeFileHandle hFile,
@@ -224,7 +224,7 @@ namespace DiskGazer.Models.Win32
 		public const uint FILE_END = 2;
 
 		// Read from disk.
-		[DllImport("kernel32.dll", SetLastError = true)]
+		[DllImport("Kernel32.dll", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool ReadFile(
 			SafeFileHandle hFile,

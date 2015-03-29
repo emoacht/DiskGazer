@@ -18,21 +18,20 @@ namespace DiskGazer.Views
 		/// <summary>
 		/// Get rectangle of a specified window.
 		/// </summary>
-		/// <param name="source">Source window</param>
+		/// <param name="source">Source Window</param>
 		internal static Rect GetWindowRect(Window source)
 		{
-			var targetRect = new NativeMethod.RECT();
+			var handleWindow = new WindowInteropHelper(source).Handle;
 
 			try
 			{
-				var handle = new WindowInteropHelper(source).Handle;
+				NativeMethod.RECT targetRect;
 
 				// For Windows XP or older
 				var result = NativeMethod.GetWindowRect(
-					handle,
+					handleWindow,
 					out targetRect);
-
-				if (result == false)
+				if (!result)
 					throw new Win32Exception(Marshal.GetLastWin32Error());
 
 				if (OsVersion.IsVistaOrNewer)
@@ -48,7 +47,7 @@ namespace DiskGazer.Views
 					if (isEnabled)
 					{
 						var result2 = NativeMethod.DwmGetWindowAttribute(
-							handle,
+							handleWindow,
 							NativeMethod.DWMWA_EXTENDED_FRAME_BOUNDS,
 							ref targetRect,
 							Marshal.SizeOf(typeof(NativeMethod.RECT)));
@@ -56,62 +55,61 @@ namespace DiskGazer.Views
 							throw new Win32Exception(Marshal.GetLastWin32Error());
 					}
 				}
+
+				return targetRect.ToRect();
 			}
 			catch (Win32Exception ex)
 			{
 				throw new Exception(String.Format("Failed to get window rect (Code: {0}).", ex.ErrorCode), ex);
 			}
-
-			return new Rect(new Point(targetRect.Left, targetRect.Top), new Point(targetRect.Right, targetRect.Bottom));
 		}
 
 		/// <summary>
 		/// Get size of client area of a specified window.
 		/// </summary>
-		/// <param name="source">Source window</param>
+		/// <param name="source">Source Window</param>
 		internal static Size GetClientAreaSize(Window source)
 		{
-			var targetRect = new NativeMethod.RECT();
+			var handleWindow = new WindowInteropHelper(source).Handle;
 
 			try
 			{
-				var handle = new WindowInteropHelper(source).Handle;
+				NativeMethod.RECT targetRect;
 
-				// GetClientRect method only provides size but not position (Left and Top are always 0).
 				var result = NativeMethod.GetClientRect(
-					handle,
+					handleWindow,
 					out targetRect);
-				if (result == false)
+				if (!result)
 					throw new Win32Exception(Marshal.GetLastWin32Error());
+
+				return targetRect.ToSize();
 			}
 			catch (Win32Exception ex)
 			{
 				throw new Exception(String.Format("Failed to get client area rect (Code: {0}).", ex.ErrorCode), ex);
 			}
-
-			return new Size(targetRect.Right, targetRect.Bottom);
 		}
 
 		/// <summary>
 		/// Activate a specified window.
 		/// </summary>
-		/// <param name="target">Target window</param>
+		/// <param name="target">Target Window</param>
 		internal static void ActivateWindow(Window target)
 		{
-			var handle = new WindowInteropHelper(target).Handle;
+			var handleWindow = new WindowInteropHelper(target).Handle;
 
 			try
 			{
-				// Get process ID for this window's thread.
-				var thisWindowThreadId = NativeMethod.GetWindowThreadProcessId(
-					handle,
+				// Get process ID for target window's thread.
+				var targetWindowThreadId = NativeMethod.GetWindowThreadProcessId(
+					handleWindow,
 					IntPtr.Zero);
-				if (thisWindowThreadId == 0)
+				if (targetWindowThreadId == 0)
 					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get process ID for this window.");
 
 				// Get process ID for foreground window's thread.
 				var foregroundWindow = NativeMethod.GetForegroundWindow();
-				if (foregroundWindow == null)
+				if (foregroundWindow == IntPtr.Zero)
 					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get handle to foreground window.");
 
 				var foregroundWindowThreadId = NativeMethod.GetWindowThreadProcessId(
@@ -120,33 +118,35 @@ namespace DiskGazer.Views
 				if (foregroundWindowThreadId == 0)
 					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get process ID for foreground window.");
 
-				if (thisWindowThreadId != foregroundWindowThreadId)
+				if (targetWindowThreadId != foregroundWindowThreadId)
 				{
-					// Attach this window's thread to foreground window's thread.
+					// Attach target window's thread to foreground window's thread.
 					var result1 = NativeMethod.AttachThreadInput(
 						foregroundWindowThreadId,
-						thisWindowThreadId,
+						targetWindowThreadId,
 						true);
-					if (result1 == false)
-						throw new Win32Exception(Marshal.GetLastWin32Error(), String.Format("Failed to attach thread ({0}) to thread ({1}).", foregroundWindowThreadId, thisWindowThreadId));
+					if (!result1)
+						throw new Win32Exception(Marshal.GetLastWin32Error(), String.Format("Failed to attach thread ({0}) to thread ({1}).", foregroundWindowThreadId, targetWindowThreadId));
 
-					// Set position of this window.
+					// Set position of target window.
 					var result2 = NativeMethod.SetWindowPos(
-						handle,
-						new IntPtr(0),
-						0, 0,
-						0, 0,
+						handleWindow,
+						IntPtr.Zero,
+						0,
+						0,
+						0,
+						0,
 						NativeMethod.SWP_NOSIZE | NativeMethod.SWP_NOMOVE | NativeMethod.SWP_SHOWWINDOW);
-					if (result2 == false)
+					if (!result2)
 						throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to set position of this window.");
 
-					// Detach this window's thread from foreground window's thread.
+					// Detach target window's thread from foreground window's thread.
 					var result3 = NativeMethod.AttachThreadInput(
 						foregroundWindowThreadId,
-						thisWindowThreadId,
+						targetWindowThreadId,
 						false);
-					if (result3 == false)
-						throw new Win32Exception(Marshal.GetLastWin32Error(), String.Format("Failed to detach thread ({0}) from thread ({1}).", foregroundWindowThreadId, thisWindowThreadId));
+					if (!result3)
+						throw new Win32Exception(Marshal.GetLastWin32Error(), String.Format("Failed to detach thread ({0}) from thread ({1}).", foregroundWindowThreadId, targetWindowThreadId));
 				}
 			}
 			catch (Win32Exception ex)
@@ -154,7 +154,7 @@ namespace DiskGazer.Views
 				throw new Exception(String.Format("{0} (Code: {1}).", ex.Message.Substring(0, ex.Message.Length - 1), ex.ErrorCode), ex);
 			}
 
-			// Show and activate this window.
+			// Show and activate target window.
 			if (target.WindowState == WindowState.Minimized)
 				target.WindowState = WindowState.Normal;
 
@@ -165,19 +165,19 @@ namespace DiskGazer.Views
 		/// <summary>
 		/// Check if a specified window is activated.
 		/// </summary>
-		/// <param name="target">Target window</param>
+		/// <param name="target">Target Window</param>
 		/// <returns>True if activated</returns>
 		internal static bool IsWindowActivated(Window target)
 		{
-			// Prepare points where this window is supposed to be shown.
+			// Prepare points where target window is supposed to be shown.
 			var targetRect = GetWindowRect(target);
 			var random = new Random();
 
 			var points = Enumerable.Range(0, 10) // 10 points.
-				.Select(x => new NativeMethod.POINT
+				.Select(_ => new NativeMethod.POINT
 				{
-					X = random.Next((int)targetRect.Left, (int)targetRect.Right),
-					Y = random.Next((int)targetRect.Top, (int)targetRect.Bottom),
+					x = random.Next((int)targetRect.Left, (int)targetRect.Right),
+					y = random.Next((int)targetRect.Top, (int)targetRect.Bottom),
 				});
 
 			// Check handles at the points.
@@ -189,7 +189,7 @@ namespace DiskGazer.Views
 				{
 					var handlePoint = NativeMethod.WindowFromPoint(
 						point);
-					if (handlePoint == null)
+					if (handlePoint == IntPtr.Zero)
 						throw new Win32Exception(Marshal.GetLastWin32Error());
 
 					if (handlePoint == handleWindow)
@@ -198,19 +198,19 @@ namespace DiskGazer.Views
 					var handleAncestor = NativeMethod.GetAncestor(
 						handlePoint,
 						NativeMethod.GA_ROOT);
-					if (handleAncestor == null)
+					if (handleAncestor == IntPtr.Zero)
 						throw new Win32Exception(Marshal.GetLastWin32Error());
 
 					if (handleAncestor != handleWindow)
 						return false;
 				}
+
+				return true;
 			}
 			catch (Win32Exception ex)
 			{
 				throw new Exception(String.Format("Failed to get handles where this window is supposed to be shown (Code: {0}).", ex.ErrorCode), ex);
 			}
-
-			return true;
 		}
 	}
 }
