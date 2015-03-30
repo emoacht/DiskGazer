@@ -134,7 +134,8 @@
 								  IsChecked="{Binding SettingsCurrent.SavesScreenshotLog, Mode=TwoWay}"/>
 						<Separator/>
 
-						<MenuItem Header="Open monitor window"
+						<MenuItem x:Name="MenuItemOpen"
+								  Header="Open monitor window"
 								  Command="ApplicationCommands.Open"/>
 						<MenuItem Header="Indicate window/chart size"
 								  IsCheckable="True"

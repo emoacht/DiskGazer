@@ -65,6 +65,10 @@ namespace DiskGazer.Views
 
 			SetMinSize();
 			ForceChartRedraw();
+
+#if !DEBUG
+			this.MenuItemOpen.Visibility = Visibility.Collapsed;
+#endif
 		}
 
 
