@@ -16,6 +16,10 @@ The logic for sequential read test is based on that of [CrystalDiskMark][1] (3.0
 
 ##History
 
+Ver 1.0.0 2015-3-31
+
+ - First decent release
+
 Ver 0.4.5 2014-09-19
 
  - Refactoring
@@ -52,7 +56,9 @@ Ver 0.2.1 2013-03-17
 
 ##Other
 
- - Menu icons: [Visual Studio Image Library][2]
+ - Library: [WPF Monitor Aware Window][2]
+ - Menu icons: [Visual Studio Image Library][3]
 
 [1]: http://crystalmark.info/
-[2]: http://msdn.microsoft.com/en-us/library/ms246582.aspx
+[2]: https://github.com/emoacht/WpfMonitorAware
+[3]: http://msdn.microsoft.com/en-us/library/ms246582.aspx
