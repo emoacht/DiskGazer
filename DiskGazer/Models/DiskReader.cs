@@ -11,6 +11,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
 
+using DiskGazer.Models.Win32;
+
 namespace DiskGazer.Models
 {
 	internal static class DiskReader
@@ -34,14 +36,15 @@ namespace DiskGazer.Models
 		/// Read disk by native (asynchronously and with cancellation).
 		/// </summary>
 		/// <param name="rawData">Raw data</param>
-		/// <param name="token">Cancellation token</param>
-		internal static async Task<RawData> ReadDiskNativeAsync(RawData rawData, CancellationToken token)
+		/// <param name="cancellationToken">Cancellation token</param>
+		/// <returns>Result data</returns>
+		internal static async Task<RawData> ReadDiskNativeAsync(RawData rawData, CancellationToken cancellationToken)
 		{
-			var readTask = Task.Run(() => ReadDiskNative(rawData), token);
+			var readTask = Task.Run(() => ReadDiskNative(rawData), cancellationToken);
 
 			var tcs = new TaskCompletionSource<bool>();
 
-			token.Register(() =>
+			cancellationToken.Register(() =>
 			{
 				try
 				{
@@ -70,6 +73,7 @@ namespace DiskGazer.Models
 		/// Read disk by native (synchronously).
 		/// </summary>
 		/// <param name="rawData">Raw data</param>
+		/// <returns>Result data</returns>
 		internal static RawData ReadDiskNative(RawData rawData)
 		{
 			if (!NativeExeExists)
@@ -99,7 +103,7 @@ namespace DiskGazer.Models
 
 				using (_readProcess = new Process
 				{
-					StartInfo = new ProcessStartInfo
+					StartInfo =
 					{
 						FileName = _nativeExePath,
 						Verb = "RunAs", // Run as administrator.
@@ -108,7 +112,7 @@ namespace DiskGazer.Models
 						CreateNoWindow = true,
 						//WindowStyle = ProcessWindowStyle.Hidden,
 						RedirectStandardOutput = true,
-					},
+					}
 				})
 				{
 					_readProcess.Start();
@@ -180,18 +184,20 @@ namespace DiskGazer.Models
 		/// Read disk by P/Invoke (asynchronously and with cancellation).
 		/// </summary>
 		/// <param name="rawData">Raw data</param>
-		/// <param name="token">Cancellation token</param>
-		internal static async Task<RawData> ReadDiskPInvokeAsync(RawData rawData, CancellationToken token)
+		/// <param name="cancellationToken">Cancellation token</param>
+		/// <returns>Result data</returns>
+		internal static async Task<RawData> ReadDiskPInvokeAsync(RawData rawData, CancellationToken cancellationToken)
 		{
-			return await Task.Run(() => ReadDiskPInvoke(rawData, token), token);
+			return await Task.Run(() => ReadDiskPInvoke(rawData, cancellationToken), cancellationToken);
 		}
 
 		/// <summary>
 		/// Read disk by P/Invoke (synchronously and with cancellation).
 		/// </summary>
 		/// <param name="rawData">Raw data</param>
-		/// <param name="token">Cancellation token</param>
-		internal static RawData ReadDiskPInvoke(RawData rawData, CancellationToken token)
+		/// <param name="cancellationToken">Cancellation token</param>
+		/// <returns>Result data</returns>
+		internal static RawData ReadDiskPInvoke(RawData rawData, CancellationToken cancellationToken)
 		{
 			var blockOffsetMultiple = rawData.BlockOffsetMultiple;
 
@@ -206,25 +212,24 @@ namespace DiskGazer.Models
 				// created by hiyohiyo (http://crystalmark.info/).
 
 				// Get handle to disk.
-				hFile = W32.CreateFile(
-					String.Format("\\\\.\\PhysicalDrive{0}", Settings.Current.PhysicalDrive),
-					W32.GENERIC_READ, // Administrative privilege is required.
+				hFile = NativeMethod.CreateFile(
+					String.Format(@"\\.\PhysicalDrive{0}", Settings.Current.PhysicalDrive),
+					NativeMethod.GENERIC_READ, // Administrative privilege is required.
 					0,
 					IntPtr.Zero,
-					W32.OPEN_EXISTING,
-					W32.FILE_ATTRIBUTE_NORMAL | W32.FILE_FLAG_NO_BUFFERING | W32.FILE_FLAG_SEQUENTIAL_SCAN,
+					NativeMethod.OPEN_EXISTING,
+					NativeMethod.FILE_ATTRIBUTE_NORMAL | NativeMethod.FILE_FLAG_NO_BUFFERING | NativeMethod.FILE_FLAG_SEQUENTIAL_SCAN,
 					IntPtr.Zero);
-
 				if (hFile == null || hFile.IsInvalid)
+				{
 					// This is normal when this application is not run by administrator.
 					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get handle to disk.");
+				}
 
 				// Prepare parameters.
 				var areaSizeActual = Settings.Current.AreaSize; // Area size for actual reading (MiB)
 				if (0 < Settings.Current.BlockOffset)
-				{
 					areaSizeActual -= 1; // 1 is for the last MiB of area. If offset, it may exceed disk size.
-				}
 
 				int readNum = (areaSizeActual * 1024) / Settings.Current.BlockSize; // The number of reads
 
@@ -256,34 +261,30 @@ namespace DiskGazer.Models
 				for (int i = 0; i < loopOuter; i++)
 				{
 					if (0 < i)
-					{
 						areaLocationBytes += jumpBytes;
-					}
 
 					// Move pointer.
-					var result1 = W32.SetFilePointerEx(
+					var result1 = NativeMethod.SetFilePointerEx(
 						hFile,
 						areaLocationBytes,
 						IntPtr.Zero,
-						W32.FILE_BEGIN);
-
+						NativeMethod.FILE_BEGIN);
 					if (result1 == false)
 						throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to move pointer.");
 
 					// Measure disk transfer rate (sequential read).
 					for (int j = 1; j <= loopInner; j++)
 					{
-						token.ThrowIfCancellationRequested();
+						cancellationToken.ThrowIfCancellationRequested();
 
 						sw.Start();
 
-						var result2 = W32.ReadFile(
+						var result2 = NativeMethod.ReadFile(
 							hFile,
 							buff,
 							buffSize,
 							ref readSize,
 							IntPtr.Zero);
-
 						if (result2 == false)
 							throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to measure disk transfer rate.");
 
@@ -293,7 +294,7 @@ namespace DiskGazer.Models
 					}
 				}
 
-				token.ThrowIfCancellationRequested();
+				cancellationToken.ThrowIfCancellationRequested();
 
 				// ----------------
 				// Process results.
@@ -352,9 +353,11 @@ namespace DiskGazer.Models
 			finally
 			{
 				if (hFile != null)
+				{
 					// CloseHandle is inappropriate to close SafeFileHandle.
 					// Dispose method is not necessary because Close method will call it internally.
 					hFile.Close();
+				}
 			}
 
 			return rawData;

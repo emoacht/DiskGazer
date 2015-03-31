@@ -3,8 +3,8 @@
 #include <windows.h>
 
 VS_VERSION_INFO    VERSIONINFO
-FILEVERSION        0,2,0,1
-PRODUCTVERSION     0,2,0,1
+FILEVERSION        1,0,0,0
+PRODUCTVERSION     1,0,0,0
 FILEFLAGSMASK      VS_FFI_FILEFLAGSMASK
 FILEFLAGS          0x0L
 FILEOS             VOS_NT_WINDOWS32
@@ -17,12 +17,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName",      ""
             VALUE "FileDescription",  "Win32 console application for Disk Gazer"
-            VALUE "FileVersion",      "0.2.0.1"
+            VALUE "FileVersion",      "1.0.0.0"
             VALUE "InternalName",     "Gazer.exe"
-            VALUE "LegalCopyright",   "Copyright (c) 2013-2014 EMO"
+            VALUE "LegalCopyright",   "Copyright (c) 2013-2015 EMO"
             VALUE "OriginalFilename", "Gazer.exe"
             VALUE "ProductName",      "Disk Gazer"
-            VALUE "ProductVersion",   "0.2.0.1"
+            VALUE "ProductVersion",   "1.0.0.0"
         END 
     END
     BLOCK "VarFileInfo"

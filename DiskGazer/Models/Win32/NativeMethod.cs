@@ -1,13 +1,13 @@
-﻿using Microsoft.Win32.SafeHandles;
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
-namespace DiskGazer.Models
+namespace DiskGazer.Models.Win32
 {
-	public class W32
+	public class NativeMethod
 	{
-		// Get handle to disk.
-		[DllImport("kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true)]
+		// Get handle to a specified disk.
+		[DllImport("Kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true)]
 		public static extern SafeFileHandle CreateFile(
 			[MarshalAs(UnmanagedType.LPWStr)]
 			string lpFileName,
@@ -37,8 +37,8 @@ namespace DiskGazer.Models
 		public const uint FILE_FLAG_SEQUENTIAL_SCAN = 0x8000000;
 		public const uint FILE_FLAG_WRITE_THROUGH = 0x80000000;
 
-		// Get disk information.
-		[DllImport("kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
+		// Get information on a specified disk.
+		[DllImport("Kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool DeviceIoControl(
 			SafeFileHandle hDevice,
@@ -50,8 +50,8 @@ namespace DiskGazer.Models
 			out uint lpBytesReturned,
 			IntPtr lpOverlapped);
 
-		// Get disk size.
-		[DllImport("kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
+		// Get size of a specified disk.
+		[DllImport("Kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool DeviceIoControl(
 			SafeFileHandle hDevice,
@@ -64,7 +64,7 @@ namespace DiskGazer.Models
 			IntPtr lpOverlapped);
 
 		// Get nominal media rotation rate.
-		[DllImport("kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
+		[DllImport("Kernel32.dll", EntryPoint = "DeviceIoControl", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool DeviceIoControl(
 			SafeFileHandle hDevice,
@@ -172,8 +172,6 @@ namespace DiskGazer.Models
 			BusTypeMaxReserved = 0x7F
 		}
 
-		public const uint ATA_FLAGS_DATA_IN = 0x02;
-
 		[StructLayout(LayoutKind.Sequential)]
 		public struct ATAIdentifyDeviceQuery
 		{
@@ -186,7 +184,7 @@ namespace DiskGazer.Models
 		public struct ATA_PASS_THROUGH_EX
 		{
 			public ushort Length;
-			public ushort AtaFlags;
+			public ATA_FLAGS AtaFlags;
 			public byte PathId;
 			public byte TargetId;
 			public byte Lun;
@@ -201,8 +199,19 @@ namespace DiskGazer.Models
 			public byte[] CurrentTaskFile;
 		}
 
-		// Move pointer.
-		[DllImport("kernel32.dll", SetLastError = true)]
+		[Flags]
+		public enum ATA_FLAGS : ushort
+		{
+			ATA_FLAGS_DRDY_REQUIRED = 1,
+			ATA_FLAGS_DATA_IN = 2,
+			ATA_FLAGS_DATA_OUT = 4,
+			ATA_FLAGS_48BIT_COMMAND = 8,
+			ATA_FLAGS_USE_DMA = 16,
+			ATA_FLAGS_NO_MULTIPLE = 32
+		}
+
+		// Move a pointer.
+		[DllImport("Kernel32.dll", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool SetFilePointerEx(
 			SafeFileHandle hFile,
@@ -214,8 +223,8 @@ namespace DiskGazer.Models
 		public const uint FILE_CURRENT = 1;
 		public const uint FILE_END = 2;
 
-		// Read from disk.
-		[DllImport("kernel32.dll", SetLastError = true)]
+		// Read from a specified disk.
+		[DllImport("Kernel32.dll", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool ReadFile(
 			SafeFileHandle hFile,

@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Interop;
 
 using DiskGazer.Helper;
+using DiskGazer.Views.Win32;
 
 namespace DiskGazer.Views
 {
@@ -17,21 +18,20 @@ namespace DiskGazer.Views
 		/// <summary>
 		/// Get rectangle of a specified window.
 		/// </summary>
-		/// <param name="source">Source window</param>
+		/// <param name="source">Source Window</param>
 		internal static Rect GetWindowRect(Window source)
 		{
-			var rct = new W32.RECT();
+			var handleWindow = new WindowInteropHelper(source).Handle;
 
 			try
 			{
-				var handle = new WindowInteropHelper(source).Handle;
+				NativeMethod.RECT targetRect;
 
 				// For Windows XP or older
-				var result = W32.GetWindowRect(
-					handle,
-					out rct);
-
-				if (result == false)
+				var result = NativeMethod.GetWindowRect(
+					handleWindow,
+					out targetRect);
+				if (!result)
 					throw new Win32Exception(Marshal.GetLastWin32Error());
 
 				if (OsVersion.IsVistaOrNewer)
@@ -39,119 +39,119 @@ namespace DiskGazer.Views
 					// For Windows Vista or newer
 					bool isEnabled = false;
 
-					var hresult1 = W32.DwmIsCompositionEnabled(ref isEnabled);
-					if (hresult1 != W32.S_OK)
+					var result1 = NativeMethod.DwmIsCompositionEnabled(
+						ref isEnabled);
+					if (result1 != 0) // 0 means S_OK.
 						throw new Win32Exception(Marshal.GetLastWin32Error());
 
 					if (isEnabled)
 					{
-						var hresult2 = W32.DwmGetWindowAttribute(
-							handle,
-							W32.DWMWA_EXTENDED_FRAME_BOUNDS,
-							ref rct,
-							Marshal.SizeOf(typeof(W32.RECT)));
-
-						if (hresult2 != W32.S_OK)
+						var result2 = NativeMethod.DwmGetWindowAttribute(
+							handleWindow,
+							NativeMethod.DWMWA_EXTENDED_FRAME_BOUNDS,
+							ref targetRect,
+							Marshal.SizeOf(typeof(NativeMethod.RECT)));
+						if (result2 != 0) // 0 means S_OK.
 							throw new Win32Exception(Marshal.GetLastWin32Error());
 					}
 				}
+
+				return targetRect.ToRect();
 			}
 			catch (Win32Exception ex)
 			{
 				throw new Exception(String.Format("Failed to get window rect (Code: {0}).", ex.ErrorCode), ex);
 			}
-
-			return new Rect(new Point(rct.Left, rct.Top), new Point(rct.Right, rct.Bottom));
 		}
 
 		/// <summary>
 		/// Get size of client area of a specified window.
 		/// </summary>
-		/// <param name="source">Source window</param>
+		/// <param name="source">Source Window</param>
 		internal static Size GetClientAreaSize(Window source)
 		{
-			var rct = new W32.RECT();
+			var handleWindow = new WindowInteropHelper(source).Handle;
 
 			try
 			{
-				var handle = new WindowInteropHelper(source).Handle;
+				NativeMethod.RECT targetRect;
 
-				// GetClientRect method only provides size but not position (Left and Top are always 0).
-				var result = W32.GetClientRect(
-					handle,
-					out rct);
-
-				if (result == false)
+				var result = NativeMethod.GetClientRect(
+					handleWindow,
+					out targetRect);
+				if (!result)
 					throw new Win32Exception(Marshal.GetLastWin32Error());
+
+				return targetRect.ToSize();
 			}
 			catch (Win32Exception ex)
 			{
 				throw new Exception(String.Format("Failed to get client area rect (Code: {0}).", ex.ErrorCode), ex);
 			}
-
-			return new Size(rct.Right, rct.Bottom);
 		}
 
 		/// <summary>
 		/// Activate a specified window.
 		/// </summary>
-		/// <param name="target">Target window</param>
+		/// <param name="target">Target Window</param>
 		internal static void ActivateWindow(Window target)
 		{
-			var handle = new WindowInteropHelper(target).Handle;
+			var handleWindow = new WindowInteropHelper(target).Handle;
 
 			try
 			{
-				// Get process ID for this window's thread.
-				var thisWindowThreadId = W32.GetWindowThreadProcessId(
-					handle,
+				// Get process ID for target window's thread.
+				var targetWindowId = NativeMethod.GetWindowThreadProcessId(
+					handleWindow,
 					IntPtr.Zero);
+				if (targetWindowId == 0)
+					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get process ID for target window.");
 
-				if (thisWindowThreadId == 0)
-					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get process ID for this window.");
+				// Get process ID for the foreground window's thread.
+				var foregroundWindow = NativeMethod.GetForegroundWindow();
+				if (foregroundWindow == IntPtr.Zero)
+					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get handle to the foreground window.");
 
-				// Get process ID for foreground window's thread.
-				var foregroundWindow = W32.GetForegroundWindow();
-				if (foregroundWindow == null)
-					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get handle to foreground window.");
-
-				var foregroundWindowThreadId = W32.GetWindowThreadProcessId(
+				var foregroundWindowId = NativeMethod.GetWindowThreadProcessId(
 					foregroundWindow,
 					IntPtr.Zero);
+				if (foregroundWindowId == 0)
+					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get process ID for the foreground window.");
 
-				if (foregroundWindowThreadId == 0)
-					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get process ID for foreground window.");
-
-				if (thisWindowThreadId != foregroundWindowThreadId)
+				if (targetWindowId != foregroundWindowId)
 				{
-					// Attach this window's thread to foreground window's thread.
-					var result1 = W32.AttachThreadInput(
-						foregroundWindowThreadId,
-						thisWindowThreadId,
-						true);
+					try
+					{
+						// Attach target window's thread to the foreground window's thread.
+						var result1 = NativeMethod.AttachThreadInput(
+							foregroundWindowId,
+							targetWindowId,
+							true);
+						if (!result1)
+							throw new Win32Exception(Marshal.GetLastWin32Error(), String.Format("Failed to attach thread ({0}) to thread ({1}).", foregroundWindowId, targetWindowId));
 
-					if (result1 == false)
-						throw new Win32Exception(Marshal.GetLastWin32Error(), String.Format("Failed to attach thread ({0}) to thread ({1}).", foregroundWindowThreadId, thisWindowThreadId));
-
-					// Set position of this window.
-					var result2 = W32.SetWindowPos(
-						handle,
-						new IntPtr(0),
-						0, 0,
-						0, 0,
-						W32.SWP_NOSIZE | W32.SWP_NOMOVE | W32.SWP_SHOWWINDOW);
-
-					if (result2 == false)
-						throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to set position of this window.");
-
-					// Detach this window's thread from foreground window's thread.
-					var result3 = W32.AttachThreadInput(
-						foregroundWindowThreadId,
-						thisWindowThreadId,
-						false);
-
-					if (result3 == false)
-						throw new Win32Exception(Marshal.GetLastWin32Error(), String.Format("Failed to detach thread ({0}) from thread ({1}).", foregroundWindowThreadId, thisWindowThreadId));
+						// Set position of target window.
+						var result2 = NativeMethod.SetWindowPos(
+							handleWindow,
+							IntPtr.Zero,
+							0,
+							0,
+							0,
+							0,
+							NativeMethod.SWP_NOSIZE | NativeMethod.SWP_NOMOVE | NativeMethod.SWP_SHOWWINDOW);
+						if (!result2)
+							throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to set position of target window.");
+					}
+					finally
+					{
+						// Detach target window's thread from the foreground window's thread.
+						var result3 = NativeMethod.AttachThreadInput(
+							foregroundWindowId,
+							targetWindowId,
+							false);
+						if (!result3)
+							throw new Win32Exception(Marshal.GetLastWin32Error(), String.Format("Failed to detach thread ({0}) from thread ({1}).", foregroundWindowId, targetWindowId));
+					}
 				}
 			}
 			catch (Win32Exception ex)
@@ -159,7 +159,7 @@ namespace DiskGazer.Views
 				throw new Exception(String.Format("{0} (Code: {1}).", ex.Message.Substring(0, ex.Message.Length - 1), ex.ErrorCode), ex);
 			}
 
-			// Show and activate this window.
+			// Show and activate target window.
 			if (target.WindowState == WindowState.Minimized)
 				target.WindowState = WindowState.Normal;
 
@@ -170,71 +170,52 @@ namespace DiskGazer.Views
 		/// <summary>
 		/// Check if a specified window is activated.
 		/// </summary>
-		/// <param name="target">Target window</param>
+		/// <param name="target">Target Window</param>
 		/// <returns>True if activated</returns>
 		internal static bool IsWindowActivated(Window target)
 		{
-			// Prepare points where this window is supposed to be shown.
-			var points = new List<W32.POINT>();
+			// Prepare points where target window is supposed to be shown.
+			var targetRect = GetWindowRect(target);
+			var random = new Random();
 
-			var rct = GetWindowRect(target);
-			var rnd = new Random();
-
-			for (int i = 0; i <= 9; i++) // 10 points.
-			{
-				var point = new W32.POINT()
+			var points = Enumerable.Range(0, 10) // 10 points.
+				.Select(_ => new NativeMethod.POINT
 				{
-					X = rnd.Next((int)rct.Left, (int)rct.Right),
-					Y = rnd.Next((int)rct.Top, (int)rct.Bottom),
-				};
+					x = random.Next((int)targetRect.Left, (int)targetRect.Right),
+					y = random.Next((int)targetRect.Top, (int)targetRect.Bottom),
+				});
 
-				points.Add(point);
-			}
-
-			// Check handles at the points.
+			// Check handles at each point.
 			var handleWindow = new WindowInteropHelper(target).Handle;
 
 			try
 			{
 				foreach (var point in points)
 				{
-					var handlePoint = W32.WindowFromPoint(point);
-					if (handlePoint == null)
+					var handlePoint = NativeMethod.WindowFromPoint(
+						point);
+					if (handlePoint == IntPtr.Zero)
 						throw new Win32Exception(Marshal.GetLastWin32Error());
 
 					if (handlePoint == handleWindow)
 						continue;
 
-					var handleAncestor = W32.GetAncestor(
+					var handleAncestor = NativeMethod.GetAncestor(
 						handlePoint,
-						W32.GA_ROOT);
-
-					if (handleAncestor == null)
+						NativeMethod.GA_ROOT);
+					if (handleAncestor == IntPtr.Zero)
 						throw new Win32Exception(Marshal.GetLastWin32Error());
 
 					if (handleAncestor != handleWindow)
 						return false;
 				}
+
+				return true;
 			}
 			catch (Win32Exception ex)
 			{
-				throw new Exception(String.Format("Failed to get handles where this window is supposed to be shown (Code: {0}).", ex.ErrorCode), ex);
+				throw new Exception(String.Format("Failed to get handles where target window is supposed to be shown (Code: {0}).", ex.ErrorCode), ex);
 			}
-
-			return true;
-		}
-
-		/// <summary>
-		/// Get rate of current DPI of a specified window against 96.
-		/// </summary>
-		/// <param name="window">Source window</param>
-		internal static double GetDpiRate(Window window)
-		{
-			var source = PresentationSource.FromVisual(window);
-			if ((source == null) || (source.CompositionTarget == null))
-				return 1D; // Fall back
-
-			return source.CompositionTarget.TransformToDevice.M11;
 		}
 	}
 }

@@ -22,10 +22,10 @@ namespace DiskGazer.Common
 			if (memberExpression == null)
 				throw new ArgumentException("The expression is not a member access expression.", "propertyExpression");
 
-			RaisePropertyChanged(memberExpression.Member.Name);
+			this.RaisePropertyChanged(memberExpression.Member.Name);
 		}
 
-		protected virtual void RaisePropertyChanged([CallerMemberName]string propertyName = null)
+		protected virtual void RaisePropertyChanged([CallerMemberName] string propertyName = null)
 		{
 			var handler = this.PropertyChanged;
 			if (handler != null)

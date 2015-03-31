@@ -14,6 +14,7 @@ namespace DiskGazer.Models
 		/// <summary>
 		/// Search disks by WMI.
 		/// </summary>
+		/// <returns>List of disk information</returns>
 		internal static List<DiskInfo> Search()
 		{
 			var diskRosterPre = new List<DiskInfo>();
@@ -23,10 +24,11 @@ namespace DiskGazer.Models
 
 			return diskRosterPre;
 		}
-
+		
 		/// <summary>
 		/// Search drives by WMI (Win32_DiskDrive).
 		/// </summary>
+		/// <param name="diskRosterPre">List of disk information</param>
 		private static void SearchDiskDrive(ref List<DiskInfo> diskRosterPre)
 		{
 			var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_DiskDrive");
@@ -72,17 +74,14 @@ namespace DiskGazer.Models
 		/// <summary>
 		/// Search drives and supplement information by WMI (MSFT_PhysicalDisk).
 		/// </summary>
+		/// <param name="diskRosterPre">List of disk information</param>
 		/// <remarks>Windows Storage Management API is only available for Windows 8 or newer.</remarks>
 		private static void SearchPhysicalDisk(ref List<DiskInfo> diskRosterPre)
 		{
 			if (!OsVersion.IsEightOrNewer)
 				return;
 
-			var scope = new ManagementScope("\\\\.\\root\\microsoft\\windows\\storage");
-			scope.Connect();
-
-			var searcher = new ManagementObjectSearcher("SELECT * FROM MSFT_PhysicalDisk");
-			searcher.Scope = scope;
+			var searcher = new ManagementObjectSearcher(@"\\.\Root\Microsoft\Windows\Storage", "SELECT * FROM MSFT_PhysicalDisk");
 
 			foreach (var drive in searcher.Get())
 			{

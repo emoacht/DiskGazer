@@ -64,7 +64,7 @@ namespace DiskGazer.Models
 
 		private readonly List<Dictionary<double, double>> _diskScoresRun = new List<Dictionary<double, double>>(); // Temporary scores of runs
 		private KeyValuePair<double, double>[] _diskScoresStep; // Temporary scores of steps
-		private int _diskScoresStepCount = 0; // The number of temporary scores of steps
+		private int _diskScoresStepCount; // The number of temporary scores of steps
 
 		private CancellationTokenSource _tokenSource;
 		private bool _isTokenSourceDisposed;
@@ -137,13 +137,13 @@ namespace DiskGazer.Models
 
 		#region Read (Private)
 
-		private async Task ReadAsnyc(IProgress<ProgressInfo> progress, CancellationToken token)
+		private async Task ReadAsnyc(IProgress<ProgressInfo> progress, CancellationToken cancellationToken)
 		{
 			try
 			{
 				IsReading = true;
 
-				await ReadBaseAsync(progress, token);
+				await ReadBaseAsync(progress, cancellationToken);
 
 				progress.Report(new ProgressInfo("Analyzing"));
 			}
@@ -162,13 +162,13 @@ namespace DiskGazer.Models
 			}
 		}
 
-		private async Task ReadBaseAsync(IProgress<ProgressInfo> progress, CancellationToken token)
+		private async Task ReadBaseAsync(IProgress<ProgressInfo> progress, CancellationToken cancellationToken)
 		{
 			for (int i = 1; i <= Settings.Current.NumRun; i++)
 			{
 				for (int j = 0; j < NumStep; j++)
 				{
-					token.ThrowIfCancellationRequested();
+					cancellationToken.ThrowIfCancellationRequested();
 
 					var rawData = new RawData();
 					rawData.Run = i;
@@ -183,15 +183,15 @@ namespace DiskGazer.Models
 					switch (Settings.Current.Method)
 					{
 						case ReadMethod.Native:
-							rawData = await DiskReader.ReadDiskNativeAsync(rawData, token);
+							rawData = await DiskReader.ReadDiskNativeAsync(rawData, cancellationToken);
 							break;
 
 						case ReadMethod.P_Invoke:
-							rawData = await DiskReader.ReadDiskPInvokeAsync(rawData, token);
+							rawData = await DiskReader.ReadDiskPInvokeAsync(rawData, cancellationToken);
 							break;
 					}
 
-					token.ThrowIfCancellationRequested();
+					cancellationToken.ThrowIfCancellationRequested();
 
 					// Update progress after reading.
 					progress.Report(ComposeProgressInfo(rawData));
@@ -278,7 +278,7 @@ namespace DiskGazer.Models
 
 		private readonly TimeSpan _waitTime = TimeSpan.FromMilliseconds(100); // Wait time when queue has no data
 
-		private async Task AnalyzeAsync(IProgress<ProgressInfo> progress, CancellationToken token)
+		private async Task AnalyzeAsync(IProgress<ProgressInfo> progress, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -286,12 +286,12 @@ namespace DiskGazer.Models
 
 				while (IsReading || !_rawDataQueue.IsEmpty)
 				{
-					token.ThrowIfCancellationRequested();
+					cancellationToken.ThrowIfCancellationRequested();
 
 					if (_rawDataQueue.IsEmpty)
 					{
 						// Wait for new data.
-						await Task.Delay(_waitTime, token);
+						await Task.Delay(_waitTime, cancellationToken);
 						continue;
 					}
 
@@ -307,7 +307,7 @@ namespace DiskGazer.Models
 
 					progress.Report(new ProgressInfo(innerStatusIn, false));
 
-					await Task.Run(() => AnalyzeBase(rawData, progress, token), token);
+					await Task.Run(() => AnalyzeBase(rawData, progress, cancellationToken), cancellationToken);
 
 					// Update progress after analyzing.					
 					var innerStatusOut = String.Format("[{0}/{1} - {2}/{3} Analyzer Out ({4})]",
@@ -332,14 +332,14 @@ namespace DiskGazer.Models
 			}
 		}
 
-		private void AnalyzeBase(RawData rawData, IProgress<ProgressInfo> progress, CancellationToken token)
+		private void AnalyzeBase(RawData rawData, IProgress<ProgressInfo> progress, CancellationToken cancellationToken)
 		{
 			var score = CombineLocationData(rawData.BlockOffsetMultiple, rawData.Data).ToArray();
 
 			if (!score.Any())
 				return;
 
-			token.ThrowIfCancellationRequested();
+			cancellationToken.ThrowIfCancellationRequested();
 
 			// ------------------------
 			// Process scores of steps.
@@ -401,7 +401,7 @@ namespace DiskGazer.Models
 				throw;
 			}
 
-			token.ThrowIfCancellationRequested();
+			cancellationToken.ThrowIfCancellationRequested();
 
 			// -----------------------
 			// Process scores of runs.

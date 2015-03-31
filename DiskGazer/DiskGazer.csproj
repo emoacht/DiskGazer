@@ -58,6 +58,10 @@
     <ApplicationIcon>Resources\Gazer.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MonitorAware, Version=0.4.2.13, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Library\MonitorAware.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -111,8 +115,8 @@
     </Compile>
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="Views\ProductInfo.cs" />
-    <Compile Include="Models\W32.cs" />
-    <Compile Include="Views\W32.cs" />
+    <Compile Include="Models\Win32\NativeMethod.cs" />
+    <Compile Include="Views\Win32\NativeMethod.cs" />
     <Page Include="Views\Styles\Controls.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -209,6 +213,10 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\refresh_16xLG.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Library\MonitorAware.dll" />
+    <Resource Include="Library\MonitorAware.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
