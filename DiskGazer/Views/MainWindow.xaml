@@ -7,7 +7,7 @@
 		xmlns:controls="clr-namespace:DiskGazer.Views.Controls"
 		xmlns:converters="clr-namespace:DiskGazer.Views.Converters"
 		x:Name="MainWindowRoot"
-		Title="{Binding Source={x:Static views:ProductInfo.NameVersionMiddle}, Mode=OneWay}"
+		Title="{Binding Source={x:Static views:ProductInfo.NameVersionShort}, Mode=OneWay}"
 		FontFamily="Verdana" FontSize="11"
 		Width="600" Height="460"
 		Icon="/DiskGazer;component/Resources/Gazer.ico"

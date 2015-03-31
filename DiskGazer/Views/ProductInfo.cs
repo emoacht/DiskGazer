@@ -93,9 +93,9 @@ namespace DiskGazer.Views
 		#endregion
 
 
-		public static string NameVersionShort
+		public static string NameVersionLong
 		{
-			get { return String.Format("{0} {1}", Title, Version.ToString(2)); }
+			get { return String.Format("{0} {1}", Title, Version); }
 		}
 
 		public static string NameVersionMiddle
@@ -103,9 +103,9 @@ namespace DiskGazer.Views
 			get { return String.Format("{0} {1}", Title, Version.ToString(3)); }
 		}
 
-		public static string NameVersionLong
+		public static string NameVersionShort
 		{
-			get { return String.Format("{0} {1}", Title, Version); }
+			get { return String.Format("{0} {1}", Title, Version.ToString(2)); }
 		}
 	}
 }
