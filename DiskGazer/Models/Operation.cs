@@ -60,8 +60,6 @@ namespace DiskGazer.Models
 		#endregion
 
 
-		private ConcurrentQueue<RawData> _rawDataQueue; // Queue of raw data
-
 		private readonly List<Dictionary<double, double>> _diskScoresRun = new List<Dictionary<double, double>>(); // Temporary scores of runs
 		private KeyValuePair<double, double>[] _diskScoresStep; // Temporary scores of steps
 		private int _diskScoresStepCount; // The number of temporary scores of steps
@@ -82,8 +80,6 @@ namespace DiskGazer.Models
 			IsCanceled = false;
 			_currentSpeed = 0D;
 
-			_rawDataQueue = new ConcurrentQueue<RawData>();
-
 			_diskScoresRun.Clear();
 
 			try
@@ -91,11 +87,14 @@ namespace DiskGazer.Models
 				_tokenSource = new CancellationTokenSource();
 				_isTokenSourceDisposed = false;
 
-				// Read and analyze disk in parallel.
-				var readTask = ReadAsnyc(progress, _tokenSource.Token);
-				var analyzeTask = AnalyzeAsync(progress, _tokenSource.Token);
+				using (var rawDataCollection = new BlockingCollection<RawData>())
+				{
+					// Read and analyze disk in parallel.
+					var readTask = ReadAsnyc(rawDataCollection, progress, _tokenSource.Token);
+					var analyzeTask = AnalyzeAsync(rawDataCollection, progress, _tokenSource.Token);
 
-				await Task.WhenAll(readTask, analyzeTask);
+					await Task.WhenAll(readTask, analyzeTask);
+				}
 			}
 			catch (OperationCanceledException)
 			{
@@ -137,13 +136,13 @@ namespace DiskGazer.Models
 
 		#region Read (Private)
 
-		private async Task ReadAsnyc(IProgress<ProgressInfo> progress, CancellationToken cancellationToken)
+		private async Task ReadAsnyc(BlockingCollection<RawData> rawDataCollection, IProgress<ProgressInfo> progress, CancellationToken cancellationToken)
 		{
 			try
 			{
 				IsReading = true;
 
-				await ReadBaseAsync(progress, cancellationToken);
+				await ReadBaseAsync(rawDataCollection, progress, cancellationToken);
 
 				progress.Report(new ProgressInfo("Analyzing"));
 			}
@@ -162,56 +161,62 @@ namespace DiskGazer.Models
 			}
 		}
 
-		private async Task ReadBaseAsync(IProgress<ProgressInfo> progress, CancellationToken cancellationToken)
+		private async Task ReadBaseAsync(BlockingCollection<RawData> rawDataCollection, IProgress<ProgressInfo> progress, CancellationToken cancellationToken)
 		{
-			for (int i = 1; i <= Settings.Current.NumRun; i++)
+			try
 			{
-				for (int j = 0; j < NumStep; j++)
+				for (int i = 1; i <= Settings.Current.NumRun; i++)
 				{
-					cancellationToken.ThrowIfCancellationRequested();
-
-					var rawData = new RawData();
-					rawData.Run = i;
-					rawData.Step = j + 1;
-					rawData.Result = ReadResult.NotYet;
-
-					// Update progress before reading.
-					progress.Report(ComposeProgressInfo(rawData));
-
-					rawData.BlockOffsetMultiple = j;
-
-					switch (Settings.Current.Method)
+					for (int j = 0; j < NumStep; j++)
 					{
-						case ReadMethod.Native:
-							rawData = await DiskReader.ReadDiskNativeAsync(rawData, cancellationToken);
-							break;
+						cancellationToken.ThrowIfCancellationRequested();
 
-						case ReadMethod.P_Invoke:
-							rawData = await DiskReader.ReadDiskPInvokeAsync(rawData, cancellationToken);
-							break;
-					}
+						var rawData = new RawData();
+						rawData.Run = i;
+						rawData.Step = j + 1;
+						rawData.Result = ReadResult.NotYet;
 
-					cancellationToken.ThrowIfCancellationRequested();
+						// Update progress before reading.
+						progress.Report(ComposeProgressInfo(rawData));
 
-					// Update progress after reading.
-					progress.Report(ComposeProgressInfo(rawData));
+						rawData.BlockOffsetMultiple = j;
 
-					if (rawData.Result == ReadResult.Success) // If success.
-					{
-						// Store raw data into queue.
-						_rawDataQueue.Enqueue(rawData);
-
-						// Leave current speed.
-						if (rawData.Data != null)
+						switch (Settings.Current.Method)
 						{
-							_currentSpeed = rawData.Data.Average();
+							case ReadMethod.Native:
+								rawData = await DiskReader.ReadDiskNativeAsync(rawData, cancellationToken);
+								break;
+
+							case ReadMethod.P_Invoke:
+								rawData = await DiskReader.ReadDiskPInvokeAsync(rawData, cancellationToken);
+								break;
+						}
+
+						cancellationToken.ThrowIfCancellationRequested();
+
+						// Update progress after reading.
+						progress.Report(ComposeProgressInfo(rawData));
+
+						if (rawData.Result == ReadResult.Success) // If success.
+						{
+							rawDataCollection.Add(rawData, cancellationToken);
+
+							// Leave current speed.
+							if (rawData.Data != null)
+							{
+								_currentSpeed = rawData.Data.Average();
+							}
+						}
+						else if (rawData.Result == ReadResult.Failure) // If failure.
+						{
+							throw new Exception(rawData.Message);
 						}
 					}
-					else if (rawData.Result == ReadResult.Failure) // If failure.
-					{
-						throw new Exception(rawData.Message);
-					}
 				}
+			}
+			finally
+			{
+				rawDataCollection.CompleteAdding();
 			}
 		}
 
@@ -276,46 +281,43 @@ namespace DiskGazer.Models
 
 		#region Analyze (Private)
 
-		private readonly TimeSpan _waitTime = TimeSpan.FromMilliseconds(100); // Wait time when queue has no data
-
-		private async Task AnalyzeAsync(IProgress<ProgressInfo> progress, CancellationToken cancellationToken)
+		private async Task AnalyzeAsync(BlockingCollection<RawData> rawDataCollection, IProgress<ProgressInfo> progress, CancellationToken cancellationToken)
 		{
 			try
 			{
 				IsAnalyzing = true;
 
-				while (IsReading || !_rawDataQueue.IsEmpty)
+				await Task.Factory.StartNew(() =>
 				{
-					cancellationToken.ThrowIfCancellationRequested();
-
-					if (_rawDataQueue.IsEmpty)
+					try
 					{
-						// Wait for new data.
-						await Task.Delay(_waitTime, cancellationToken);
-						continue;
+						// BlockingCollection.Take and BlockingCollection.GetConsumingEnumerable methods 
+						// seem to block the entire application permanently if running on main thread.
+						foreach (var rawData in rawDataCollection.GetConsumingEnumerable(cancellationToken))
+						{
+							// Update progress before analyzing.
+							var innerStatusIn = String.Format("[{0}/{1} - {2}/{3} Analyzer In]",
+								rawData.Run, Settings.Current.NumRun,
+								rawData.Step, NumStep);
+
+							progress.Report(new ProgressInfo(innerStatusIn, false));
+
+							AnalyzeBase(rawData, progress, cancellationToken);
+
+							// Update progress after analyzing.					
+							var innerStatusOut = String.Format("[{0}/{1} - {2}/{3} Analyzer Out ({4})]",
+								_diskScoresRun.Count, Settings.Current.NumRun,
+								_diskScoresStepCount, NumStep, _diskScoresStep.Count());
+
+							progress.Report(new ProgressInfo(innerStatusOut, false));
+						}
 					}
-
-					// Dequeue raw data from queue.
-					RawData rawData;
-					if (!_rawDataQueue.TryDequeue(out rawData))
-						throw new Exception("Failed to dequeue raw data from queue.");
-
-					// Update progress before analyzing.
-					var innerStatusIn = String.Format("[{0}/{1} - {2}/{3} Analyzer In]",
-						rawData.Run, Settings.Current.NumRun,
-						rawData.Step, NumStep);
-
-					progress.Report(new ProgressInfo(innerStatusIn, false));
-
-					await Task.Run(() => AnalyzeBase(rawData, progress, cancellationToken), cancellationToken);
-
-					// Update progress after analyzing.					
-					var innerStatusOut = String.Format("[{0}/{1} - {2}/{3} Analyzer Out ({4})]",
-						_diskScoresRun.Count, Settings.Current.NumRun,
-						_diskScoresStepCount, NumStep, _diskScoresStep.Count());
-
-					progress.Report(new ProgressInfo(innerStatusOut, false));
-				}
+					catch (OperationCanceledException)
+					{
+						// A OperationCanceledException from BlockingCollection.GetConsumingEnumerable method
+						// cannot be caught outside of this task.
+					}
+				}, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 			}
 			catch (OperationCanceledException)
 			{

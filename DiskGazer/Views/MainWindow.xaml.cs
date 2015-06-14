@@ -829,7 +829,7 @@ namespace DiskGazer.Views
 		{
 			var sampleNum = targetLength / (double)baseLength;
 
-			return (float)sampleNum * 100F;
+			return Math.Min((float)sampleNum * 100F, 100F);
 		}
 
 		private static Size TextSize(int num, System.Drawing.Font font)
