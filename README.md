@@ -5,8 +5,8 @@ Disk Gazer is a benchmark tool specialized for measuring transfer rate of physic
 
 ##Requirements
 
- * Windows 8 or newer
- * Windows 7 (required to install .NET Framework 4.5)
+ * Windows 7 or newer
+ * .NET Framework 4.5.2
 
 ##Development
 
@@ -15,6 +15,10 @@ This app consists of a WPF app developed in C# and a Win32 console app developed
 The logic for sequential read test is based on that of [CrystalDiskMark][1] (3.0.2) created by hiyohiyo.
 
 ##History
+
+Ver 1.1.0 2015-8-22
+
+ - Changed target framework to 4.5.2
 
 Ver 1.0.1 2015-6-14
 
