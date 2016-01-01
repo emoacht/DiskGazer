@@ -62,7 +62,6 @@ namespace DiskGazer.ViewModels
 			await SearchAsync();
 		}
 
-
 		#region Status
 
 		/// <summary>
@@ -94,7 +93,6 @@ namespace DiskGazer.ViewModels
 		private string _innerStatus;
 
 		#endregion
-
 
 		#region Scores
 
@@ -142,14 +140,12 @@ namespace DiskGazer.ViewModels
 
 		#endregion
 
-
 		#region Settings
 
 		public Settings SettingsCurrent
 		{
 			get { return Settings.Current; }
 		}
-
 
 		#region Disks
 
@@ -195,7 +191,6 @@ namespace DiskGazer.ViewModels
 		private DiskInfo _currentDisk;
 
 		#endregion
-
 
 		#region Area size and location
 
@@ -259,7 +254,6 @@ namespace DiskGazer.ViewModels
 
 		#endregion
 
-
 		#region Area fineness
 
 		public IReadOnlyCollection<double> MenuAreaFineness
@@ -279,7 +273,6 @@ namespace DiskGazer.ViewModels
 		private int _areaFineness = 1024; // MiB
 
 		#endregion
-
 
 		#region Area Ratio
 
@@ -311,7 +304,6 @@ namespace DiskGazer.ViewModels
 
 		#endregion
 
-
 		#region The number of runs
 
 		public IReadOnlyCollection<int> MenuNumRun
@@ -320,7 +312,6 @@ namespace DiskGazer.ViewModels
 		}
 
 		#endregion
-
 
 		#region Block size
 
@@ -344,7 +335,6 @@ namespace DiskGazer.ViewModels
 		}
 
 		#endregion
-
 
 		#region Block offset
 
@@ -391,7 +381,6 @@ namespace DiskGazer.ViewModels
 
 		#endregion
 
-
 		#region Command
 
 		#region Run
@@ -421,7 +410,6 @@ namespace DiskGazer.ViewModels
 
 		#endregion
 
-
 		#region Rescan
 
 		public DelegateCommand RescanCommand
@@ -441,7 +429,6 @@ namespace DiskGazer.ViewModels
 		}
 
 		#endregion
-
 
 		#region Save screenshot to file
 
@@ -463,7 +450,6 @@ namespace DiskGazer.ViewModels
 
 		#endregion
 
-
 		#region Save log to file
 
 		public DelegateCommand SaveLogFileCommand
@@ -483,7 +469,6 @@ namespace DiskGazer.ViewModels
 		}
 
 		#endregion
-
 
 		#region Send log to clipboard
 
@@ -505,7 +490,6 @@ namespace DiskGazer.ViewModels
 
 		#endregion
 
-
 		#region Pin current chart line
 
 		public DelegateCommand PinLineCommand
@@ -525,7 +509,6 @@ namespace DiskGazer.ViewModels
 		}
 
 		#endregion
-
 
 		#region Clear all chart lines
 
@@ -550,7 +533,6 @@ namespace DiskGazer.ViewModels
 		#endregion
 
 		#endregion
-
 
 		#region Search
 
@@ -664,7 +646,6 @@ namespace DiskGazer.ViewModels
 
 		#endregion
 
-
 		#region Run
 
 		/// <summary>
@@ -727,7 +708,7 @@ namespace DiskGazer.ViewModels
 			if (Settings.Current.SavesScreenshotLog && !Op.IsCanceled)
 			{
 				// Wait for rendering of scores and chart.
-				// (Synchronously start empty action of lower priority than rendering.) 
+				// (Synchronously start empty action of lower priority than rendering.)
 				_mainWindow.Dispatcher.Invoke(new Action(() => { }), DispatcherPriority.ContextIdle, null);
 
 				WindowSupplement.ActivateWindow(_mainWindow);
@@ -796,7 +777,6 @@ namespace DiskGazer.ViewModels
 		}
 
 		#endregion
-
 
 		#region Screenshot and log
 

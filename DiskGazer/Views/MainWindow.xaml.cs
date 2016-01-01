@@ -71,7 +71,6 @@ namespace DiskGazer.Views
 #endif
 		}
 
-
 		#region Window management
 
 		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -199,7 +198,6 @@ namespace DiskGazer.Views
 
 		#endregion
 
-
 		#region Operation
 
 		/// <summary>
@@ -304,7 +302,6 @@ namespace DiskGazer.Views
 
 		#endregion
 
-
 		#region Disk Information
 
 		/// <summary>
@@ -375,7 +372,7 @@ namespace DiskGazer.Views
 				{
 					new GridElement("Product (P/Invoke)"),
 					new GridElement(info.Product, HorizontalAlignment.Right),
-				},                
+				},
 				new List<GridElement>
 				{
 					new GridElement("Interface type (WMI)"),
@@ -484,7 +481,6 @@ namespace DiskGazer.Views
 		}
 
 		#endregion
-
 
 		#region Chart
 
@@ -1025,7 +1021,6 @@ namespace DiskGazer.Views
 
 		#endregion
 
-
 		#region Command
 
 		#region ApplicationCommands.Open
@@ -1062,7 +1057,6 @@ namespace DiskGazer.Views
 		}
 
 		#endregion
-
 
 		#region ApplicationCommands.Close
 

@@ -66,7 +66,6 @@ namespace DiskGazer.Views.Controls
 
 		#endregion
 
-
 		#region Property
 
 		public double Value
@@ -191,13 +190,11 @@ namespace DiskGazer.Views.Controls
 
 		#endregion
 
-
 		private enum Direction
 		{
 			Down,
 			Up,
 		}
-
 
 		public override void OnApplyTemplate()
 		{

@@ -37,7 +37,7 @@ namespace DiskGazer.Models
 		public DateTime StartTime { get; set; }
 
 		/// <summary>
-		/// Data of runs 
+		/// Data of runs
 		/// </summary>
 		/// <remarks>Key: location (MiB), Value: transfer rate (MB/s) at that location</remarks>
 		public Dictionary<double, double> Data { get; set; }

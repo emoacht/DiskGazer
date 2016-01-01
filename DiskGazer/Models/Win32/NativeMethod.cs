@@ -9,8 +9,7 @@ namespace DiskGazer.Models.Win32
 		// Get handle to a specified disk.
 		[DllImport("Kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true)]
 		public static extern SafeFileHandle CreateFile(
-			[MarshalAs(UnmanagedType.LPWStr)]
-			string lpFileName,
+			[MarshalAs(UnmanagedType.LPWStr)] string lpFileName,
 			uint dwDesiredAccess,
 			uint dwShareMode,
 			IntPtr lpSecurityAttributes,
@@ -121,6 +120,7 @@ namespace DiskGazer.Models.Win32
 		{
 			public uint PropertyId;
 			public uint QueryType;
+
 			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
 			public byte[] AdditionalParameters;
 		}
@@ -135,16 +135,20 @@ namespace DiskGazer.Models.Win32
 			public uint Size;
 			public byte DeviceType;
 			public byte DeviceTypeModifier;
+
 			[MarshalAs(UnmanagedType.U1)]
 			public bool RemovableMedia;
+
 			[MarshalAs(UnmanagedType.U1)]
 			public bool CommandQueueing;
+
 			public uint VendorIdOffset;
 			public uint ProductIdOffset;
 			public uint ProductRevisionOffset;
 			public uint SerialNumberOffset;
 			public STORAGE_BUS_TYPE BusType;
 			public uint RawPropertiesLength;
+
 			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 1024)] // To be considered.
 			public byte[] RawDeviceProperties;
 		}
@@ -176,6 +180,7 @@ namespace DiskGazer.Models.Win32
 		public struct ATAIdentifyDeviceQuery
 		{
 			public ATA_PASS_THROUGH_EX header;
+
 			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
 			public ushort[] data;
 		}
@@ -193,8 +198,10 @@ namespace DiskGazer.Models.Win32
 			public uint TimeOutValue;
 			public uint ReservedAsUlong;
 			public IntPtr DataBufferOffset;
+
 			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
 			public byte[] PreviousTaskFile;
+
 			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
 			public byte[] CurrentTaskFile;
 		}

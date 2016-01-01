@@ -193,7 +193,6 @@ namespace DiskGazer.Models
 			get { return (int)Math.Truncate(Math.Max(SizeWMI, SizePInvoke) / Math.Pow(1024D, 2)); }
 		}
 
-
 		#region IComparable member
 
 		public int CompareTo(DiskInfo other)
@@ -205,7 +204,6 @@ namespace DiskGazer.Models
 		}
 
 		#endregion
-
 
 		#region ICloneable member
 

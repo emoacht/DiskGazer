@@ -27,7 +27,6 @@ namespace DiskGazer
 				this.DispatcherUnhandledException += (sender, args) => RecordException(sender, args.Exception);
 		}
 
-
 		#region Exception
 
 		private static void RecordException(object sender, Exception exception)

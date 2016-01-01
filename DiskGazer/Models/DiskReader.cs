@@ -177,7 +177,6 @@ namespace DiskGazer.Models
 
 		#endregion
 
-
 		#region P/Invoke
 
 		/// <summary>
@@ -299,7 +298,7 @@ namespace DiskGazer.Models
 				// ----------------
 				// Process results.
 				// ----------------
-				// Calculate each transfer rate.				
+				// Calculate each transfer rate.
 				var data = new double[readNum];
 
 				for (int i = 1; i <= readNum; i++)
