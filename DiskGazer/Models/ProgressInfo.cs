@@ -28,7 +28,6 @@ namespace DiskGazer.Models
 		/// </summary>
 		public Dictionary<double, double> Data { get; private set; }
 
-
 		#region Constructor
 
 		public ProgressInfo()

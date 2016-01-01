@@ -14,7 +14,7 @@
 
 	<Grid>
 		<TextBox x:Name="TextBoxInnerStatus"
-				 Margin="10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+				 Margin="10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
 				 VerticalScrollBarVisibility="Auto"/>
 	</Grid>
 </Window>

@@ -16,7 +16,6 @@ namespace DiskGazer.Models
 		public static Settings Current { get { return _current; } }
 		private static readonly Settings _current = new Settings();
 
-
 		#region Settings
 
 		/// <summary>

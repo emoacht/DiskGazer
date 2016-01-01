@@ -20,7 +20,6 @@ namespace DiskGazer.Helper
 
 		#endregion
 
-
 		/// <summary>
 		/// Whether this application is run by administrator
 		/// </summary>

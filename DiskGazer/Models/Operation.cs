@@ -59,7 +59,6 @@ namespace DiskGazer.Models
 
 		#endregion
 
-
 		private readonly List<Dictionary<double, double>> _diskScoresRun = new List<Dictionary<double, double>>(); // Temporary scores of runs
 		private KeyValuePair<double, double>[] _diskScoresStep; // Temporary scores of steps
 		private int _diskScoresStepCount; // The number of temporary scores of steps
@@ -68,7 +67,6 @@ namespace DiskGazer.Models
 		private bool _isTokenSourceDisposed;
 
 		private double _currentSpeed; // Current and latest transfer rate (MB/s)
-
 
 		#region Read and analyze (Internal)
 
@@ -132,7 +130,6 @@ namespace DiskGazer.Models
 		}
 
 		#endregion
-
 
 		#region Read (Private)
 
@@ -278,7 +275,6 @@ namespace DiskGazer.Models
 
 		#endregion
 
-
 		#region Analyze (Private)
 
 		private async Task AnalyzeAsync(BlockingCollection<RawData> rawDataCollection, IProgress<ProgressInfo> progress, CancellationToken cancellationToken)
@@ -291,7 +287,7 @@ namespace DiskGazer.Models
 				{
 					try
 					{
-						// BlockingCollection.Take and BlockingCollection.GetConsumingEnumerable methods 
+						// BlockingCollection.Take and BlockingCollection.GetConsumingEnumerable methods
 						// seem to block the entire application permanently if running on main thread.
 						foreach (var rawData in rawDataCollection.GetConsumingEnumerable(cancellationToken))
 						{
@@ -304,7 +300,7 @@ namespace DiskGazer.Models
 
 							AnalyzeBase(rawData, progress, cancellationToken);
 
-							// Update progress after analyzing.					
+							// Update progress after analyzing.
 							var innerStatusOut = String.Format("[{0}/{1} - {2}/{3} Analyzer Out ({4})]",
 								_diskScoresRun.Count, Settings.Current.NumRun,
 								_diskScoresStepCount, NumStep, _diskScoresStep.Count());
@@ -495,7 +491,6 @@ namespace DiskGazer.Models
 		}
 
 		#endregion
-
 
 		#region Helper
 
