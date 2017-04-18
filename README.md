@@ -1,20 +1,19 @@
-﻿Disk Gazer
-==========
+﻿# Disk Gazer
 
 Disk Gazer is a benchmark tool specialized for measuring transfer rate of physical disk in a small unit and at any location.
 
-##Requirements
+## Requirements
 
  * Windows 7 or newer
  * .NET Framework 4.5.2
 
-##Development
+## Development
 
 This app consists of a WPF app developed in C# and a Win32 console app developed in C++ with Visual Studio Professional 2013.
 
 The logic for sequential read test is based on that of [CrystalDiskMark][1] (3.0.2) created by hiyohiyo.
 
-##History
+## History
 
 Ver 1.1.0 2015-8-22
 
@@ -58,13 +57,13 @@ Ver 0.2.1 2013-03-17
 
  - Initial release
 
-##License
+## License
 
  - MIT License
 
-##Other
+## Other
 
- - Library: [WPF Monitor Aware Window][2]
+ - Libraries: [WPF Monitor Aware Window][2]
  - Menu icons: [Visual Studio Image Library][3]
 
 [1]: http://crystalmark.info/
