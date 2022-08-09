@@ -79,15 +79,15 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 	// Check block size.
-	if ((blockSize <= 0) |
-		(1024 < blockSize) |
+	if ((blockSize <= 0) ||
+		(1024 < blockSize) ||
 		(1024 % blockSize != 0))
 	{
 		message += "Invalid block size. ";
 	}
 
 	// Check block offset.
-	if ((blockOffset < 0) |
+	if ((blockOffset < 0) ||
 		(1024 < blockOffset))
 	{
 		message += "Invalid block offset. ";
@@ -235,7 +235,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		}
 	}
 
-	VirtualFree(buf, bufSize, MEM_DECOMMIT);
+	if (buf != NULL)
+	{
+		VirtualFree(buf, 0, MEM_RELEASE);
+	}
 	buf = NULL;
 
 	CloseHandle(hFile);
@@ -273,7 +276,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		_tprintf_s(_T("%0.6f "), data[i]); // Data have 6 decimal places.
 
 		k++;
-		if ((k == 6) |
+		if ((k == 6) ||
 			(i == readNum - 1))
 		{
 			k = 0;
