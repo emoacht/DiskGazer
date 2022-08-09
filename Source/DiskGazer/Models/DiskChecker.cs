@@ -201,8 +201,14 @@ namespace DiskGazer.Models
 					return "SD";
 				case NativeMethod.STORAGE_BUS_TYPE.BusTypeMmc:
 					return "MMC";
+				case NativeMethod.STORAGE_BUS_TYPE.BusTypeNvme:
+					return "NVMe";
+				case NativeMethod.STORAGE_BUS_TYPE.BusTypeSCM:
+					return "SCM";
+				case NativeMethod.STORAGE_BUS_TYPE.BusTypeUfs:
+					return "UFS";
 				default:
-					return String.Empty;
+					return Convert.ToUInt32(type).ToString();
 			}
 		}
 	}
