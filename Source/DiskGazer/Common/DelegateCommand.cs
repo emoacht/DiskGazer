@@ -14,53 +14,33 @@ namespace DiskGazer.Common
 
 		#region Constructor
 
-		public DelegateCommand(Action execute)
-			: this(execute, () => true)
+		public DelegateCommand(Action execute) : this(execute, () => true)
 		{ }
 
 		public DelegateCommand(Action execute, Func<bool> canExecute)
 		{
-			if (execute == null)
-				throw new ArgumentNullException("execute");
-			if (canExecute == null)
-				throw new ArgumentNullException("canExecute");
-
-			this._execute = execute;
-			this._canExecute = canExecute;
+			this._execute = execute ?? throw new ArgumentNullException(nameof(execute));
+			this._canExecute = canExecute ?? throw new ArgumentNullException(nameof(canExecute));
 		}
 
 		#endregion
 
 		#region Execute
 
-		public void Execute()
-		{
-			this._execute();
-		}
-
-		void ICommand.Execute(object parameter)
-		{
-			this.Execute();
-		}
+		public void Execute() => _execute();
+		void ICommand.Execute(object parameter) => Execute();
 
 		#endregion
 
 		#region CanExecute
 
-		public bool CanExecute()
-		{
-			return this._canExecute();
-		}
-
-		bool ICommand.CanExecute(object parameter)
-		{
-			return this.CanExecute();
-		}
+		public bool CanExecute() => _canExecute();
+		bool ICommand.CanExecute(object parameter) => CanExecute();
 
 		public event EventHandler CanExecuteChanged
 		{
-			add { CommandManager.RequerySuggested += value; }
-			remove { CommandManager.RequerySuggested -= value; }
+			add => CommandManager.RequerySuggested += value;
+			remove => CommandManager.RequerySuggested -= value;
 		}
 
 		#endregion
