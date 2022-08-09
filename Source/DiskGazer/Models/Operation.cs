@@ -29,11 +29,11 @@ namespace DiskGazer.Models
 		/// </summary>
 		public bool IsReading
 		{
-			get { return _isReading; }
+			get => _isReading;
 			private set
 			{
-				_isReading = value;
-				RaisePropertyChanged(() => IsReady);
+				if (SetProperty(ref _isReading, value))
+					OnPropertyChanged(nameof(IsReady));
 			}
 		}
 		private bool _isReading;
@@ -43,11 +43,11 @@ namespace DiskGazer.Models
 		/// </summary>
 		public bool IsAnalyzing
 		{
-			get { return _isAnalyzing; }
+			get => _isAnalyzing;
 			private set
 			{
-				_isAnalyzing = value;
-				RaisePropertyChanged(() => IsReady);
+				if (SetProperty(ref _isAnalyzing, value))
+					OnPropertyChanged(nameof(IsReady));
 			}
 		}
 		private bool _isAnalyzing;

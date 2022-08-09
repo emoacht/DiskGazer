@@ -69,12 +69,8 @@ namespace DiskGazer.ViewModels
 		/// </summary>
 		public string Status
 		{
-			get { return _status; }
-			private set
-			{
-				_status = value;
-				RaisePropertyChanged();
-			}
+			get => _status;
+			private set => SetProperty(ref _status, value);
 		}
 		private string _status;
 
@@ -83,12 +79,8 @@ namespace DiskGazer.ViewModels
 		/// </summary>
 		public string InnerStatus
 		{
-			get { return _innerStatus; }
-			private set
-			{
-				_innerStatus = value;
-				RaisePropertyChanged();
-			}
+			get => _innerStatus;
+			private set => SetProperty(ref _innerStatus, value);
 		}
 		private string _innerStatus;
 
@@ -101,12 +93,8 @@ namespace DiskGazer.ViewModels
 		/// </summary>
 		public double ScoreMax
 		{
-			get { return _scoreMax; }
-			private set
-			{
-				_scoreMax = value;
-				RaisePropertyChanged();
-			}
+			get => _scoreMax;
+			private set => SetProperty(ref _scoreMax, value);
 		}
 		private double _scoreMax;
 
@@ -115,12 +103,8 @@ namespace DiskGazer.ViewModels
 		/// </summary>
 		public double ScoreMin
 		{
-			get { return _scoreMin; }
-			private set
-			{
-				_scoreMin = value;
-				RaisePropertyChanged();
-			}
+			get => _scoreMin;
+			private set => SetProperty(ref _scoreMin, value);
 		}
 		private double _scoreMin;
 
@@ -129,12 +113,8 @@ namespace DiskGazer.ViewModels
 		/// </summary>
 		public double ScoreAvg
 		{
-			get { return _scoreAvg; }
-			private set
-			{
-				_scoreAvg = value;
-				RaisePropertyChanged();
-			}
+			get => _scoreAvg;
+			private set => SetProperty(ref _scoreAvg, value);
 		}
 		private double _scoreAvg;
 
@@ -151,41 +131,37 @@ namespace DiskGazer.ViewModels
 
 		public ObservableCollection<string> DiskRosterNames
 		{
-			get { return _diskRosterNames ?? (_diskRosterNames = new ObservableCollection<string>()); }
-			set
-			{
-				_diskRosterNames = value;
-				RaisePropertyChanged();
-			}
+			get => _diskRosterNames ??= new ObservableCollection<string>();
+			set => SetProperty(ref _diskRosterNames, value);
 		}
 		private ObservableCollection<string> _diskRosterNames;
 
 		public int DiskRosterNamesIndex
 		{
-			get { return _diskRosterNamesIndex; }
+			get => _diskRosterNamesIndex;
 			set
 			{
-				_diskRosterNamesIndex = value;
-				RaisePropertyChanged();
-
-				if (_diskRoster.Any())
-					CurrentDisk = _diskRoster[value];
+				if (SetProperty(ref _diskRosterNamesIndex, value))
+				{
+					if (_diskRoster.Any())
+						CurrentDisk = _diskRoster[value];
+				}
 			}
 		}
 		private int _diskRosterNamesIndex;
 
 		public DiskInfo CurrentDisk
 		{
-			get { return _currentDisk; }
+			get => _currentDisk;
 			set
 			{
-				_currentDisk = value;
-				RaisePropertyChanged();
+				if (SetProperty(ref _currentDisk, value))
+				{
+					Settings.Current.PhysicalDrive = value.PhysicalDrive;
 
-				Settings.Current.PhysicalDrive = value.PhysicalDrive;
-
-				AreaSize = AreaFineness; // Set to minimum value.
-				AreaLocation = 0; // Reset.
+					AreaSize = AreaFineness; // Set to minimum value.
+					AreaLocation = 0; // Reset.
+				}
 			}
 		}
 		private DiskInfo _currentDisk;
@@ -242,13 +218,13 @@ namespace DiskGazer.ViewModels
 			if (Settings.Current.AreaSize != sizeCopy)
 			{
 				Settings.Current.AreaSize = sizeCopy;
-				RaisePropertyChanged(() => AreaSize);
+				OnPropertyChanged(nameof(AreaSize));
 			}
 
 			if (Settings.Current.AreaLocation != locationCopy)
 			{
 				Settings.Current.AreaLocation = locationCopy;
-				RaisePropertyChanged(() => AreaLocation);
+				OnPropertyChanged(nameof(AreaLocation));
 			}
 		}
 
@@ -263,12 +239,8 @@ namespace DiskGazer.ViewModels
 
 		public int AreaFineness
 		{
-			get { return _areaFineness; }
-			set
-			{
-				_areaFineness = value;
-				RaisePropertyChanged();
-			}
+			get => _areaFineness;
+			set => SetProperty(ref _areaFineness, value);
 		}
 		private int _areaFineness = 1024; // MiB
 
@@ -298,7 +270,7 @@ namespace DiskGazer.ViewModels
 			set
 			{
 				Settings.Current.AreaRatioOuter = Settings.Current.AreaRatioInner * _menuAreaRatioDivider[value];
-				RaisePropertyChanged();
+				OnPropertyChanged();
 			}
 		}
 
@@ -327,7 +299,7 @@ namespace DiskGazer.ViewModels
 			set
 			{
 				Settings.Current.BlockSize = value;
-				RaisePropertyChanged();
+				OnPropertyChanged();
 
 				MenuBlockOffsetIndex = 0; // Reset.
 				MenuBlockOffset = null; // Reset.
@@ -350,12 +322,8 @@ namespace DiskGazer.ViewModels
 
 		public string[] MenuBlockOffset
 		{
-			get { return _menuBlockOffset ?? (_menuBlockOffset = GetMenuBlockOffset()); }
-			set
-			{
-				_menuBlockOffset = value;
-				RaisePropertyChanged();
-			}
+			get => _menuBlockOffset ??= GetMenuBlockOffset();
+			set => SetProperty(ref _menuBlockOffset, value);
 		}
 		private string[] _menuBlockOffset;
 
@@ -373,7 +341,7 @@ namespace DiskGazer.ViewModels
 					? Settings.Current.BlockSize / _menuBlockOffsetDivider[value]
 					: 0;
 
-				RaisePropertyChanged();
+				OnPropertyChanged();
 			}
 		}
 

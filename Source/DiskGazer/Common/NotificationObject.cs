@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,23 +12,17 @@ namespace DiskGazer.Common
 	{
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		protected void RaisePropertyChanged<T>(Expression<Func<T>> propertyExpression)
+		protected virtual bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string propertyName = null)
 		{
-			if (propertyExpression == null)
-				throw new ArgumentNullException("propertyExpression");
+			if (EqualityComparer<T>.Default.Equals(storage, value))
+				return false;
 
-			var memberExpression = propertyExpression.Body as MemberExpression;
-			if (memberExpression == null)
-				throw new ArgumentException("The expression is not a member access expression.", "propertyExpression");
-
-			this.RaisePropertyChanged(memberExpression.Member.Name);
+			storage = value;
+			OnPropertyChanged(propertyName);
+			return true;
 		}
 
-		protected void RaisePropertyChanged([CallerMemberName] string propertyName = null)
-		{
-			var handler = this.PropertyChanged;
-			if (handler != null)
-				handler(this, new PropertyChangedEventArgs(propertyName));
-		}
+		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 	}
 }
