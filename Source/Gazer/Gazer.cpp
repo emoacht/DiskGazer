@@ -1,5 +1,3 @@
-// Entry point of console application
-
 #include "stdafx.h"
 #include <windows.h>
 #include <tchar.h>
@@ -8,41 +6,71 @@
 
 using namespace std;
 
+class Runner
+{
+private:
+	/// <summary>
+	/// Index number in PhysicalDrive
+	/// </summary>
+	int physicalDrive = 0;
+
+	/// <summary>
+	/// Block size (KiB)
+	/// </summary>
+	int blockSize = 1024;
+
+	/// <summary>
+	/// Block offset  (KiB)
+	/// </summary>
+	int blockOffset = 0;
+
+	/// <summary>
+	/// Area size (MiB)
+	/// </summary>
+	int areaSize = 1024;
+
+	/// <summary>
+	/// Area location (MiB)
+	/// </summary>
+	int areaLocation = 0;
+
+	/// <summary>
+	/// Area ratio inner (numerator)
+	/// </summary>
+	int areaRatioInner = 16;
+
+	/// <summary>
+	/// Area ratio outer (denominator)
+	/// </summary>
+	int areaRatioOuter = 16;
+
+public:
+	int Load(int argc, _TCHAR* argv[]);
+	int Run();
+};
+
 int _tmain(int argc, _TCHAR* argv[])
 {
-	int physicalDrive = 0;    // Index number in PhysicalDrive
-	int blockSize     = 1024; // Block size    (KiB)
-	int blockOffset   = 0;    // Block offset  (KiB)
-	int areaSize      = 1024; // Area size     (MiB)
-	int areaLocation  = 0;    // Area location (MiB)
-	int areaRatioInner = 16;  // Area ratio inner (numerator)
-	int areaRatioOuter = 16;  // Area ratio outer (denominator)
+	Runner runner;
 
-	// ----------------
-	// Check arguments.
-	// ----------------
+	int result = runner.Load(argc, argv);
+	if (result == 0)
+	{
+		result = runner.Run();
+	}
+	return result;
+}
+
+int Runner::Load(int argc, _TCHAR* argv[])
+{
 	switch (argc) // argv[0] is always empty.
 	{
-	case 2:
-		if (_tcscmp(argv[1], _T("/?")) == 0)
-		{
-			cout << "Gazer syntax:" << endl;
-			cout << "gazer [physical drive] [block size] [block offset] [area size] [area location]" << endl;
-			cout << "- Unit of block size and block offset is KiB." << endl;
-			cout << "- Unit of area size and area location is MiB." << endl;
-			cout << "- Block size must be a power of 2 and no more than 1024." << endl;
-			cout << "- Block offset must be no more than 1024." << endl;
-			cout << "- Gazer requires administrator privilege." << endl;
-		}
-		return 0;
-		break;
-
 	case 6:
 		physicalDrive = _tcstol(argv[1], NULL, 10);
-		blockSize     = _tcstol(argv[2], NULL, 10);
-		blockOffset   = _tcstol(argv[3], NULL, 10);
-		areaSize      = _tcstol(argv[4], NULL, 10);
-		areaLocation  = _tcstol(argv[5], NULL, 10);
+		blockSize = _tcstol(argv[2], NULL, 10);
+		blockOffset = _tcstol(argv[3], NULL, 10);
+		areaSize = _tcstol(argv[4], NULL, 10);
+		areaLocation = _tcstol(argv[5], NULL, 10);
 
 		cout << "physical drive : " << physicalDrive << endl;
 		cout << "block size     : " << blockSize << endl;
@@ -68,6 +96,16 @@ int _tmain(int argc, _TCHAR* argv[])
 		cout << "area ratio inner : " << areaRatioInner << endl;
 		cout << "area ratio outer : " << areaRatioOuter << endl;
 		break;
+
+	default:
+		cout << "Gazer syntax:" << endl;
+		cout << "gazer [physical drive] [block size] [block offset] [area size] [area location]" << endl;
+		cout << "- Unit of block size and block offset is KiB." << endl;
+		cout << "- Unit of area size and area location is MiB." << endl;
+		cout << "- Block size must be a power of 2 and no more than 1024." << endl;
+		cout << "- Block offset must be no more than 1024." << endl;
+		cout << "- Gazer requires administrator privilege." << endl;
+		return 1;
 	}
 
 	string message = "";
@@ -79,16 +117,13 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 	// Check block size.
-	if ((blockSize <= 0) ||
-		(1024 < blockSize) ||
-		(1024 % blockSize != 0))
+	if ((blockSize <= 0) || (1024 < blockSize) || (1024 % blockSize != 0))
 	{
 		message += "Invalid block size. ";
 	}
 
 	// Check block offset.
-	if ((blockOffset < 0) ||
-		(1024 < blockOffset))
+	if ((blockOffset < 0) || (1024 < blockOffset))
 	{
 		message += "Invalid block offset. ";
 	}
@@ -110,17 +145,19 @@ int _tmain(int argc, _TCHAR* argv[])
 	{
 		message += "Invalid area ratio. ";
 	}
-	
+
 	if (!message.empty())
 	{
 		cout << message << endl;
 		return 1;
 	}
 
-	// ----------
-	// Read disk.
-	// ----------
-	// This section is based on sequential read test of CrystalDiskMark (3.0.2)
+	return 0;
+}
+
+int Runner::Run()
+{
+	// The way to read disk is based on sequential read test of CrystalDiskMark (3.0.2)
 	// created by hiyohiyo (http://crystalmark.info/).
 
 	// Get handle to disk.
@@ -150,17 +187,17 @@ int _tmain(int argc, _TCHAR* argv[])
 		areaSizeActual -= 1; // 1 is for the last MiB of area. If offset, it may exceed disk size.
 	}
 
-	long readNum = (areaSizeActual * 1024) / blockSize; // The number of reads
+	long readNumber = (areaSizeActual * 1024) / blockSize; // The number of reads
 
 	int loopOuter = 1; // The number of outer loops
-	int loopInner = readNum; // The number of inner loops
+	int loopInner = readNumber; // The number of inner loops
 
 	if (areaRatioInner < areaRatioOuter)
 	{
 		loopOuter = (areaSizeActual * 1024) / (blockSize * areaRatioOuter);
 		loopInner = areaRatioInner;
 
-		readNum = loopInner * loopOuter;
+		readNumber = loopInner * loopOuter;
 	}
 
 	LARGE_INTEGER areaLocationBytes; // Bytes
@@ -179,8 +216,8 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	areaLocationBytes.QuadPart += blockOffsetBytes.QuadPart;
 
-	int bufSize = blockSize * 1024; // Buffer size (Bytes)
-	char* buf = (char*) VirtualAlloc(NULL, bufSize, MEM_COMMIT, PAGE_READWRITE); // Buffer
+	int bufferSize = blockSize * 1024; // Buffer size (Bytes)
+	char* buffer = (char*)VirtualAlloc(NULL, bufferSize, MEM_COMMIT, PAGE_READWRITE); // Buffer
 	DWORD readSize;
 
 	// Check high-resolution performance counter.
@@ -192,7 +229,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 	LARGE_INTEGER* lapTime;
-	lapTime = new LARGE_INTEGER[readNum + 1]; // 1 is for starting time.
+	lapTime = new LARGE_INTEGER[readNumber + 1]; // 1 is for starting time.
 	QueryPerformanceCounter(&lapTime[0]); // Starting time
 
 	for (int i = 0; i < loopOuter; i++)
@@ -220,8 +257,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		{
 			BOOL result2 = ::ReadFile(
 				hFile,
-				buf,
-				bufSize,
+				buffer,
+				bufferSize,
 				&readSize,
 				NULL);
 
@@ -235,32 +272,29 @@ int _tmain(int argc, _TCHAR* argv[])
 		}
 	}
 
-	if (buf != NULL)
+	if (buffer != NULL)
 	{
-		VirtualFree(buf, 0, MEM_RELEASE);
+		VirtualFree(buffer, 0, MEM_RELEASE);
 	}
-	buf = NULL;
+	buffer = NULL;
 
 	CloseHandle(hFile);
 
-	// ----------------
-	// Process results.
-	// ----------------
 	// Calculate each transfer rate.
 	double* data;
-	data = new double[readNum];
+	data = new double[readNumber];
 
-	for (int i = 1; i <= readNum; i++)
+	for (int i = 1; i <= readNumber; i++)
 	{
 		double timeEach = (double)(lapTime[i].QuadPart - lapTime[i - 1].QuadPart) / frq.QuadPart; // Second
-		double scoreEach = floor(bufSize / timeEach) / 1000000.0; // MB/s
+		double scoreEach = floor(bufferSize / timeEach) / 1000000.0; // MB/s
 
 		data[i - 1] = scoreEach;
 	}
 
 	// Calculate total transfer rate (just for reference).
-	double totalTime = (double)(lapTime[readNum].QuadPart - lapTime[0].QuadPart) / frq.QuadPart; // Second
-	double totalRead = (double)blockSize * (double)readNum * 1024.0; // Bytes
+	double totalTime = (double)(lapTime[readNumber].QuadPart - lapTime[0].QuadPart) / frq.QuadPart; // Second
+	double totalRead = (double)blockSize * (double)readNumber * 1024.0; // Bytes
 
 	double totalScore = floor(totalRead / totalTime) / 1000000.0; // MB/s
 
@@ -271,13 +305,12 @@ int _tmain(int argc, _TCHAR* argv[])
 	_tprintf_s(_T("[Start data]\n"));
 
 	int k = 0;
-	for (int i = 0; i < readNum; i++)
+	for (int i = 0; i < readNumber; i++)
 	{
 		_tprintf_s(_T("%0.6f "), data[i]); // Data have 6 decimal places.
 
 		k++;
-		if ((k == 6) ||
-			(i == readNum - 1))
+		if ((k == 6) || (i == readNumber - 1))
 		{
 			k = 0;
 			_tprintf_s(_T("\n"));
