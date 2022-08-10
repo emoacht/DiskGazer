@@ -89,7 +89,7 @@
     <Compile Include="Models\DiskReader.cs" />
     <Compile Include="Models\DiskScore.cs" />
     <Compile Include="Models\DiskSearcher.cs" />
-    <Compile Include="Models\Operation.cs" />
+    <Compile Include="Models\Operator.cs" />
     <Compile Include="Models\ProgressInfo.cs" />
     <Compile Include="Models\RawData.cs" />
     <Compile Include="Models\ReadMethod.cs" />

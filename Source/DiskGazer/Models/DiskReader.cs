@@ -19,21 +19,18 @@ namespace DiskGazer.Models
 	{
 		#region Native
 
-		private const string _nativeExeFile = "Gazer.exe"; // Executable file of Win32 console application
-		private static readonly string _nativeExePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, _nativeExeFile);
+		private const string NativeExeFile = "Gazer.exe"; // Executable file of Win32 console application
+		private static readonly string _nativeExePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, NativeExeFile);
 
 		/// <summary>
 		/// Whether executable file exists
 		/// </summary>
-		internal static bool NativeExeExists
-		{
-			get { return File.Exists(_nativeExePath); }
-		}
+		internal static bool NativeExeExists => File.Exists(_nativeExePath);
 
 		private static Process _readProcess; // Process to run Win32 console application
 
 		/// <summary>
-		/// Read disk by native (asynchronously and with cancellation).
+		/// Reads disk by native (asynchronously and with cancellation).
 		/// </summary>
 		/// <param name="rawData">Raw data</param>
 		/// <param name="cancellationToken">Cancellation token</param>
@@ -54,7 +51,7 @@ namespace DiskGazer.Models
 				catch (InvalidOperationException ioe)
 				{
 					// If the process has been disposed, this exception will be thrown.
-					Debug.WriteLine("There is no associated process. {0}", ioe);
+					Debug.WriteLine($"There is no associated process.{Environment.NewLine}{ioe}");
 				}
 
 				tcs.SetCanceled();
@@ -70,7 +67,7 @@ namespace DiskGazer.Models
 		}
 
 		/// <summary>
-		/// Read disk by native (synchronously).
+		/// Reads disk by native (synchronously).
 		/// </summary>
 		/// <param name="rawData">Raw data</param>
 		/// <returns>Result data</returns>
@@ -79,7 +76,7 @@ namespace DiskGazer.Models
 			if (!NativeExeExists)
 			{
 				rawData.Result = ReadResult.Failure;
-				rawData.Message = String.Format("Cannot find {0}.", _nativeExeFile);
+				rawData.Message = $"Cannot find {NativeExeFile}.";
 				return rawData;
 			}
 
@@ -87,7 +84,7 @@ namespace DiskGazer.Models
 
 			try
 			{
-				var arguments = String.Format("{0} {1} {2} {3} {4}",
+				var arguments = string.Format("{0} {1} {2} {3} {4}",
 					Settings.Current.PhysicalDrive,
 					Settings.Current.BlockSize,
 					Settings.Current.BlockOffset * blockOffsetMultiple,
@@ -96,7 +93,7 @@ namespace DiskGazer.Models
 
 				if (Settings.Current.AreaRatioInner < Settings.Current.AreaRatioOuter)
 				{
-					arguments += String.Format(" {0} {1}",
+					arguments += string.Format(" {0} {1}",
 						Settings.Current.AreaRatioInner,
 						Settings.Current.AreaRatioOuter);
 				}
@@ -139,7 +136,7 @@ namespace DiskGazer.Models
 			catch (Exception ex)
 			{
 				rawData.Result = ReadResult.Failure;
-				rawData.Message = String.Format("Failed to execute {0}. {1}", _nativeExeFile, ex.Message);
+				rawData.Message = $"Failed to execute {NativeExeFile}. {ex.Message}";
 			}
 
 			return rawData;
@@ -156,23 +153,21 @@ namespace DiskGazer.Models
 			if ((startPoint < 0) || (endPoint < 0) || (startPoint >= endPoint))
 				return null;
 
-			var buff = outcome
-				.Substring(startPoint + startSign.Length, ((endPoint - 1) - (startPoint + startSign.Length)))
-				.Trim()
-				.Split(new[] { " ", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-
-			return buff
+			return outcome
+				.Substring(startPoint + startSign.Length, (endPoint - 1) - (startPoint + startSign.Length))
+				.Split()
+				.Where(x => !string.IsNullOrEmpty(x))
 				.Select(x => double.Parse(x, NumberStyles.Any, CultureInfo.InvariantCulture)) // Culture matters.
 				.ToArray();
 		}
 
 		private static string FindMessage(string outcome)
 		{
-			var strLine = outcome.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+			var lines = outcome.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
-			return (strLine.Length >= 1)
-				? strLine[strLine.Length - 1] // Last line should contain error message.
-				: String.Empty;
+			return (lines.Length >= 1)
+				? lines[lines.Length - 1] // Last line should contain error message.
+				: string.Empty;
 		}
 
 		#endregion
@@ -180,18 +175,18 @@ namespace DiskGazer.Models
 		#region P/Invoke
 
 		/// <summary>
-		/// Read disk by P/Invoke (asynchronously and with cancellation).
+		/// Reads disk by P/Invoke (asynchronously and with cancellation).
 		/// </summary>
 		/// <param name="rawData">Raw data</param>
 		/// <param name="cancellationToken">Cancellation token</param>
 		/// <returns>Result data</returns>
-		internal static async Task<RawData> ReadDiskPInvokeAsync(RawData rawData, CancellationToken cancellationToken)
+		internal static Task<RawData> ReadDiskPInvokeAsync(RawData rawData, CancellationToken cancellationToken)
 		{
-			return await Task.Run(() => ReadDiskPInvoke(rawData, cancellationToken), cancellationToken);
+			return Task.Run(() => ReadDiskPInvoke(rawData, cancellationToken), cancellationToken);
 		}
 
 		/// <summary>
-		/// Read disk by P/Invoke (synchronously and with cancellation).
+		/// Reads disk by P/Invoke (synchronously and with cancellation).
 		/// </summary>
 		/// <param name="rawData">Raw data</param>
 		/// <param name="cancellationToken">Cancellation token</param>
@@ -212,14 +207,14 @@ namespace DiskGazer.Models
 
 				// Get handle to disk.
 				hFile = NativeMethod.CreateFile(
-					String.Format(@"\\.\PhysicalDrive{0}", Settings.Current.PhysicalDrive),
+					@$"\\.\PhysicalDrive{Settings.Current.PhysicalDrive}",
 					NativeMethod.GENERIC_READ, // Administrative privilege is required.
 					0,
 					IntPtr.Zero,
 					NativeMethod.OPEN_EXISTING,
 					NativeMethod.FILE_ATTRIBUTE_NORMAL | NativeMethod.FILE_FLAG_NO_BUFFERING | NativeMethod.FILE_FLAG_SEQUENTIAL_SCAN,
 					IntPtr.Zero);
-				if (hFile == null || hFile.IsInvalid)
+				if (hFile is null || hFile.IsInvalid)
 				{
 					// This is normal when this application is not run by administrator.
 					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get handle to disk.");
@@ -230,17 +225,17 @@ namespace DiskGazer.Models
 				if (0 < Settings.Current.BlockOffset)
 					areaSizeActual -= 1; // 1 is for the last MiB of area. If offset, it may exceed disk size.
 
-				int readNum = (areaSizeActual * 1024) / Settings.Current.BlockSize; // The number of reads
+				int readNumber = (areaSizeActual * 1024) / Settings.Current.BlockSize; // The number of reads
 
 				int loopOuter = 1; // The number of outer loops
-				int loopInner = readNum; // The number of inner loops
+				int loopInner = readNumber; // The number of inner loops
 
 				if (Settings.Current.AreaRatioInner < Settings.Current.AreaRatioOuter)
 				{
 					loopOuter = (areaSizeActual * 1024) / (Settings.Current.BlockSize * Settings.Current.AreaRatioOuter);
 					loopInner = Settings.Current.AreaRatioInner;
 
-					readNum = loopInner * loopOuter;
+					readNumber = loopInner * loopOuter;
 				}
 
 				var areaLocationBytes = (long)Settings.Current.AreaLocation * 1024L * 1024L; // Bytes
@@ -249,12 +244,12 @@ namespace DiskGazer.Models
 
 				areaLocationBytes += blockOffsetBytes;
 
-				var buffSize = (uint)Settings.Current.BlockSize * 1024U; // Buffer size (Bytes)
-				var buff = new byte[buffSize]; // Buffer
+				var bufferSize = (uint)Settings.Current.BlockSize * 1024U; // Buffer size (Bytes)
+				var buffer = new byte[bufferSize]; // Buffer
 				uint readSize = 0U;
 
 				var sw = new Stopwatch();
-				var lapTime = new TimeSpan[readNum + 1]; // 1 is for leading zero time.
+				var lapTime = new TimeSpan[readNumber + 1]; // 1 is for leading zero time.
 				lapTime[0] = TimeSpan.Zero; // Leading zero time
 
 				for (int i = 0; i < loopOuter; i++)
@@ -280,8 +275,8 @@ namespace DiskGazer.Models
 
 						var result2 = NativeMethod.ReadFile(
 							hFile,
-							buff,
-							buffSize,
+							buffer,
+							bufferSize,
 							ref readSize,
 							IntPtr.Zero);
 						if (result2 == false)
@@ -299,50 +294,50 @@ namespace DiskGazer.Models
 				// Process results.
 				// ----------------
 				// Calculate each transfer rate.
-				var data = new double[readNum];
+				var data = new double[readNumber];
 
-				for (int i = 1; i <= readNum; i++)
+				for (int i = 1; i <= readNumber; i++)
 				{
 					var timeEach = (lapTime[i] - lapTime[i - 1]).TotalSeconds; // Second
-					var scoreEach = Math.Floor(buffSize / timeEach) / 1000000D; // MB/s
+					var scoreEach = Math.Floor(bufferSize / timeEach) / 1000000D; // MB/s
 
 					data[i - 1] = scoreEach;
 				}
 
 				// Calculate total transfer rate (just for reference).
-				var totalTime = lapTime[readNum].TotalSeconds; // Second
-				var totalRead = (double)Settings.Current.BlockSize * (double)readNum * 1024D; // Bytes
+				var totalTime = lapTime[readNumber].TotalSeconds; // Second
+				var totalRead = (double)Settings.Current.BlockSize * (double)readNumber * 1024D; // Bytes
 
 				var totalScore = Math.Floor(totalRead / totalTime) / 1000000D; // MB/s
 
 				// Compose outcome.
-				var outcome = "[Start data]" + Environment.NewLine;
+				var outcome = new StringBuilder();
+				outcome.AppendLine("[Start data]");
 
 				int k = 0;
-				for (int i = 0; i < readNum; i++)
+				for (int i = 0; i < readNumber; i++)
 				{
-					outcome += String.Format("{0:f6} ", data[i]); // Data have 6 decimal places.
+					outcome.Append($"{data[i]:f6} "); // Data have 6 decimal places.
 
 					k++;
-					if ((k == 6) |
-						(i == readNum - 1))
+					if ((k == 6) | (i == readNumber - 1))
 					{
 						k = 0;
-						outcome += Environment.NewLine;
+						outcome.AppendLine();
 					}
 				}
 
-				outcome += "[End data]" + Environment.NewLine;
-				outcome += String.Format("Total {0:f6} MB/s", totalScore);
+				outcome.AppendLine("[End data]");
+				outcome.Append($"Total {totalScore:f6} MB/s");
 
 				rawData.Result = ReadResult.Success;
-				rawData.Outcome = outcome;
+				rawData.Outcome = outcome.ToString();
 				rawData.Data = data;
 			}
 			catch (Win32Exception ex)
 			{
 				rawData.Result = ReadResult.Failure;
-				rawData.Message = String.Format("{0} (Code: {1}).", ex.Message.Substring(0, ex.Message.Length - 1), ex.ErrorCode);
+				rawData.Message = $"{ex.Message.Substring(0, ex.Message.Length - 1)} (Code: {ex.ErrorCode}).";
 			}
 			catch (Exception ex) // Including OperationCanceledException
 			{
@@ -351,7 +346,7 @@ namespace DiskGazer.Models
 			}
 			finally
 			{
-				if (hFile != null)
+				if (hFile is not null)
 				{
 					// CloseHandle is inappropriate to close SafeFileHandle.
 					// Dispose method is not necessary because Close method will call it internally.

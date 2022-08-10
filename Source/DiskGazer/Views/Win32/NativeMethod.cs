@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace DiskGazer.Views.Win32
 {
-	public class NativeMethod
+	internal static class NativeMethod
 	{
 		// Get rectangle of a specified window.
 		[DllImport("User32.dll", SetLastError = true)]
@@ -47,7 +47,7 @@ namespace DiskGazer.Views.Win32
 		// Check if DWM composition is enabled (for Windows Vista or newer).
 		[DllImport("Dwmapi.dll", SetLastError = true)]
 		public static extern int DwmIsCompositionEnabled(
-			[MarshalAs(UnmanagedType.Bool)]	ref bool pfEnabled);
+			[MarshalAs(UnmanagedType.Bool)] ref bool pfEnabled);
 
 		// Get rectangle of a specified window under DWM.
 		[DllImport("Dwmapi.dll", SetLastError = true)]
@@ -81,7 +81,7 @@ namespace DiskGazer.Views.Win32
 		public static extern bool AttachThreadInput(
 			uint idAttach,
 			uint idAttachTo,
-			[MarshalAs(UnmanagedType.Bool)]	bool fAttach);
+			[MarshalAs(UnmanagedType.Bool)] bool fAttach);
 
 		// Set position, size and Z order of a specified window.
 		[DllImport("User32.dll", SetLastError = true)]

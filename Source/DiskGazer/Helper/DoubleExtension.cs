@@ -12,14 +12,14 @@ namespace DiskGazer.Helper
 	public static class DoubleExtension
 	{
 		/// <summary>
-		/// Get the number of scale (decimals) of double.
+		/// Gets the number of scale (decimals) of double.
 		/// </summary>
 		/// <param name="value">Double</param>
 		/// <returns>The number of scale</returns>
 		public static int Scale(this double value)
 		{
 			if (double.IsNaN(value) || double.IsInfinity(value))
-				throw new NotSupportedException("Value is not a number or evaluates to infinity.");
+				throw new ArgumentException("The value is not a number or evaluates to infinity.", nameof(value));
 
 			const int max = 15; // The number of significant figures in double
 

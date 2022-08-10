@@ -12,13 +12,13 @@ using DiskGazer.Models;
 namespace DiskGazer.Views.Converters
 {
 	/// <summary>
-	/// Convert ReadMethod to Boolean.
+	/// Conversion from ReadMethod to Boolean
 	/// </summary>
 	[ValueConversion(typeof(ReadMethod), typeof(bool))]
 	public class ReadMethodToBooleanConverter : IValueConverter
 	{
 		/// <summary>
-		/// Return true when source ReadMethod name matches target ReadMethod name.
+		/// Returns true when source ReadMethod name matches target ReadMethod name.
 		/// </summary>
 		/// <param name="value">Source ReadMethod</param>
 		/// <param name="targetType"></param>
@@ -27,14 +27,14 @@ namespace DiskGazer.Views.Converters
 		/// <returns>Boolean</returns>
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{
-			if (!(value is ReadMethod) || (parameter == null))
+			if ((value is not ReadMethod sourceValue) || (parameter is null))
 				return DependencyProperty.UnsetValue;
 
-			return ((ReadMethod)value).ToString().Equals(parameter.ToString(), StringComparison.OrdinalIgnoreCase);
+			return string.Equals(sourceValue.ToString(), parameter.ToString(), StringComparison.OrdinalIgnoreCase);
 		}
 
 		/// <summary>
-		/// If true, return ReadMethod whose name is the same as target ReadMethod name.
+		/// If true, returns ReadMethod whose name is the same as target ReadMethod name.
 		/// </summary>
 		/// <param name="value">Source Boolean</param>
 		/// <param name="targetType"></param>
@@ -43,14 +43,13 @@ namespace DiskGazer.Views.Converters
 		/// <returns>ReadMethod</returns>
 		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
 		{
-			if (!(value is bool) || !(bool)value || (parameter == null))
+			if ((value is not bool sourceValue) || !sourceValue || (parameter is null))
 				return DependencyProperty.UnsetValue;
 
-			ReadMethod method;
-			if (!Enum.TryParse(parameter.ToString(), true, out method))
+			if (!Enum.TryParse(parameter.ToString(), true, out ReadMethod targetValue))
 				return DependencyProperty.UnsetValue;
 
-			return method;
+			return targetValue;
 		}
 	}
 }

@@ -33,8 +33,7 @@ namespace DiskGazer
 		{
 			const string fileName = "exception.log";
 
-			var content = String.Format(@"[Date: {0} Sender: {1}]", DateTime.Now, sender) + Environment.NewLine
-				+ exception + Environment.NewLine + Environment.NewLine;
+			var content = $"[Date: {DateTime.Now} Sender: {sender}]{Environment.NewLine}{exception}{Environment.NewLine}{Environment.NewLine}";
 
 			Trace.WriteLine(content);
 
@@ -46,14 +45,14 @@ namespace DiskGazer
 			try
 			{
 				var folderPathAppData = Path.GetDirectoryName(filePathAppData);
-				if (!String.IsNullOrEmpty(folderPathAppData) && !Directory.Exists(folderPathAppData))
+				if (!string.IsNullOrEmpty(folderPathAppData) && !Directory.Exists(folderPathAppData))
 					Directory.CreateDirectory(folderPathAppData);
 
 				File.AppendAllText(filePathAppData, content);
 			}
 			catch (Exception ex)
 			{
-				Trace.WriteLine(String.Format("Failed to record exception to AppData. {0}", ex));
+				Trace.WriteLine($"Failed to record exception to AppData.{Environment.NewLine}{Environment.NewLine}{ex}");
 			}
 		}
 

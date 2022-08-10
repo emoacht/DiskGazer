@@ -23,43 +23,27 @@ namespace DiskGazer.ViewModels
 		/// <summary>
 		/// Roster of disks
 		/// </summary>
-		private readonly List<DiskInfo> _diskRoster = new List<DiskInfo>();
+		private readonly List<DiskInfo> _diskRoster = new();
 
 		/// <summary>
-		/// Scores of runs (private)
-		/// </summary>
-		/// <remarks>Current score is always diskScores[0].</remarks>
-		private readonly List<DiskScore> _diskScores = new List<DiskScore> { new DiskScore() };
-
-		/// <summary>
-		/// Scores of runs (internal)
+		/// Scores of runs
 		/// </summary>
 		/// <remark>Current score is always DiskScores[0].</remark>
-		internal IReadOnlyList<DiskScore> DiskScores
-		{
-			get { return _diskScores; }
-		}
+		internal IReadOnlyList<DiskScore> DiskScores => _diskScores.AsReadOnly();
+		private readonly List<DiskScore> _diskScores = new() { new DiskScore() };
 
-		public Operation Op
-		{
-			get { return _op ?? (_op = new Operation()); }
-		}
-		private Operation _op;
+		public Operator Op { get; } = new Operator();
 
 		private readonly MainWindow _mainWindow;
 
 		public MainWindowViewModel(MainWindow mainWindow)
 		{
 			this._mainWindow = mainWindow;
-
-			InitializeTask = InitializeAsync();
 		}
 
-		private Task InitializeTask { get; set; }
-
-		private async Task InitializeAsync()
+		public Task InitializeAsync()
 		{
-			await SearchAsync();
+			return SearchAsync();
 		}
 
 		#region Status
@@ -122,10 +106,7 @@ namespace DiskGazer.ViewModels
 
 		#region Settings
 
-		public Settings SettingsCurrent
-		{
-			get { return Settings.Current; }
-		}
+		public Settings SettingsCurrent => Settings.Current;
 
 		#region Disks
 
@@ -141,11 +122,11 @@ namespace DiskGazer.ViewModels
 			get => _diskRosterNamesIndex;
 			set
 			{
-				if (SetProperty(ref _diskRosterNamesIndex, value))
-				{
-					if (_diskRoster.Any())
-						CurrentDisk = _diskRoster[value];
-				}
+				SetProperty(ref _diskRosterNamesIndex, value);
+
+				// This must run every time.
+				if (_diskRoster.Any())
+					CurrentDisk = _diskRoster[value];
 			}
 		}
 		private int _diskRosterNamesIndex;
@@ -172,14 +153,14 @@ namespace DiskGazer.ViewModels
 
 		public int AreaSize
 		{
-			get { return Settings.Current.AreaSize; }
-			set { SetAreaSizeLocation(size: value, location: AreaLocation, selection: AreaSelection.Size); }
+			get => Settings.Current.AreaSize;
+			set => SetAreaSizeLocation(size: value, location: AreaLocation, selection: AreaSelection.Size);
 		}
 
 		public int AreaLocation
 		{
-			get { return Settings.Current.AreaLocation; }
-			set { SetAreaSizeLocation(size: AreaSize, location: value, selection: AreaSelection.Location); }
+			get => Settings.Current.AreaLocation;
+			set => SetAreaSizeLocation(size: AreaSize, location: value, selection: AreaSelection.Location);
 		}
 
 		private enum AreaSelection
@@ -205,6 +186,7 @@ namespace DiskGazer.ViewModels
 
 						sizeCopy = CurrentDisk.Size - remainder - locationCopy;
 						break;
+
 					case AreaSelection.Location:
 						sizeCopy = CurrentDisk.Size - remainder - locationCopy;
 						if (sizeCopy < AreaFineness)
@@ -232,10 +214,7 @@ namespace DiskGazer.ViewModels
 
 		#region Area fineness
 
-		public IReadOnlyCollection<double> MenuAreaFineness
-		{
-			get { return new[] { 1, 0.5, 0.25 }; } // GiB
-		}
+		public IReadOnlyCollection<double> MenuAreaFineness => new[] { 1, 0.5, 0.25 }; // GiB
 
 		public int AreaFineness
 		{
@@ -248,16 +227,13 @@ namespace DiskGazer.ViewModels
 
 		#region Area Ratio
 
-		private readonly List<int> _menuAreaRatioDivider = new List<int> { 1, 2, 4, 8, 16 };
+		private readonly List<int> _menuAreaRatioDivider = new() { 1, 2, 4, 8, 16 };
 
 		public string[] MenuAreaRatio
 		{
-			get
-			{
-				return _menuAreaRatioDivider
-					.Select(x => String.Format("1/{0}", x))
-					.ToArray();
-			}
+			get => _menuAreaRatioDivider
+				.Select(x => $"1/{x}")
+				.ToArray();
 		}
 
 		public int MenuAreaRatioIndex
@@ -269,8 +245,12 @@ namespace DiskGazer.ViewModels
 			}
 			set
 			{
-				Settings.Current.AreaRatioOuter = Settings.Current.AreaRatioInner * _menuAreaRatioDivider[value];
-				OnPropertyChanged();
+				var buffer = Settings.Current.AreaRatioInner * _menuAreaRatioDivider[value];
+				if (Settings.Current.AreaRatioOuter != buffer)
+				{
+					Settings.Current.AreaRatioInner = buffer;
+					OnPropertyChanged();
+				}
 			}
 		}
 
@@ -278,31 +258,28 @@ namespace DiskGazer.ViewModels
 
 		#region The number of runs
 
-		public IReadOnlyCollection<int> MenuNumRun
-		{
-			get { return new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 }; }
-		}
+		public IReadOnlyCollection<int> MenuNumRun => new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
 		#endregion
 
 		#region Block size
 
-		public IReadOnlyCollection<int> MenuBlockSize
-		{
-			get { return _menuBlockSize ?? (_menuBlockSize = new[] { 1024, 512, 256, 128, 64, 32 }); } //MiB
-		}
+		public IReadOnlyCollection<int> MenuBlockSize => _menuBlockSize ??= new[] { 1024, 512, 256, 128, 64, 32 }; //MiB
 		private int[] _menuBlockSize;
 
 		public int MenuBlockSizeItem
 		{
-			get { return Settings.Current.BlockSize; }
+			get => Settings.Current.BlockSize;
 			set
 			{
-				Settings.Current.BlockSize = value;
-				OnPropertyChanged();
+				if (Settings.Current.BlockSize != value)
+				{
+					Settings.Current.BlockSize = value;
+					OnPropertyChanged();
 
-				MenuBlockOffsetIndex = 0; // Reset.
-				MenuBlockOffset = null; // Reset.
+					MenuBlockOffsetIndex = 0; // Reset.
+					MenuBlockOffset = null; // Reset.
+				}
 			}
 		}
 
@@ -310,13 +287,13 @@ namespace DiskGazer.ViewModels
 
 		#region Block offset
 
-		private readonly List<int> _menuBlockOffsetDivider = new List<int> { 1, 2, 4, 8, 16, 32 };
+		private readonly List<int> _menuBlockOffsetDivider = new() { 1, 2, 4, 8, 16, 32 };
 
 		private string[] GetMenuBlockOffset()
 		{
 			return _menuBlockOffsetDivider
 				.Where(x => MenuBlockSize.Min() <= Settings.Current.BlockSize / x)
-				.Select(x => String.Format("1/{0}", x))
+				.Select(x => $"1/{x}")
 				.ToArray();
 		}
 
@@ -353,10 +330,7 @@ namespace DiskGazer.ViewModels
 
 		#region Run
 
-		public DelegateCommand RunCommand
-		{
-			get { return _runCommand ?? (_runCommand = new DelegateCommand(RunExecute, CanRunExecute)); }
-		}
+		public DelegateCommand RunCommand => _runCommand ??= new DelegateCommand(RunExecute);
 		private DelegateCommand _runCommand;
 
 		private async void RunExecute()
@@ -367,123 +341,66 @@ namespace DiskGazer.ViewModels
 			}
 			else
 			{
-				StopRun();
+				Stop();
 			}
-		}
-
-		private bool CanRunExecute()
-		{
-			return true;
 		}
 
 		#endregion
 
 		#region Rescan
 
-		public DelegateCommand RescanCommand
-		{
-			get { return _rescanCommand ?? (_rescanCommand = new DelegateCommand(RescanExecute, CanRescanExecute)); }
-		}
+		public DelegateCommand RescanCommand => _rescanCommand ??= new DelegateCommand(RescanExecute);
 		private DelegateCommand _rescanCommand;
 
-		private async void RescanExecute()
-		{
-			await RescanAsync();
-		}
-
-		private bool CanRescanExecute()
-		{
-			return true;
-		}
+		private async void RescanExecute() => await RescanAsync();
 
 		#endregion
 
 		#region Save screenshot to file
 
-		public DelegateCommand SaveScreenshotFileCommand
-		{
-			get { return _saveScreenshotFileCommand ?? (_saveScreenshotFileCommand = new DelegateCommand(SaveScreenshotFileExecute, CanSaveScreenshotFileExecute)); }
-		}
+		public DelegateCommand SaveScreenshotFileCommand => _saveScreenshotFileCommand ??= new DelegateCommand(SaveScreenshotFileExecute);
 		private DelegateCommand _saveScreenshotFileCommand;
 
-		private void SaveScreenshotFileExecute()
-		{
-			SaveScreenshotFile();
-		}
-
-		private bool CanSaveScreenshotFileExecute()
-		{
-			return true;
-		}
+		private void SaveScreenshotFileExecute() => SaveScreenshotFile();
 
 		#endregion
 
 		#region Save log to file
 
-		public DelegateCommand SaveLogFileCommand
-		{
-			get { return _saveLogFileCommand ?? (_saveLogFileCommand = new DelegateCommand(SaveLogFileExecute, CanSaveLogFileExecute)); }
-		}
+		public DelegateCommand SaveLogFileCommand => _saveLogFileCommand ??= new DelegateCommand(SaveLogFileExecute, CanSaveLogFileExecute);
 		private DelegateCommand _saveLogFileCommand;
 
-		private async void SaveLogFileExecute()
-		{
-			await SaveLogFile();
-		}
+		private async void SaveLogFileExecute() => await SaveLogFile();
 
-		private bool CanSaveLogFileExecute()
-		{
-			return (_diskScores[0].Data != null);
-		}
+		private bool CanSaveLogFileExecute() => _diskScores[0].Data is not null;
 
 		#endregion
 
 		#region Send log to clipboard
 
-		public DelegateCommand SendLogClipboardCommand
-		{
-			get { return _sendLogClipboardCommand ?? (_sendLogClipboardCommand = new DelegateCommand(SendLogClipboardExecute, CanSendLogClipboardExecute)); }
-		}
+		public DelegateCommand SendLogClipboardCommand => _sendLogClipboardCommand ??= new DelegateCommand(SendLogClipboardExecute, CanSendLogClipboardExecute);
 		private DelegateCommand _sendLogClipboardCommand;
 
-		private async void SendLogClipboardExecute()
-		{
-			await SendLogClipboard();
-		}
+		private async void SendLogClipboardExecute() => await SendLogClipboard();
 
-		private bool CanSendLogClipboardExecute()
-		{
-			return (_diskScores[0].Data != null);
-		}
+		private bool CanSendLogClipboardExecute() => _diskScores[0].Data is not null;
 
 		#endregion
 
 		#region Pin current chart line
 
-		public DelegateCommand PinLineCommand
-		{
-			get { return _pinLineCommand ?? (_pinLineCommand = new DelegateCommand(PinLineExecute, CanPinLineExecute)); }
-		}
+		public DelegateCommand PinLineCommand => _pinLineCommand ??= new DelegateCommand(PinLineExecute, CanPinLineExecute);
 		private DelegateCommand _pinLineCommand;
 
-		private void PinLineExecute()
-		{
-			_diskScores[0].IsPinned = true;
-		}
+		private void PinLineExecute() => _diskScores[0].IsPinned = true;
 
-		private bool CanPinLineExecute()
-		{
-			return (_diskScores[0].Data != null);
-		}
+		private bool CanPinLineExecute() => _diskScores[0].Data is not null;
 
 		#endregion
 
 		#region Clear all chart lines
 
-		public DelegateCommand ClearLinesCommand
-		{
-			get { return _clearLinesCommand ?? (_clearLinesCommand = new DelegateCommand(ClearLinesExecute, CanClearLinesExecute)); }
-		}
+		public DelegateCommand ClearLinesCommand => _clearLinesCommand ??= new DelegateCommand(ClearLinesExecute);
 		private DelegateCommand _clearLinesCommand;
 
 		private void ClearLinesExecute()
@@ -493,11 +410,6 @@ namespace DiskGazer.ViewModels
 			UpdateScores();
 		}
 
-		private bool CanClearLinesExecute()
-		{
-			return true;
-		}
-
 		#endregion
 
 		#endregion
@@ -505,7 +417,7 @@ namespace DiskGazer.ViewModels
 		#region Search
 
 		/// <summary>
-		/// Search disks.
+		/// Searches disks.
 		/// </summary>
 		private async Task SearchAsync()
 		{
@@ -522,9 +434,9 @@ namespace DiskGazer.ViewModels
 				}
 				catch (Exception ex)
 				{
-					Debug.WriteLine("Failed to get disk information by WMI. {0}", ex);
+					Debug.WriteLine($"Failed to get disk information by WMI.{Environment.NewLine}{ex}");
 
-					if (searchTask.Exception != null)
+					if (searchTask.Exception is not null)
 					{
 						searchTask.Exception.Flatten().InnerExceptions
 							.ToList()
@@ -532,7 +444,7 @@ namespace DiskGazer.ViewModels
 					}
 				}
 
-				if (diskRosterPre == null)
+				if (diskRosterPre is null)
 					return;
 
 				// Sort by PhysicalDrive.
@@ -553,9 +465,9 @@ namespace DiskGazer.ViewModels
 					}
 					catch (Exception ex)
 					{
-						Debug.WriteLine("Failed to get disk information by P/Invoke. {0}", ex);
+						Debug.WriteLine($"Failed to get disk information by P/Invoke.{Environment.NewLine}{ex}");
 
-						if (checkTask.Exception != null)
+						if (checkTask.Exception is not null)
 						{
 							checkTask.Exception.Flatten().InnerExceptions
 								.ToList()
@@ -563,7 +475,7 @@ namespace DiskGazer.ViewModels
 						}
 					}
 
-					if (infoNew == null)
+					if (infoNew is null)
 					{
 						infoNew = new DiskInfo { PhysicalDrive = infoPre.PhysicalDrive };
 					}
@@ -597,12 +509,12 @@ namespace DiskGazer.ViewModels
 			}
 			catch (Exception ex)
 			{
-				Debug.WriteLine("Failed to search disks {0}", ex);
+				Debug.WriteLine($"Failed to search disks.{Environment.NewLine}{ex}");
 			}
 		}
 
 		/// <summary>
-		/// Rescan disks.
+		/// Rescans disks.
 		/// </summary>
 		private async Task RescanAsync()
 		{
@@ -617,7 +529,7 @@ namespace DiskGazer.ViewModels
 		#region Run
 
 		/// <summary>
-		/// Start reading and analyzing disk.
+		/// Starts reading and analyzing disk.
 		/// </summary>
 		private async Task RunAsync()
 		{
@@ -645,6 +557,8 @@ namespace DiskGazer.ViewModels
 				_diskScores.Insert(0, new DiskScore());
 			}
 
+			Trace.Assert(CurrentDisk is not null);
+
 			_diskScores[0].Disk = CurrentDisk.Clone();
 			_diskScores[0].StartTime = DateTime.Now;
 
@@ -664,12 +578,11 @@ namespace DiskGazer.ViewModels
 
 			try
 			{
-				// Start.
 				await Op.ReadAnalyzeAsync(new Progress<ProgressInfo>(UpdateProgress));
 			}
 			catch (Exception ex)
 			{
-				Debug.WriteLine("Failed to read disk. {0}", ex);
+				Debug.WriteLine($"Failed to read disk.{Environment.NewLine}{ex}");
 			}
 
 			// Save screenshot and log.
@@ -695,9 +608,9 @@ namespace DiskGazer.ViewModels
 		}
 
 		/// <summary>
-		/// Stop reading and analyzing disk.
+		/// Stops reading and analyzing disk.
 		/// </summary>
-		private void StopRun()
+		private void Stop()
 		{
 			Op.StopReadAnalyze(new Progress<ProgressInfo>(UpdateProgress));
 		}
@@ -705,7 +618,7 @@ namespace DiskGazer.ViewModels
 		private void UpdateProgress(ProgressInfo info)
 		{
 			// Update scores and chart.
-			if ((info.Data != null) && !Op.IsCanceled)
+			if ((info.Data is not null) && !Op.IsCanceled)
 			{
 				_diskScores[0].Data = info.Data;
 
@@ -714,13 +627,13 @@ namespace DiskGazer.ViewModels
 			}
 
 			// Update status.
-			if (info.Status != null)
+			if (info.Status is not null)
 			{
 				Status = info.Status;
 			}
 
 			// Update inner status.
-			if (info.InnerStatus != null)
+			if (info.InnerStatus is not null)
 			{
 				InnerStatus = info.IsInnerStatusRenewed
 					? info.InnerStatus
@@ -730,7 +643,7 @@ namespace DiskGazer.ViewModels
 
 		private void UpdateScores()
 		{
-			if (_diskScores[0].Data == null)
+			if (_diskScores[0].Data is null)
 			{
 				ScoreMax = 0;
 				ScoreMin = 0;
@@ -748,14 +661,14 @@ namespace DiskGazer.ViewModels
 
 		#region Screenshot and log
 
-		private const string _resultFolderName = "result"; // Folder name to save screenshots and logs
+		private const string ResultFolderName = "result"; // Folder name to save screenshots and logs
 
 		/// <summary>
-		/// Save screenshot and log.
+		/// Saves screenshot and log.
 		/// </summary>
 		private async Task SaveScreenshotLog()
 		{
-			var folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, _resultFolderName);
+			var folderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ResultFolderName);
 			var filePath = Path.Combine(folderPath, _diskScores[0].StartTime.ToString("yyyyMMddHHmmss")); // File path except extension
 
 			try
@@ -765,27 +678,27 @@ namespace DiskGazer.ViewModels
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show(String.Format("Failed to save screenshot and log. {0}", ex),
+				MessageBox.Show($"Failed to save screenshot and log. {ex.Message}",
 								ProductInfo.Title, MessageBoxButton.OK, MessageBoxImage.Error);
 				return;
 			}
 
 			// Save screenshot to file.
 			System.Drawing.Bitmap screenshot = GetScreenshot();
-			if (screenshot != null)
-				SaveScreenshotFileBase(screenshot, String.Format("{0}.png", filePath));
+			if (screenshot is not null)
+				SaveScreenshotFileBase(screenshot, $"{filePath}.png");
 
 			// Save log to file.
-			await SaveLogFileBase(String.Format("{0}.txt", filePath));
+			await SaveLogFileBase($"{filePath}.txt");
 		}
 
 		/// <summary>
-		/// Save screenshot to file.
+		/// Saves screenshot to file.
 		/// </summary>
 		private void SaveScreenshotFile()
 		{
 			System.Drawing.Bitmap screenshot = GetScreenshot();
-			if (screenshot == null)
+			if (screenshot is null)
 				return;
 
 			var sfd = new SaveFileDialog
@@ -794,7 +707,7 @@ namespace DiskGazer.ViewModels
 				Filter = "(*.png)|*.png|(*.*)|*.*",
 			};
 
-			if (sfd.ShowDialog() == true)
+			if (sfd.ShowDialog() is true)
 				SaveScreenshotFileBase(screenshot, sfd.FileName);
 		}
 
@@ -806,13 +719,13 @@ namespace DiskGazer.ViewModels
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show("Failed to save screenshot to file. " + ex.Message,
+				MessageBox.Show($"Failed to save screenshot to file. {ex.Message}",
 								ProductInfo.Title, MessageBoxButton.OK, MessageBoxImage.Error);
 			}
 		}
 
 		/// <summary>
-		/// Save log to file.
+		/// Saves log to file.
 		/// </summary>
 		private async Task SaveLogFile()
 		{
@@ -822,7 +735,7 @@ namespace DiskGazer.ViewModels
 				Filter = "(*.txt)|*.txt|(*.*)|*.*",
 			};
 
-			if (sfd.ShowDialog() == true)
+			if (sfd.ShowDialog() is true)
 				await SaveLogFileBase(sfd.FileName);
 		}
 
@@ -841,13 +754,13 @@ namespace DiskGazer.ViewModels
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show("Failed to save log to file. " + ex.Message,
+				MessageBox.Show($"Failed to save log to file. {ex.Message}",
 								ProductInfo.Title, MessageBoxButton.OK, MessageBoxImage.Error);
 			}
 		}
 
 		/// <summary>
-		/// Send log to clipboard.
+		/// Sends log to clipboard.
 		/// </summary>
 		private async Task SendLogClipboard()
 		{
@@ -874,7 +787,7 @@ namespace DiskGazer.ViewModels
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show("Failed to send log to clipboard. " + ex.Message,
+				MessageBox.Show($"Failed to send log to clipboard. {ex.Message}",
 								ProductInfo.Title, MessageBoxButton.OK, MessageBoxImage.Error);
 			}
 		}
@@ -883,18 +796,18 @@ namespace DiskGazer.ViewModels
 		{
 			try
 			{
-				var rct = WindowSupplement.GetWindowRect(_mainWindow);
+				var rect = WindowSupplement.GetWindowRect(_mainWindow);
 
-				var screenshot = new System.Drawing.Bitmap((int)rct.Width, (int)rct.Height);
+				var screenshot = new System.Drawing.Bitmap((int)rect.Width, (int)rect.Height);
 				using (var g = System.Drawing.Graphics.FromImage(screenshot))
 				{
-					g.CopyFromScreen(new System.Drawing.Point((int)rct.Left, (int)rct.Top), System.Drawing.Point.Empty, screenshot.Size);
+					g.CopyFromScreen(new System.Drawing.Point((int)rect.Left, (int)rect.Top), System.Drawing.Point.Empty, screenshot.Size);
 				}
 				return screenshot;
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show("Failed to save screenshot. " + ex.Message,
+				MessageBox.Show($"Failed to save screenshot. {ex.Message}",
 								ProductInfo.Title, MessageBoxButton.OK, MessageBoxImage.Error);
 				return null;
 			}
@@ -902,38 +815,38 @@ namespace DiskGazer.ViewModels
 
 		private string ComposeLog()
 		{
-			if (_diskScores[0].Data == null)
-				return String.Empty;
+			if (_diskScores[0].Data is null)
+				return string.Empty;
 
 			// Compose header.
 			var headerElements = new[]
 			{
-				String.Format("[{0}]", ProductInfo.NameVersionMiddle),
-				String.Format("Disk model     : {0}", _diskScores[0].Disk.Name),
-				String.Format("Bus type       : {0}", _diskScores[0].Disk.BusType),
-				String.Format("Disk capacity  : {0:f2} GiB", (double)_diskScores[0].Disk.Size / 1024D), // Convert MiB to GiB.
-				String.Format("Block size     : {0} KiB", _diskScores[0].BlockSize),
-				String.Format("Block offset   : {0} KiB", _diskScores[0].BlockOffset),
-				String.Format("Area size      : {0} GiB", (double)_diskScores[0].AreaSize / 1024D), // Convert MiB to GiB.
-				String.Format("Area location  : {0} GiB", (double)_diskScores[0].AreaLocation / 1024D), // Convert MiB to GiB.
-				String.Format("Area ratio     : {0} / {1}", _diskScores[0].AreaRatioInner, _diskScores[0].AreaRatioOuter),
-				String.Format("Number of runs : {0}", _diskScores[0].NumRun),
-				String.Format("Method to run  : {0}", _diskScores[0].Method.ToString().Replace("_", "/")),
-				String.Format("Start time     : {0:yyyy/MM/dd HH:mm:ss}", _diskScores[0].StartTime),
-				String.Format("Maximum read   : {0:f2} MB/s", ScoreMax),
-				String.Format("Minimum read   : {0:f2} MB/s", ScoreMin),
-				String.Format("Average read   : {0:f2} MB/s", ScoreAvg),
+				string.Format("[{0}]", ProductInfo.NameVersionMiddle),
+				string.Format("Disk model     : {0}", _diskScores[0].Disk.Name),
+				string.Format("Bus type       : {0}", _diskScores[0].Disk.BusType),
+				string.Format("Disk capacity  : {0:f2} GiB", (double)_diskScores[0].Disk.Size / 1024D), // Convert MiB to GiB.
+				string.Format("Block size     : {0} KiB", _diskScores[0].BlockSize),
+				string.Format("Block offset   : {0} KiB", _diskScores[0].BlockOffset),
+				string.Format("Area size      : {0} GiB", (double)_diskScores[0].AreaSize / 1024D), // Convert MiB to GiB.
+				string.Format("Area location  : {0} GiB", (double)_diskScores[0].AreaLocation / 1024D), // Convert MiB to GiB.
+				string.Format("Area ratio     : {0} / {1}", _diskScores[0].AreaRatioInner, _diskScores[0].AreaRatioOuter),
+				string.Format("Number of runs : {0}", _diskScores[0].NumRun),
+				string.Format("Method to run  : {0}", _diskScores[0].Method.ToString().Replace("_", "/")),
+				string.Format("Start time     : {0:yyyy/MM/dd HH:mm:ss}", _diskScores[0].StartTime),
+				string.Format("Maximum read   : {0:f2} MB/s", ScoreMax),
+				string.Format("Minimum read   : {0:f2} MB/s", ScoreMin),
+				string.Format("Average read   : {0:f2} MB/s", ScoreAvg),
 				"(MB/s = 1,000,000 Bytes / second)",
 			};
 
-			var header = String.Join(Environment.NewLine, headerElements);
+			var header = headerElements.Aggregate((total, next) => $"{total}{Environment.NewLine}{next}");
 
 			// Compose body.
 			const string bodyElementTop = "Location (MiB), Sequential read (MB/s)";
 
 			var body = new SortedList<double, double>(_diskScores[0].Data)
-				.Select(x => String.Format("{0}, {1:f6}", x.Key, x.Value))
-				.Aggregate(bodyElementTop, (total, next) => total + Environment.NewLine + next);
+				.Select(x => $"{x.Key}, {x.Value:f6}")
+				.Aggregate(bodyElementTop, (total, next) => $"{total}{Environment.NewLine}{next}");
 
 			return header + Environment.NewLine +
 				Environment.NewLine +

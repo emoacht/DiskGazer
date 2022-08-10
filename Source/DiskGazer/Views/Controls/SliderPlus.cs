@@ -18,15 +18,15 @@ namespace DiskGazer.Views.Controls
 
 		private Slider InnerSlider
 		{
-			get { return _innerSlider; }
+			get => _innerSlider;
 			set
 			{
-				if (_innerSlider != null)
+				if (_innerSlider is not null)
 					_innerSlider.ValueChanged -= new RoutedPropertyChangedEventHandler<double>(OnSliderValueChanged);
 
 				_innerSlider = value;
 
-				if (_innerSlider != null)
+				if (_innerSlider is not null)
 					_innerSlider.ValueChanged += new RoutedPropertyChangedEventHandler<double>(OnSliderValueChanged);
 			}
 		}
@@ -34,15 +34,15 @@ namespace DiskGazer.Views.Controls
 
 		private RepeatButton DownButton
 		{
-			get { return _downButton; }
+			get => _downButton;
 			set
 			{
-				if (_downButton != null)
+				if (_downButton is not null)
 					_downButton.Click -= new RoutedEventHandler(OnButtonClick);
 
 				_downButton = value;
 
-				if (_downButton != null)
+				if (_downButton is not null)
 					_downButton.Click += new RoutedEventHandler(OnButtonClick);
 			}
 		}
@@ -50,15 +50,15 @@ namespace DiskGazer.Views.Controls
 
 		private RepeatButton UpButton
 		{
-			get { return _upButton; }
+			get => _upButton;
 			set
 			{
-				if (_upButton != null)
+				if (_upButton is not null)
 					_upButton.Click -= new RoutedEventHandler(OnButtonClick);
 
 				_upButton = value;
 
-				if (_upButton != null)
+				if (_upButton is not null)
 					_upButton.Click += new RoutedEventHandler(OnButtonClick);
 			}
 		}
@@ -78,24 +78,24 @@ namespace DiskGazer.Views.Controls
 				"Value",
 				typeof(double),
 				typeof(SliderPlus),
-				new FrameworkPropertyMetadata(
+				new PropertyMetadata(
 					0D,
 					(d, e) =>
 					{
 						var innerSlider = ((SliderPlus)d).InnerSlider;
-						if (innerSlider == null)
+						if (innerSlider is null)
 							return;
 
-						var buff = Math.Round((double)e.NewValue);
+						var buffer = Math.Round((double)e.NewValue);
 
-						if (buff < innerSlider.Minimum)
-							buff = innerSlider.Minimum;
+						if (buffer < innerSlider.Minimum)
+							buffer = innerSlider.Minimum;
 
-						if (buff > innerSlider.Maximum)
-							buff = innerSlider.Maximum;
+						if (buffer > innerSlider.Maximum)
+							buffer = innerSlider.Maximum;
 
-						((SliderPlus)d)._innerSliderValue = buff; // This must be changed on ahead.
-						innerSlider.Value = buff;
+						((SliderPlus)d)._innerSliderValue = buffer; // This must be changed on ahead.
+						innerSlider.Value = buffer;
 					}));
 
 		public double Maximum
@@ -106,21 +106,21 @@ namespace DiskGazer.Views.Controls
 		public static readonly DependencyProperty MaximumProperty =
 			RangeBase.MaximumProperty.AddOwner(
 				typeof(SliderPlus),
-				new FrameworkPropertyMetadata(
+				new PropertyMetadata(
 					10D,
 					(d, e) =>
 					{
 						var innerSlider = ((SliderPlus)d).InnerSlider;
-						if (innerSlider == null)
+						if (innerSlider is null)
 							return;
 
-						var buff = Math.Floor((double)e.NewValue);
+						var buffer = Math.Floor((double)e.NewValue);
 
 						var maximumThreshold = Math.Ceiling(innerSlider.Minimum) + 1D;
-						if (buff < maximumThreshold)
+						if (buffer < maximumThreshold)
 							innerSlider.Maximum = maximumThreshold;
 
-						innerSlider.Maximum = buff;
+						innerSlider.Maximum = buffer;
 					}));
 
 		public double Minimum
@@ -131,21 +131,21 @@ namespace DiskGazer.Views.Controls
 		public static readonly DependencyProperty MinimumProperty =
 			RangeBase.MinimumProperty.AddOwner(
 				typeof(SliderPlus),
-				new FrameworkPropertyMetadata(
+				new PropertyMetadata(
 					0D,
 					(d, e) =>
 					{
 						var innerSlider = ((SliderPlus)d).InnerSlider;
-						if (innerSlider == null)
+						if (innerSlider is null)
 							return;
 
-						var buff = Math.Ceiling((double)e.NewValue);
+						var buffer = Math.Ceiling((double)e.NewValue);
 
 						var minimumThreshold = Math.Floor(innerSlider.Maximum) - 1D;
-						if (buff < minimumThreshold)
+						if (buffer < minimumThreshold)
 							innerSlider.Minimum = minimumThreshold;
 
-						innerSlider.Minimum = buff;
+						innerSlider.Minimum = buffer;
 					}));
 
 		public double LargeChange
@@ -156,7 +156,7 @@ namespace DiskGazer.Views.Controls
 		public static readonly DependencyProperty LargeChangeProperty =
 			RangeBase.LargeChangeProperty.AddOwner(
 				typeof(SliderPlus),
-				new FrameworkPropertyMetadata(
+				new PropertyMetadata(
 					10D,
 					null,
 					(d, baseValue) => Math.Ceiling((double)baseValue)));
@@ -169,7 +169,7 @@ namespace DiskGazer.Views.Controls
 		public static readonly DependencyProperty SmallChangeProperty =
 			RangeBase.SmallChangeProperty.AddOwner(
 				typeof(SliderPlus),
-				new FrameworkPropertyMetadata(
+				new PropertyMetadata(
 					1D,
 					null,
 					(d, baseValue) => Math.Ceiling((double)baseValue)));
@@ -184,7 +184,7 @@ namespace DiskGazer.Views.Controls
 				"ButtonFrequency",
 				typeof(double),
 				typeof(SliderPlus),
-				new FrameworkPropertyMetadata(
+				new PropertyMetadata(
 					1D,
 					(d, e) => ((SliderPlus)d).Value = ((SliderPlus)d).Minimum));
 

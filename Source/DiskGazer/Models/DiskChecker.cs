@@ -15,7 +15,7 @@ namespace DiskGazer.Models
 	internal static class DiskChecker
 	{
 		/// <summary>
-		/// Get disk information by P/Invoke.
+		/// Gets disk information by P/Invoke.
 		/// </summary>
 		/// <param name="physicalDrive">Index number of physical drive</param>
 		/// <returns>Disk information</returns>
@@ -28,14 +28,14 @@ namespace DiskGazer.Models
 			try
 			{
 				hFile = NativeMethod.CreateFile(
-					String.Format(@"\\.\PhysicalDrive{0}", physicalDrive),
+					@$"\\.\PhysicalDrive{physicalDrive}",
 					NativeMethod.GENERIC_READ | NativeMethod.GENERIC_WRITE, // Administrative privilege is required. GENERIC_WRITE is for IOCTL_ATA_PASS_THROUGH.
 					NativeMethod.FILE_SHARE_READ | NativeMethod.FILE_SHARE_WRITE,
 					IntPtr.Zero,
 					NativeMethod.OPEN_EXISTING,
 					NativeMethod.FILE_ATTRIBUTE_NORMAL,
 					IntPtr.Zero);
-				if (hFile == null || hFile.IsInvalid)
+				if (hFile is null || hFile.IsInvalid)
 				{
 					// This is normal when this application is not run by administrator.
 					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get handle to disk.");
@@ -48,17 +48,14 @@ namespace DiskGazer.Models
 				storageQuery.PropertyId = NativeMethod.StorageDeviceProperty;
 				storageQuery.QueryType = NativeMethod.PropertyStandardQuery;
 
-				NativeMethod.STORAGE_DEVICE_DESCRIPTOR storageDescriptor;
-				uint bytesReturned1;
-
 				var result1 = NativeMethod.DeviceIoControl(
 					hFile,
 					NativeMethod.IOCTL_STORAGE_QUERY_PROPERTY,
 					ref storageQuery,
 					(uint)Marshal.SizeOf(typeof(NativeMethod.STORAGE_PROPERTY_QUERY)),
-					out storageDescriptor,
+					out NativeMethod.STORAGE_DEVICE_DESCRIPTOR storageDescriptor,
 					(uint)Marshal.SizeOf(typeof(NativeMethod.STORAGE_DEVICE_DESCRIPTOR)),
-					out bytesReturned1,
+					out uint bytesReturned1,
 					IntPtr.Zero);
 				if (result1 == false)
 					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get disk information.");
@@ -81,17 +78,14 @@ namespace DiskGazer.Models
 				// -------------------------------
 				// Use IOCTL_DISK_GET_LENGTH_INFO.
 				// -------------------------------
-				long diskSize;
-				uint bytesReturned2;
-
 				var result2 = NativeMethod.DeviceIoControl(
 					hFile,
 					NativeMethod.IOCTL_DISK_GET_LENGTH_INFO,
 					IntPtr.Zero,
 					0,
-					out diskSize,
+					out long diskSize,
 					(uint)Marshal.SizeOf(typeof(long)),
-					out bytesReturned2,
+					out uint bytesReturned2,
 					IntPtr.Zero);
 				if (result2 == false)
 					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get disk size.");
@@ -114,8 +108,6 @@ namespace DiskGazer.Models
 				ataQuery.header.CurrentTaskFile = new byte[8];
 				ataQuery.header.CurrentTaskFile[6] = 0xec; // ATA IDENTIFY DEVICE
 
-				uint bytesReturned3;
-
 				var result3 = NativeMethod.DeviceIoControl(
 					hFile,
 					NativeMethod.IOCTL_ATA_PASS_THROUGH,
@@ -123,7 +115,7 @@ namespace DiskGazer.Models
 					(uint)Marshal.SizeOf(typeof(NativeMethod.ATAIdentifyDeviceQuery)),
 					ref ataQuery,
 					(uint)Marshal.SizeOf(typeof(NativeMethod.ATAIdentifyDeviceQuery)),
-					out bytesReturned3,
+					out uint bytesReturned3,
 					IntPtr.Zero);
 				if (result3)
 				{
@@ -137,7 +129,7 @@ namespace DiskGazer.Models
 			}
 			catch (Win32Exception ex)
 			{
-				Debug.WriteLine("{0} (Code: {1}).", ex.Message.Substring(0, ex.Message.Length - 1), ex.ErrorCode);
+				Debug.WriteLine($"{ex.Message.Substring(0, ex.Message.Length - 1)} (Code: {ex.ErrorCode}).");
 				throw;
 			}
 			catch (Exception ex)
@@ -147,7 +139,7 @@ namespace DiskGazer.Models
 			}
 			finally
 			{
-				if (hFile != null)
+				if (hFile is not null)
 				{
 					// CloseHandle is inappropriate to close SafeFileHandle.
 					// Dispose method is not necessary because Close method will call it internally.
@@ -162,54 +154,37 @@ namespace DiskGazer.Models
 		{
 			if ((indexStart <= 0) || // If no data, start index is zero.
 				(source.Length - 1 <= indexStart))
-				return String.Empty;
+				return string.Empty;
 
 			var indexEnd = Array.IndexOf(source, default(byte), indexStart); // default(byte) is null.
 			if (indexEnd <= 0)
-				return String.Empty;
+				return string.Empty;
 
 			return Encoding.ASCII.GetString(source, indexStart, indexEnd - indexStart);
 		}
 
 		private static string ConvertBusTypeToString(NativeMethod.STORAGE_BUS_TYPE type)
 		{
-			switch (type)
+			return type switch
 			{
-				case NativeMethod.STORAGE_BUS_TYPE.BusTypeScsi:
-					return "SCSI";
-				case NativeMethod.STORAGE_BUS_TYPE.BusTypeAtapi:
-					return "ATAPI";
-				case NativeMethod.STORAGE_BUS_TYPE.BusTypeAta:
-					return "ATA";
-				case NativeMethod.STORAGE_BUS_TYPE.BusType1394:
-					return "1394";
-				case NativeMethod.STORAGE_BUS_TYPE.BusTypeSsa:
-					return "SSA";
-				case NativeMethod.STORAGE_BUS_TYPE.BusTypeFibre:
-					return "Fibre";
-				case NativeMethod.STORAGE_BUS_TYPE.BusTypeUsb:
-					return "USB";
-				case NativeMethod.STORAGE_BUS_TYPE.BusTypeRAID:
-					return "RAID";
-				case NativeMethod.STORAGE_BUS_TYPE.BusTypeiScsi:
-					return "iSCSI";
-				case NativeMethod.STORAGE_BUS_TYPE.BusTypeSas:
-					return "SAS";
-				case NativeMethod.STORAGE_BUS_TYPE.BusTypeSata:
-					return "SATA";
-				case NativeMethod.STORAGE_BUS_TYPE.BusTypeSd:
-					return "SD";
-				case NativeMethod.STORAGE_BUS_TYPE.BusTypeMmc:
-					return "MMC";
-				case NativeMethod.STORAGE_BUS_TYPE.BusTypeNvme:
-					return "NVMe";
-				case NativeMethod.STORAGE_BUS_TYPE.BusTypeSCM:
-					return "SCM";
-				case NativeMethod.STORAGE_BUS_TYPE.BusTypeUfs:
-					return "UFS";
-				default:
-					return Convert.ToUInt32(type).ToString();
-			}
+				NativeMethod.STORAGE_BUS_TYPE.BusTypeScsi => "SCSI",
+				NativeMethod.STORAGE_BUS_TYPE.BusTypeAtapi => "ATAPI",
+				NativeMethod.STORAGE_BUS_TYPE.BusTypeAta => "ATA",
+				NativeMethod.STORAGE_BUS_TYPE.BusType1394 => "1394",
+				NativeMethod.STORAGE_BUS_TYPE.BusTypeSsa => "SSA",
+				NativeMethod.STORAGE_BUS_TYPE.BusTypeFibre => "Fibre",
+				NativeMethod.STORAGE_BUS_TYPE.BusTypeUsb => "USB",
+				NativeMethod.STORAGE_BUS_TYPE.BusTypeRAID => "RAID",
+				NativeMethod.STORAGE_BUS_TYPE.BusTypeiScsi => "iSCSI",
+				NativeMethod.STORAGE_BUS_TYPE.BusTypeSas => "SAS",
+				NativeMethod.STORAGE_BUS_TYPE.BusTypeSata => "SATA",
+				NativeMethod.STORAGE_BUS_TYPE.BusTypeSd => "SD",
+				NativeMethod.STORAGE_BUS_TYPE.BusTypeMmc => "MMC",
+				NativeMethod.STORAGE_BUS_TYPE.BusTypeNvme => "NVMe",
+				NativeMethod.STORAGE_BUS_TYPE.BusTypeSCM => "SCM",
+				NativeMethod.STORAGE_BUS_TYPE.BusTypeUfs => "UFS",
+				_ => Convert.ToUInt32(type).ToString(),
+			};
 		}
 	}
 }

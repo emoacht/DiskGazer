@@ -44,18 +44,18 @@ namespace DiskGazer.Models
 		{
 			get
 			{
-				if (String.IsNullOrWhiteSpace(Product))
+				if (string.IsNullOrWhiteSpace(Product))
 					return Model;
 
-				if (String.IsNullOrWhiteSpace(Vendor) || Vendor.Contains("VID:"))
+				if (string.IsNullOrWhiteSpace(Vendor) || Vendor.Contains("VID:"))
 					return Product;
 
-				var name = String.Format("{0}{1}", Vendor, Product);
+				var name = $"{Vendor}{Product}";
 				if (Model.Contains(name) | // If Vendor ID field has former part of Product ID. To be considered.
 					((Vendor.Length == 8) && Vendor.Contains(" "))) // If Vendor ID field has not only Vendor ID but also former part of Product ID. To be considered.
 					return name;
 
-				return String.Format("{0} {1}", Vendor, Product);
+				return $"{Vendor} {Product}";
 			}
 		}
 
@@ -66,13 +66,13 @@ namespace DiskGazer.Models
 		{
 			get
 			{
-				if (String.IsNullOrWhiteSpace(Product))
+				if (string.IsNullOrWhiteSpace(Product))
 					return Model; // Model may include information on bus type.
 
-				if (String.IsNullOrWhiteSpace(BusType))
+				if (string.IsNullOrWhiteSpace(BusType))
 					return Name;
 
-				return String.Format("{0} ({1})", Name, BusType);
+				return $"{Name} ({BusType})";
 			}
 		}
 
@@ -107,20 +107,13 @@ namespace DiskGazer.Models
 		/// </summary>
 		public string MediaTypePhysicalDiskDescription
 		{
-			get
+			get => MediaTypePhysicalDisk switch
 			{
-				switch (MediaTypePhysicalDisk)
-				{
-					case null:
-						return "Not available";
-					case 3:
-						return "HDD";
-					case 4:
-						return "SSD";
-					default: // 0
-						return "Unspecified";
-				}
-			}
+				null => "Not available",
+				3 => "HDD",
+				4 => "SSD",
+				_ => "Unspecified"
+			};
 		}
 
 		/// <summary>
@@ -133,20 +126,13 @@ namespace DiskGazer.Models
 		/// </summary>
 		public string SpindleSpeedDescription
 		{
-			get
+			get => SpindleSpeed switch
 			{
-				switch (SpindleSpeed)
-				{
-					case null:
-						return "Not available";
-					case UInt32.MaxValue:
-						return "Unknown";
-					case 0:
-						return "Non-rotational media";
-					default:
-						return String.Format("{0} RPM", SpindleSpeed);
-				}
-			}
+				null => "Not available",
+				uint.MaxValue => "Unknown",
+				0 => "Non-rotational media",
+				_ => $"{SpindleSpeed} RPM"
+			};
 		}
 
 		/// <summary>
@@ -159,20 +145,13 @@ namespace DiskGazer.Models
 		/// </summary>
 		public string NominalMediaRotationRateDescription
 		{
-			get
+			get => NominalMediaRotationRate switch
 			{
-				switch (NominalMediaRotationRate)
-				{
-					case null:
-						return "Not supported";
-					case 0:
-						return "Rate not reported";
-					case 1:
-						return "Non-rotating media";
-					default:
-						return String.Format("{0} RPM", NominalMediaRotationRate);
-				}
-			}
+				null => "Not supported",
+				0 => "Rate not reported",
+				1 => "Non-rotating media",
+				_ => $"{NominalMediaRotationRate} RPM"
+			};
 		}
 
 		/// <summary>
@@ -190,14 +169,14 @@ namespace DiskGazer.Models
 		/// </summary>
 		public int Size
 		{
-			get { return (int)Math.Truncate(Math.Max(SizeWMI, SizePInvoke) / Math.Pow(1024D, 2)); }
+			get => (int)Math.Truncate(Math.Max(SizeWMI, SizePInvoke) / Math.Pow(1024D, 2));
 		}
 
 		#region IComparable member
 
 		public int CompareTo(DiskInfo other)
 		{
-			if (other == null)
+			if (other is null)
 				return 1;
 
 			return this.PhysicalDrive.CompareTo(other.PhysicalDrive);
@@ -211,19 +190,14 @@ namespace DiskGazer.Models
 		{
 			var binaryFormatter = new BinaryFormatter();
 
-			using (var ms = new MemoryStream())
-			{
-				binaryFormatter.Serialize(ms, this);
-				ms.Seek(0, SeekOrigin.Begin);
+			using var ms = new MemoryStream();
+			binaryFormatter.Serialize(ms, this);
+			ms.Seek(0, SeekOrigin.Begin);
 
-				return (DiskInfo)binaryFormatter.Deserialize(ms);
-			}
+			return (DiskInfo)binaryFormatter.Deserialize(ms);
 		}
 
-		object ICloneable.Clone()
-		{
-			return Clone();
-		}
+		object ICloneable.Clone() => Clone();
 
 		#endregion
 	}
