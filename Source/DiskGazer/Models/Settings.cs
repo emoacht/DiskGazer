@@ -23,12 +23,8 @@ namespace DiskGazer.Models
 		/// </summary>
 		public int PhysicalDrive
 		{
-			get { return _physicalDrive; }
-			set
-			{
-				_physicalDrive = value;
-				RaisePropertyChanged();
-			}
+			get => _physicalDrive;
+			set => SetProperty(ref _physicalDrive, value);
 		}
 		private int _physicalDrive = 0;
 
@@ -37,12 +33,8 @@ namespace DiskGazer.Models
 		/// </summary>
 		public int BlockSize
 		{
-			get { return _blockSize; }
-			set
-			{
-				_blockSize = value;
-				RaisePropertyChanged();
-			}
+			get => _blockSize;
+			set => SetProperty(ref _blockSize, value);
 		}
 		private int _blockSize = 1024;
 
@@ -52,12 +44,8 @@ namespace DiskGazer.Models
 		/// <remarks>To divide block size so as to produce block offset.</remarks>
 		public int BlockOffset
 		{
-			get { return _blockOffset; }
-			set
-			{
-				_blockOffset = value;
-				RaisePropertyChanged();
-			}
+			get => _blockOffset;
+			set => SetProperty(ref _blockOffset, value);
 		}
 		private int _blockOffset = 0;
 
@@ -66,12 +54,8 @@ namespace DiskGazer.Models
 		/// </summary>
 		public int AreaSize
 		{
-			get { return _areaSize; }
-			set
-			{
-				_areaSize = value;
-				RaisePropertyChanged();
-			}
+			get => _areaSize;
+			set => SetProperty(ref _areaSize, value);
 		}
 		private int _areaSize = 1024;
 
@@ -80,12 +64,8 @@ namespace DiskGazer.Models
 		/// </summary>
 		public int AreaLocation
 		{
-			get { return _areaLocation; }
-			set
-			{
-				_areaLocation = value;
-				RaisePropertyChanged();
-			}
+			get => _areaLocation;
+			set => SetProperty(ref _areaLocation, value);
 		}
 		private int _areaLocation = 0;
 
@@ -94,12 +74,8 @@ namespace DiskGazer.Models
 		/// </summary>
 		public int AreaRatioInner
 		{
-			get { return _areaRatioInner; }
-			set
-			{
-				_areaRatioInner = value;
-				RaisePropertyChanged();
-			}
+			get => _areaRatioInner;
+			set => SetProperty(ref _areaRatioInner, value);
 		}
 		private int _areaRatioInner = 8; // Fixed
 
@@ -108,12 +84,8 @@ namespace DiskGazer.Models
 		/// </summary>
 		public int AreaRatioOuter
 		{
-			get { return _areaRatioOuter; }
-			set
-			{
-				_areaRatioOuter = value;
-				RaisePropertyChanged();
-			}
+			get => _areaRatioOuter;
+			set => SetProperty(ref _areaRatioOuter, value);
 		}
 		private int _areaRatioOuter = 8; // Changeable
 
@@ -122,12 +94,8 @@ namespace DiskGazer.Models
 		/// </summary>
 		public int NumRun
 		{
-			get { return _numRun; }
-			set
-			{
-				_numRun = value;
-				RaisePropertyChanged();
-			}
+			get => _numRun;
+			set => SetProperty(ref _numRun, value);
 		}
 		private int _numRun = 5;
 
@@ -136,12 +104,8 @@ namespace DiskGazer.Models
 		/// </summary>
 		public ReadMethod Method
 		{
-			get { return _method; }
-			set
-			{
-				_method = value;
-				RaisePropertyChanged();
-			}
+			get => _method;
+			set => SetProperty(ref _method, value);
 		}
 		private ReadMethod _method = ReadMethod.Native;
 
@@ -150,12 +114,8 @@ namespace DiskGazer.Models
 		/// </summary>
 		public bool RemovesOutlier
 		{
-			get { return _removesOutlier; }
-			set
-			{
-				_removesOutlier = value;
-				RaisePropertyChanged();
-			}
+			get => _removesOutlier;
+			set => SetProperty(ref _removesOutlier, value);
 		}
 		private bool _removesOutlier = true;
 
@@ -164,12 +124,8 @@ namespace DiskGazer.Models
 		/// </summary>
 		public bool SavesScreenshotLog
 		{
-			get { return _savesScreenshotLog; }
-			set
-			{
-				_savesScreenshotLog = value;
-				RaisePropertyChanged();
-			}
+			get => _savesScreenshotLog;
+			set => SetProperty(ref _savesScreenshotLog, value);
 		}
 		private bool _savesScreenshotLog;
 
