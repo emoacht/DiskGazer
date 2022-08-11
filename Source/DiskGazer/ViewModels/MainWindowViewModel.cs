@@ -360,10 +360,7 @@ namespace DiskGazer.ViewModels
 
 		#region Run
 
-		public DelegateCommand RunCommand
-		{
-			get { return _runCommand ?? (_runCommand = new DelegateCommand(RunExecute, CanRunExecute)); }
-		}
+		public DelegateCommand RunCommand => _runCommand ??= new DelegateCommand(RunExecute);
 		private DelegateCommand _runCommand;
 
 		private async void RunExecute()
@@ -378,119 +375,70 @@ namespace DiskGazer.ViewModels
 			}
 		}
 
-		private bool CanRunExecute()
-		{
-			return true;
-		}
-
 		#endregion
 
 		#region Rescan
 
-		public DelegateCommand RescanCommand
-		{
-			get { return _rescanCommand ?? (_rescanCommand = new DelegateCommand(RescanExecute, CanRescanExecute)); }
-		}
+		public DelegateCommand RescanCommand => _rescanCommand ??= new DelegateCommand(RescanExecute, CanRescanExecute);
 		private DelegateCommand _rescanCommand;
 
-		private async void RescanExecute()
-		{
-			await RescanAsync();
-		}
+		private async void RescanExecute() => await RescanAsync();
 
-		private bool CanRescanExecute()
-		{
-			return true;
-		}
+		private bool CanRescanExecute() => true;
 
 		#endregion
 
 		#region Save screenshot to file
 
-		public DelegateCommand SaveScreenshotFileCommand
-		{
-			get { return _saveScreenshotFileCommand ?? (_saveScreenshotFileCommand = new DelegateCommand(SaveScreenshotFileExecute, CanSaveScreenshotFileExecute)); }
-		}
+		public DelegateCommand SaveScreenshotFileCommand => _saveScreenshotFileCommand ??= new DelegateCommand(SaveScreenshotFileExecute, CanSaveScreenshotFileExecute);
 		private DelegateCommand _saveScreenshotFileCommand;
 
-		private void SaveScreenshotFileExecute()
-		{
-			SaveScreenshotFile();
-		}
+		private void SaveScreenshotFileExecute() => SaveScreenshotFile();
 
-		private bool CanSaveScreenshotFileExecute()
-		{
-			return true;
-		}
+		private bool CanSaveScreenshotFileExecute() => true;
 
 		#endregion
 
 		#region Save log to file
 
-		public DelegateCommand SaveLogFileCommand
-		{
-			get { return _saveLogFileCommand ?? (_saveLogFileCommand = new DelegateCommand(SaveLogFileExecute, CanSaveLogFileExecute)); }
-		}
+		public DelegateCommand SaveLogFileCommand => _saveLogFileCommand ??= new DelegateCommand(SaveLogFileExecute, CanSaveLogFileExecute);
 		private DelegateCommand _saveLogFileCommand;
 
-		private async void SaveLogFileExecute()
-		{
-			await SaveLogFile();
-		}
+		private async void SaveLogFileExecute() => await SaveLogFile();
 
-		private bool CanSaveLogFileExecute()
-		{
-			return (_diskScores[0].Data != null);
-		}
+		private bool CanSaveLogFileExecute() => _diskScores[0].Data is not null;
 
 		#endregion
 
 		#region Send log to clipboard
 
-		public DelegateCommand SendLogClipboardCommand
-		{
-			get { return _sendLogClipboardCommand ?? (_sendLogClipboardCommand = new DelegateCommand(SendLogClipboardExecute, CanSendLogClipboardExecute)); }
-		}
+		public DelegateCommand SendLogClipboardCommand => _sendLogClipboardCommand ??= new DelegateCommand(SendLogClipboardExecute, CanSendLogClipboardExecute);
 		private DelegateCommand _sendLogClipboardCommand;
 
-		private async void SendLogClipboardExecute()
-		{
-			await SendLogClipboard();
-		}
+		private async void SendLogClipboardExecute() => await SendLogClipboard();
 
-		private bool CanSendLogClipboardExecute()
-		{
-			return (_diskScores[0].Data != null);
-		}
+		private bool CanSendLogClipboardExecute() => _diskScores[0].Data is not null;
 
 		#endregion
 
 		#region Pin current chart line
 
-		public DelegateCommand PinLineCommand
-		{
-			get { return _pinLineCommand ?? (_pinLineCommand = new DelegateCommand(PinLineExecute, CanPinLineExecute)); }
-		}
+		public DelegateCommand PinLineCommand => _pinLineCommand ??= new DelegateCommand(PinLineExecute, CanPinLineExecute);
 		private DelegateCommand _pinLineCommand;
 
 		private void PinLineExecute()
 		{
 			_diskScores[0].IsPinned = true;
+			_mainWindow.DrawChart(DrawMode.PinCurrentChart);
 		}
 
-		private bool CanPinLineExecute()
-		{
-			return (_diskScores[0].Data != null);
-		}
+		private bool CanPinLineExecute() => _diskScores[0].Data is not null;
 
 		#endregion
 
 		#region Clear all chart lines
 
-		public DelegateCommand ClearLinesCommand
-		{
-			get { return _clearLinesCommand ?? (_clearLinesCommand = new DelegateCommand(ClearLinesExecute, CanClearLinesExecute)); }
-		}
+		public DelegateCommand ClearLinesCommand => _clearLinesCommand ??= new DelegateCommand(ClearLinesExecute, CanClearLinesExecute);
 		private DelegateCommand _clearLinesCommand;
 
 		private void ClearLinesExecute()
@@ -498,12 +446,14 @@ namespace DiskGazer.ViewModels
 			_diskScores.Clear();
 			_diskScores.Add(new DiskScore()); // Make diskScores[0] always exist.
 			UpdateScores();
+			_mainWindow.DrawChart(DrawMode.ClearCompletely);
+
+			SaveLogFileCommand.RaiseCanExecuteChanged();
+			SendLogClipboardCommand.RaiseCanExecuteChanged();
+			PinLineCommand.RaiseCanExecuteChanged();
 		}
 
-		private bool CanClearLinesExecute()
-		{
-			return true;
-		}
+		private bool CanClearLinesExecute() => true;
 
 		#endregion
 
@@ -678,6 +628,10 @@ namespace DiskGazer.ViewModels
 			{
 				Debug.WriteLine("Failed to read disk. {0}", ex);
 			}
+
+			SaveLogFileCommand.RaiseCanExecuteChanged();
+			SendLogClipboardCommand.RaiseCanExecuteChanged();
+			PinLineCommand.RaiseCanExecuteChanged();
 
 			// Save screenshot and log.
 			if (Settings.Current.SavesScreenshotLog && !Op.IsCanceled)

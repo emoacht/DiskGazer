@@ -617,26 +617,6 @@ namespace DiskGazer.Views
 					true,
 					(d, e) => ((MainWindow)d).DrawChart(DrawMode.RefreshPinnedChart)));
 
-		private void MenuItemPinLine_Clicked(object sender, RoutedEventArgs e)
-		{
-			// Ping current chart line.
-			if (_mainWindowViewModel.PinLineCommand.CanExecute())
-			{
-				_mainWindowViewModel.PinLineCommand.Execute();
-				DrawChart(DrawMode.PinCurrentChart);
-			}
-		}
-
-		private void MenuItemClearLines_Clicked(object sender, RoutedEventArgs e)
-		{
-			// Clear all chart lines.
-			if (_mainWindowViewModel.ClearLinesCommand.CanExecute())
-			{
-				_mainWindowViewModel.ClearLinesCommand.Execute();
-				DrawChart(DrawMode.ClearCompletely);
-			}
-		}
-
 		/// <summary>
 		/// Create and add chart.
 		/// </summary>

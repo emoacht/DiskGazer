@@ -209,9 +209,9 @@
 					<Separator/>
 
 					<MenuItem Header="Pin current chart line"
-							  Click="MenuItemPinLine_Clicked"/>
+							  Command="{Binding PinLineCommand}"/>
 					<MenuItem Header="Clear all chart lines"
-							  Click="MenuItemClearLines_Clicked"/>
+							  Command="{Binding ClearLinesCommand}"/>
 				</MenuItem>
 
 				<!-- Help -->
