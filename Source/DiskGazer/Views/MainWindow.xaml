@@ -224,18 +224,20 @@
 				<MenuItem Height="21"
 						  Header="_Help">
 					<!-- Disk information -->
-					<MenuItem x:Name="MenuItemDiskInfo"
-							  Header="Disk information">
+					<MenuItem Header="Disk information">
 						<MenuItem.Icon>
 							<Viewbox Child="{StaticResource InfoIcon}"/>
 						</MenuItem.Icon>
+						<Grid x:Name="DiskInfoHost"
+							  Margin="8"
+							  controls:MenuItemModifier.IsEnabled="True"/>
 					</MenuItem>
 					<Separator/>
 
 					<!-- About -->
 					<MenuItem Header="{Binding Source={x:Static views:ProductInfo.Title}, Mode=OneWay}" HeaderStringFormat="About {0}">
-						<StackPanel Margin="0,4"
-									Orientation="Vertical">
+						<StackPanel Margin="8,6"
+									controls:MenuItemModifier.IsEnabled="True">
 							<TextBlock Margin="2"
 									   FontSize="16" FontWeight="Bold"
 									   Text="{Binding Source={x:Static views:ProductInfo.Title}, Mode=OneWay}"/>
