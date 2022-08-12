@@ -34,8 +34,9 @@ namespace DiskGazer.Views
 		{
 			var initializeTask = _mainWindowViewModel.InitializeAsync();
 
-			CreateAddChart();
+			CreateChart();
 			ManageColorBar();
+			SetMinSize();
 
 			this.SetBinding(
 				StatusProperty,
@@ -53,9 +54,6 @@ namespace DiskGazer.Views
 					Mode = BindingMode.OneWay,
 				});
 
-			SetMinSize();
-			ForceChartRedraw();
-
 #if !DEBUG
 			this.MenuItemOpen.Visibility = Visibility.Collapsed;
 #endif
@@ -65,8 +63,7 @@ namespace DiskGazer.Views
 
 		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 		{
-			if (_diskChart is not null)
-				AdjustChartAppearance();
+			AdjustChartArea();
 
 			// Binding in XAML will not work when window is maximized.
 			this.MenuTop.Width = WindowSupplement.GetClientAreaSize(this).Width;
@@ -101,7 +98,7 @@ namespace DiskGazer.Views
 		private void IndicateWindowChartSize()
 		{
 			var rect = WindowSupplement.GetWindowRect(this);
-			var innerPlotAreaSize = ChartInnerPlotAreaSize();
+			var innerPlotAreaSize = GetChartInnerPlotAreaSize();
 
 			ShowStatus(string.Format("Window {0}-{1} Chart {2}-{3}",
 				rect.Width,
@@ -431,7 +428,7 @@ namespace DiskGazer.Views
 		private const double ChartMaxDefault = 200D; // Default maximum value of Y axis
 		private const double ChartMinDefault = 0D;   // Default minimum value of Y axis
 
-		private readonly Color[] _colBar = // Colors for color bar
+		private readonly Color[] _colorBarColors = // Colors for color bar
 		{
 			Color.FromRgb(255,  0,255),
 			Color.FromRgb(255,  0,153),
@@ -444,10 +441,10 @@ namespace DiskGazer.Views
 			Color.FromRgb(  0,255,255),
 		};
 
-		private int _indexColSelected = 8; // Index of color
+		private int _colorBarIndex = 8; // Index of selected color in color bar
 
 		/// <summary>
-		/// Maximum value of Y axle
+		/// Maximum value of Y axis
 		/// </summary>
 		public double ChartMax
 		{
@@ -470,12 +467,12 @@ namespace DiskGazer.Views
 							window.SliderChartMin.Value = (double)e.NewValue - ChartUnit;
 
 						if (window.IsChartMaxFixed)
-							window.AdjustChartAppearance();
+							window.AdjustChartArea();
 					},
 					(d, baseValue) => Math.Round((double)baseValue / ChartUnit) * ChartUnit));
 
 		/// <summary>
-		/// Minimum value of Y axle
+		/// Minimum value of Y axis
 		/// </summary>
 		public double ChartMin
 		{
@@ -498,7 +495,7 @@ namespace DiskGazer.Views
 							window.SliderChartMax.Value = (double)e.NewValue + ChartUnit;
 
 						if (window.IsChartMinFixed)
-							window.AdjustChartAppearance();
+							window.AdjustChartArea();
 					},
 					(d, baseValue) => Math.Round((double)baseValue / ChartUnit) * ChartUnit));
 
@@ -517,7 +514,7 @@ namespace DiskGazer.Views
 				typeof(MainWindow),
 				new PropertyMetadata(
 					false,
-					(d, e) => ((MainWindow)d).AdjustChartAppearance()));
+					(d, e) => ((MainWindow)d).AdjustChartArea()));
 
 		/// <summary>
 		/// Whether minimum value of Y axle is fixed
@@ -534,7 +531,7 @@ namespace DiskGazer.Views
 				typeof(MainWindow),
 				new PropertyMetadata(
 					false,
-					(d, e) => ((MainWindow)d).AdjustChartAppearance()));
+					(d, e) => ((MainWindow)d).AdjustChartArea()));
 
 		/// <summary>
 		/// Whether to slide chart line to current location so as to make it visible
@@ -551,58 +548,59 @@ namespace DiskGazer.Views
 				typeof(MainWindow),
 				new PropertyMetadata(
 					true,
-					(d, e) => ((MainWindow)d).DrawChart(DrawMode.RefreshPinnedChart)));
+					(d, e) => ((MainWindow)d).DrawChartLine(DrawMode.RefreshPinnedChart)));
 
-		/// <summary>
-		/// Creates and adds chart.
-		/// </summary>
-		private void CreateAddChart()
+		private DpiScale _initialDpi;
+
+		private void CreateChart()
 		{
-			var chartFont = new System.Drawing.Font(this.FontFamily.ToString(), (float)this.FontSize - 3F); // To be considered.
+			_initialDpi = VisualTreeHelper.GetDpi(this);
 
-			var colBack = System.Drawing.Color.FromArgb(10, 10, 10);      // Back color of inner plot area
-			var colBack2ndry = System.Drawing.Color.FromArgb(60, 60, 60); // Secondary back color of inner plot area
-			var colMajor = System.Drawing.Color.FromArgb(120, 120, 120);  // Line color of major grid
-			var colMinor = System.Drawing.Color.FromArgb(80, 80, 80);     // Line color of minor grid
+			var labelFont = GetLabelFont(1); // Axis label font
+
+			var primaryBackColor = System.Drawing.Color.FromArgb(10, 10, 10);   // Primary background color of inner plot area
+			var secondaryBackColor = System.Drawing.Color.FromArgb(60, 60, 60); // Secondary background color of inner plot area
+			var majorLineColor = System.Drawing.Color.FromArgb(120, 120, 120);  // Line color of major grid
+			var minorLineColor = System.Drawing.Color.FromArgb(80, 80, 80);     // Line color of minor grid
 
 			// Prepare Chart and add to WindowsFormsHost.
 			_diskChart = new Chart();
 			this.ChartHost.Child = _diskChart;
 
 			// Prepare ChartArea and add to Chart.
-			var chartAreaOne = new ChartArea();
-			chartAreaOne.BackColor = colBack;
-			chartAreaOne.BackSecondaryColor = colBack2ndry;
-			chartAreaOne.BackGradientStyle = GradientStyle.TopBottom;
-			chartAreaOne.Position = new ElementPosition(0, 0, 100, 100); // This is required for ChartArea to fill Chart object completely.
+			var chartArea = new ChartArea();
+			chartArea.BackColor = primaryBackColor;
+			chartArea.BackSecondaryColor = secondaryBackColor;
+			chartArea.BackGradientStyle = GradientStyle.TopBottom;
+			chartArea.Position = new ElementPosition(0, 0, 100, 100); // This is required for ChartArea to fill Chart object completely.
 
 			// Set X axis.
-			chartAreaOne.AxisX.IsLabelAutoFit = false;
-			chartAreaOne.AxisX.LabelStyle.Font = chartFont;
-			chartAreaOne.AxisX.MajorGrid.LineColor = colMajor;
-			chartAreaOne.AxisX.MajorTickMark.Enabled = false;
+			chartArea.AxisX.IsLabelAutoFit = false;
+			chartArea.AxisX.LabelStyle.Font = labelFont;
+			chartArea.AxisX.MajorGrid.LineColor = majorLineColor;
+			chartArea.AxisX.MajorTickMark.Enabled = false;
 
-			chartAreaOne.AxisX.MinorGrid.Enabled = true;
-			chartAreaOne.AxisX.MinorGrid.LineColor = colMinor;
+			chartArea.AxisX.MinorGrid.Enabled = true;
+			chartArea.AxisX.MinorGrid.LineColor = minorLineColor;
 
 			// Set Y axis.
-			chartAreaOne.AxisY.IsLabelAutoFit = false;
-			chartAreaOne.AxisY.LabelStyle.Font = chartFont;
-			chartAreaOne.AxisY.MajorGrid.LineColor = colMajor;
-			chartAreaOne.AxisY.MajorTickMark.Enabled = false;
+			chartArea.AxisY.IsLabelAutoFit = false;
+			chartArea.AxisY.LabelStyle.Font = labelFont;
+			chartArea.AxisY.MajorGrid.LineColor = majorLineColor;
+			chartArea.AxisY.MajorTickMark.Enabled = false;
 
-			chartAreaOne.AxisY.MinorGrid.Enabled = true;
-			chartAreaOne.AxisY.MinorGrid.LineColor = colMinor;
+			chartArea.AxisY.MinorGrid.Enabled = true;
+			chartArea.AxisY.MinorGrid.LineColor = minorLineColor;
 
-			_diskChart.ChartAreas.Add(chartAreaOne);
+			_diskChart.ChartAreas.Add(chartArea);
 
 			// Draw blank Series. This is required for inner plot area to be drawn.
-			DrawChart(DrawMode.Clear);
+			DrawChartLine(DrawMode.Clear);
 
-			AdjustChartAppearance();
+			AdjustChartArea();
 		}
 
-		private void AdjustChartAppearance()
+		private void AdjustChartArea()
 		{
 			if (_diskChart is null)
 				return;
@@ -613,17 +611,18 @@ namespace DiskGazer.Views
 			// Set size of Chart.
 			// ------------------
 			// Width will be automatically resized except initial adjustment where it is required to set ChartArea.InnerPlotPosition.X.
-			_diskChart.Width = (int)WindowSupplement.GetClientAreaSize(this).Width;
-			_diskChart.Height = (int)(WindowSupplement.GetClientAreaSize(this).Height - this.GridDashboard.ActualHeight * windowDpi.DpiScaleY);
+			var clientAreaSize = WindowSupplement.GetClientAreaSize(this);
+			_diskChart.Width = (int)clientAreaSize.Width;
+			_diskChart.Height = (int)(clientAreaSize.Height - this.GridDashboard.ActualHeight * windowDpi.DpiScaleY);
 
-			var chartAreaOne = _diskChart.ChartAreas[0];
+			var chartArea = _diskChart.ChartAreas[0];
 
 			// -----------------------------------------------------
 			// Adjust maximum and minimum values in scales of Chart.
 			// -----------------------------------------------------
 			// X axis
-			chartAreaOne.AxisX.Maximum = Settings.Current.AreaLocation + Settings.Current.AreaSize;
-			chartAreaOne.AxisX.Minimum = Settings.Current.AreaLocation;
+			chartArea.AxisX.Maximum = Settings.Current.AreaLocation + Settings.Current.AreaSize;
+			chartArea.AxisX.Minimum = Settings.Current.AreaLocation;
 
 			// Y axis
 			double chartMax;
@@ -665,8 +664,8 @@ namespace DiskGazer.Views
 				}
 			}
 
-			chartAreaOne.AxisY.Maximum = chartMax;
-			chartAreaOne.AxisY.Minimum = chartMin;
+			chartArea.AxisY.Maximum = chartMax;
+			chartArea.AxisY.Minimum = chartMin;
 
 			// -----------------------------------------------------
 			// Adjust size and position of inner plot area of Chart.
@@ -676,21 +675,26 @@ namespace DiskGazer.Views
 
 			if (DiskScores[0].Data is not null)
 			{
-				digitX = Math.Max(digitX, chartAreaOne.AxisX.Maximum.ToString(CultureInfo.InvariantCulture).Length);
-				digitY = Math.Max(digitY, chartAreaOne.AxisY.Maximum.ToString(CultureInfo.InvariantCulture).Length);
+				digitX = Math.Max(digitX, chartArea.AxisX.Maximum.ToString(CultureInfo.InvariantCulture).Length);
+				digitY = Math.Max(digitY, chartArea.AxisY.Maximum.ToString(CultureInfo.InvariantCulture).Length);
 			}
 
-			var labelX = GetSize(digitX, chartAreaOne.AxisX.LabelStyle.Font);
-			var labelY = GetSize(digitY, chartAreaOne.AxisY.LabelStyle.Font);
+			var labelFont = GetLabelFont(windowDpi.DpiScaleX / _initialDpi.DpiScaleX);
+
+			chartArea.AxisX.LabelStyle.Font = labelFont;
+			chartArea.AxisY.LabelStyle.Font = labelFont;
+
+			var labelX = GetSize(digitX, labelFont);
+			var labelY = GetSize(digitY, labelFont);
 
 			// Note that all properties are percentage.
-			chartAreaOne.InnerPlotPosition.Auto = false;
+			chartArea.InnerPlotPosition.Auto = false;
 
-			chartAreaOne.InnerPlotPosition.X = GetPerc(labelY.Width + 2, _diskChart.Width);
-			chartAreaOne.InnerPlotPosition.Y = GetPerc(labelY.Height / 2, _diskChart.Height);
+			chartArea.InnerPlotPosition.X = GetPerc(labelY.Width + 2, _diskChart.Width);
+			chartArea.InnerPlotPosition.Y = GetPerc(labelY.Height / 2, _diskChart.Height);
 
-			chartAreaOne.InnerPlotPosition.Width = 100f - GetPerc((labelY.Width + 2) + (labelX.Width / 2), _diskChart.Width);
-			chartAreaOne.InnerPlotPosition.Height = 100f - GetPerc((labelY.Height / 2) + (labelX.Height * 2), _diskChart.Height);
+			chartArea.InnerPlotPosition.Width = 100f - GetPerc((labelY.Width + 2) + (labelX.Width / 2), _diskChart.Width);
+			chartArea.InnerPlotPosition.Height = 100f - GetPerc((labelY.Height / 2) + (labelX.Height * 2), _diskChart.Height);
 
 			// --------------------------------
 			// Adjust scale intervals of Chart.
@@ -698,46 +702,58 @@ namespace DiskGazer.Views
 			var shortest = 40D * windowDpi.DpiScaleY;
 
 			// X axis
-			double innerX = _diskChart.Width * (chartAreaOne.InnerPlotPosition.Width / 100D);
-			double intervalX = 256D; // This is fallback number in case appropriate number can not be found.
+			double innerX = _diskChart.Width * (chartArea.InnerPlotPosition.Width / 100D);
 
-			for (int i = 2; i <= 10; i++) // 10 means very large number.
+			double GetIntervalX()
 			{
-				var interval = innerX / Math.Pow(2, i);
-
-				if (interval < shortest)
+				foreach (int i in Enumerable.Range(2, 9)) // 10 means very large number.
 				{
-					intervalX = Settings.Current.AreaSize / Math.Pow(2, i - 1);
-					break;
+					var test = innerX / Math.Pow(2, i);
+
+					if (test < shortest)
+						return Settings.Current.AreaSize / Math.Pow(2, i - 1);
 				}
+				return 256D; // Fallback if appropriate number can not be found
 			}
 
-			chartAreaOne.AxisX.Interval = intervalX;
-			chartAreaOne.AxisX.MinorGrid.Interval = intervalX / 2;
-			chartAreaOne.AxisX.LabelStyle.Interval = intervalX * 2; // 1 label per 2 major grids
+			double intervalX = GetIntervalX();
+
+			chartArea.AxisX.Interval = intervalX;
+			chartArea.AxisX.MinorGrid.Interval = intervalX / 2;
+			chartArea.AxisX.LabelStyle.Interval = intervalX * 2; // 1 label per 2 major grids
 
 			// Y axis
-			double innerY = _diskChart.Height * (chartAreaOne.InnerPlotPosition.Height / 100D);
-			double intervalY = 100D; // This is fallback number in case appropriate number can not be found.
-			var intervals = new double[] { 5, 10, 20, 25, 50, 100, 200, 500, 1000 }; // Numbers to be used as interval
+			double innerY = _diskChart.Height * (chartArea.InnerPlotPosition.Height / 100D);
+			double[] intervals = { 5, 10, 20, 25, 50, 100, 200, 500, 1000 }; // Numbers to be used as interval
 
-			for (int i = 0; i < intervals.Length; i++)
+			double GetIntervalY()
 			{
-				if ((chartMax - chartMin) % intervals[i] > 0D)
-					continue;
+				var range = chartMax - chartMin;
 
-				var interval = innerY * intervals[i] / (chartMax - chartMin);
-
-				if (interval > shortest)
+				foreach ((var interval, int i) in intervals.Select((x, i) => (x, i)))
 				{
-					intervalY = intervals[i];
-					break;
+					if ((interval < 100) && (range % interval != 0))
+						continue;
+
+					if (interval >= range)
+						return intervals[Math.Max(0, i - 1)];
+
+					var test = innerY * (interval / range);
+
+					if (test > shortest)
+						return interval;
 				}
+				return intervals.Last(); // Fallback if appropriate number can not be found
 			}
 
-			chartAreaOne.AxisY.Interval = intervalY;
-			chartAreaOne.AxisY.MinorGrid.Interval = intervalY / 2;
+			double intervalY = GetIntervalY();
+
+			chartArea.AxisY.Interval = intervalY;
+			chartArea.AxisY.MinorGrid.Interval = intervalY / 2D;
 		}
+
+		private System.Drawing.Font GetLabelFont(double scale) =>
+			new(this.FontFamily.ToString(), (float)((this.FontSize - 3F) * scale));
 
 		private static float GetPerc(double targetLength, int baseLength)
 		{
@@ -761,28 +777,28 @@ namespace DiskGazer.Views
 			return new Size(sampleSize.Width, sampleSize.Height);
 		}
 
-		private Size ChartInnerPlotAreaSize()
+		private Size GetChartInnerPlotAreaSize()
 		{
 			if (_diskChart is null)
 				return new Size(0, 0);
 
-			var chartAreaOne = _diskChart.ChartAreas[0];
+			var chartArea = _diskChart.ChartAreas[0];
 
 			return new Size(
-				Math.Round(_diskChart.Width * chartAreaOne.InnerPlotPosition.Width / 100),
-				Math.Round(_diskChart.Height * chartAreaOne.InnerPlotPosition.Height / 100));
+				Math.Round(_diskChart.Width * (chartArea.InnerPlotPosition.Width / 100F)),
+				Math.Round(_diskChart.Height * (chartArea.InnerPlotPosition.Height / 100F)));
 		}
 
 		/// <summary>
 		/// Draws chart line.
 		/// </summary>
 		/// <param name="mode">Draw mode of chart</param>
-		internal void DrawChart(DrawMode mode)
+		internal void DrawChartLine(DrawMode mode)
 		{
-			var colLine = System.Drawing.Color.FromArgb(
-				_colBar[_indexColSelected].R,
-				_colBar[_indexColSelected].G,
-				_colBar[_indexColSelected].B); // Line color of Series
+			var lineColor = System.Drawing.Color.FromArgb(
+				_colorBarColors[_colorBarIndex].R,
+				_colorBarColors[_colorBarIndex].G,
+				_colorBarColors[_colorBarIndex].B); // Line color of Series
 
 			// Remove existing Series.
 			switch (mode)
@@ -845,7 +861,7 @@ namespace DiskGazer.Views
 					if (seriesOne is not null)
 					{
 						// In ControlPaint.Dark method, 2nd parameter starts from -0.5 (not darkened yet) to 1 (fully darkened to be black).
-						seriesOne.Color = System.Windows.Forms.ControlPaint.Dark(colLine, (float)-0.2);
+						seriesOne.Color = System.Windows.Forms.ControlPaint.Dark(lineColor, (float)-0.2);
 					}
 					break;
 			}
@@ -863,7 +879,7 @@ namespace DiskGazer.Views
 
 					// Set type and line color of Series.
 					seriesOne.ChartType = SeriesChartType.FastLine;
-					seriesOne.Color = colLine;
+					seriesOne.Color = lineColor;
 
 					// Set points of Series.
 					switch (mode)
@@ -888,7 +904,7 @@ namespace DiskGazer.Views
 					_diskChart.Series.Add(seriesOne);
 
 					if (DiskScores[0].Data is not null)
-						AdjustChartAppearance();
+						AdjustChartArea();
 					break;
 			}
 		}
@@ -902,13 +918,13 @@ namespace DiskGazer.Views
 			const double sizeSelected = 30D;
 
 			// If initial adjustment, fill color bar with buttons.
-			if (this.PanelColorBar.Children.Count == 0)
+			if (this.ColorBarHost.Children.Count == 0)
 			{
-				for (int i = 0; i < _colBar.Length; i++)
+				for (int i = 0; i < _colorBarColors.Length; i++)
 				{
 					var colButton = new Button
 					{
-						Background = new SolidColorBrush(_colBar[i]),
+						Background = new SolidColorBrush(_colorBarColors[i]),
 						Tag = i, // Store index number in Tag.
 						Template = (ControlTemplate)(App.Current.Resources["ButtonColorTemplate"]),
 						Margin = new Thickness(0, 0, 4, 0),
@@ -919,19 +935,19 @@ namespace DiskGazer.Views
 					{
 						var button = sender as Button;
 						if (button is not null)
-							_indexColSelected = (int)button.Tag;
+							_colorBarIndex = (int)button.Tag;
 
 						ManageColorBar();
 					};
 
-					this.PanelColorBar.Children.Add(colButton);
+					this.ColorBarHost.Children.Add(colButton);
 				}
 			}
 
 			// Adjust each button size.
-			foreach (var button in this.PanelColorBar.Children.OfType<Button>())
+			foreach (var button in this.ColorBarHost.Children.OfType<Button>())
 			{
-				button.Width = button.Height = ((int)button.Tag == _indexColSelected)
+				button.Width = button.Height = ((int)button.Tag == _colorBarIndex)
 					? sizeSelected
 					: sizeNormal;
 			}

@@ -394,7 +394,7 @@ namespace DiskGazer.ViewModels
 		private void PinLineExecute()
 		{
 			_diskScores[0].IsPinned = true;
-			_mainWindow.DrawChart(DrawMode.PinCurrentChart);
+			_mainWindow.DrawChartLine(DrawMode.PinCurrentChart);
 		}
 
 		private bool CanPinLineExecute() => _diskScores[0].Data is not null;
@@ -411,7 +411,7 @@ namespace DiskGazer.ViewModels
 			_diskScores.Clear();
 			_diskScores.Add(new DiskScore()); // Make diskScores[0] always exist.
 			UpdateScores();
-			_mainWindow.DrawChart(DrawMode.ClearCompletely);
+			_mainWindow.DrawChartLine(DrawMode.ClearCompletely);
 
 			SaveLogFileCommand.RaiseCanExecuteChanged();
 			SendLogClipboardCommand.RaiseCanExecuteChanged();
@@ -584,7 +584,7 @@ namespace DiskGazer.ViewModels
 
 			// Reset scores and chart.
 			UpdateScores();
-			_mainWindow.DrawChart(DrawMode.Clear);
+			_mainWindow.DrawChartLine(DrawMode.Clear);
 
 			try
 			{
@@ -637,7 +637,7 @@ namespace DiskGazer.ViewModels
 				_diskScores[0].Data = info.Data;
 
 				UpdateScores();
-				_mainWindow.DrawChart(DrawMode.DrawNewChart);
+				_mainWindow.DrawChartLine(DrawMode.DrawNewChart);
 			}
 
 			// Update status.
