@@ -15,6 +15,10 @@
 			<converters:DoubleScaleConverter x:Key="DoubleScaleConverterKey"/>
 			<converters:TripleDigitConverter x:Key="TripleDigitConverterKey"/>
 			<converters:ReadMethodToBooleanConverter x:Key="ReadMethodToBooleanConverterKey"/>
+
+			<ResourceDictionary.MergedDictionaries>
+				<ResourceDictionary Source="Styles/Icons.xaml"/>
+			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>
 	</Window.Resources>
 
@@ -55,17 +59,21 @@
 					<MenuItem Header="Save screenshot to file"
 							  Command="{Binding SaveScreenshotFileCommand}">
 						<MenuItem.Icon>
-							<Image Source="/DiskGazer;component/Resources/Camera_16xLG.png"/>
+							<Viewbox Child="{StaticResource CameraIcon}"/>
 						</MenuItem.Icon>
 					</MenuItem>
 					<MenuItem Header="Save log to file"
 							  Command="{Binding SaveLogFileCommand}">
 						<MenuItem.Icon>
-							<Image Source="/DiskGazer;component/Resources/save_16xLG.png"/>
+							<Viewbox Child="{StaticResource SaveIcon}"/>
 						</MenuItem.Icon>
 					</MenuItem>
 					<MenuItem Header="Send log to clipboard"
-							  Command="{Binding SendLogClipboardCommand}"/>
+							  Command="{Binding SendLogClipboardCommand}">
+						<MenuItem.Icon>
+							<Viewbox Child="{StaticResource CopyIcon}"/>
+						</MenuItem.Icon>
+					</MenuItem>
 					<Separator/>
 
 					<!-- Rescan disks -->
@@ -73,7 +81,7 @@
 							  Command="{Binding RescanCommand}"
 							  IsEnabled="{Binding Op.IsReady, Mode=OneWay}">
 						<MenuItem.Icon>
-							<Image Source="/DiskGazer;component/Resources/refresh_16xLG.png"/>
+							<Viewbox Child="{StaticResource RefreshIcon}"/>
 						</MenuItem.Icon>
 					</MenuItem>
 					<Separator/>
@@ -81,7 +89,7 @@
 					<!-- Options -->
 					<MenuItem Header="Options">
 						<MenuItem.Icon>
-							<Image Source="/DiskGazer;component/Resources/gear_16xLG.png"/>
+							<Viewbox Child="{StaticResource SettingsIcon}"/>
 						</MenuItem.Icon>
 
 						<!-- Read method -->
@@ -139,9 +147,6 @@
 					<!-- Exit -->
 					<MenuItem Header="Exit"
 							  Command="ApplicationCommands.Close">
-						<MenuItem.Icon>
-							<Image Source="/DiskGazer;component/Resources/Close_16xLG.png"/>
-						</MenuItem.Icon>
 					</MenuItem>
 				</MenuItem>
 
@@ -202,9 +207,17 @@
 					<Separator/>
 
 					<MenuItem Header="Pin current chart line"
-							  Command="{Binding PinLineCommand}"/>
+							  Command="{Binding PinLineCommand}">
+						<MenuItem.Icon>
+							<Viewbox Child="{StaticResource PinIcon}"/>
+						</MenuItem.Icon>
+					</MenuItem>
 					<MenuItem Header="Clear all chart lines"
-							  Command="{Binding ClearLinesCommand}"/>
+							  Command="{Binding ClearLinesCommand}">
+						<MenuItem.Icon>
+							<Viewbox Child="{StaticResource ClearIcon}"/>
+						</MenuItem.Icon>
+					</MenuItem>
 				</MenuItem>
 
 				<!-- Help -->
@@ -212,7 +225,11 @@
 						  Header="_Help">
 					<!-- Disk information -->
 					<MenuItem x:Name="MenuItemDiskInfo"
-							  Header="Disk information"/>
+							  Header="Disk information">
+						<MenuItem.Icon>
+							<Viewbox Child="{StaticResource InfoIcon}"/>
+						</MenuItem.Icon>
+					</MenuItem>
 					<Separator/>
 
 					<!-- About -->
