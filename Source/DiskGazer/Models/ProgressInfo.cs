@@ -11,22 +11,22 @@ namespace DiskGazer.Models
 		/// <summary>
 		/// Status for Main window
 		/// </summary>
-		public string Status { get; private set; }
+		public string Status { get; }
 
 		/// <summary>
 		/// Inner status for Monitor window
 		/// </summary>
-		public string InnerStatus { get; private set; }
+		public string InnerStatus { get; }
 
 		/// <summary>
 		/// Whether inner status is renewed
 		/// </summary>
-		public bool IsInnerStatusRenewed { get; private set; }
+		public bool IsInnerStatusRenewed { get; }
 
 		/// <summary>
 		/// Data of runs
 		/// </summary>
-		public Dictionary<double, double> Data { get; private set; }
+		public Dictionary<double, double> Data { get; }
 
 		#region Constructor
 
@@ -37,20 +37,17 @@ namespace DiskGazer.Models
 			this.InnerStatus = null;
 		}
 
-		public ProgressInfo(Dictionary<double, double> data)
-			: this()
+		public ProgressInfo(Dictionary<double, double> data) : this()
 		{
 			this.Data = data;
 		}
 
-		public ProgressInfo(string status)
-			: this()
+		public ProgressInfo(string status) : this()
 		{
 			this.Status = status;
 		}
 
-		public ProgressInfo(string innerStatus, bool isInnerStatusRenewed)
-			: this()
+		public ProgressInfo(string innerStatus, bool isInnerStatusRenewed) : this()
 		{
 			this.InnerStatus = innerStatus;
 			this.IsInnerStatusRenewed = isInnerStatusRenewed;

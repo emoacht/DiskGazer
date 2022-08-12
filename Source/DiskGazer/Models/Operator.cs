@@ -12,17 +12,14 @@ using DiskGazer.Helper;
 
 namespace DiskGazer.Models
 {
-	public class Operation : NotificationObject
+	public class Operator : NotificationObject
 	{
 		#region Operation state
 
 		/// <summary>
 		/// Whether ready for run
 		/// </summary>
-		public bool IsReady
-		{
-			get { return (!IsReading && !IsAnalyzing); }
-		}
+		public bool IsReady => !IsReading && !IsAnalyzing;
 
 		/// <summary>
 		/// Whether currently reading
@@ -59,7 +56,7 @@ namespace DiskGazer.Models
 
 		#endregion
 
-		private readonly List<Dictionary<double, double>> _diskScoresRun = new List<Dictionary<double, double>>(); // Temporary scores of runs
+		private readonly List<Dictionary<double, double>> _diskScoresRun = new(); // Temporary scores of runs
 		private KeyValuePair<double, double>[] _diskScoresStep; // Temporary scores of steps
 		private int _diskScoresStepCount; // The number of temporary scores of steps
 
@@ -85,14 +82,13 @@ namespace DiskGazer.Models
 				_tokenSource = new CancellationTokenSource();
 				_isTokenSourceDisposed = false;
 
-				using (var rawDataCollection = new BlockingCollection<RawData>())
-				{
-					// Read and analyze disk in parallel.
-					var readTask = ReadAsnyc(rawDataCollection, progress, _tokenSource.Token);
-					var analyzeTask = AnalyzeAsync(rawDataCollection, progress, _tokenSource.Token);
+				using var rawDataCollection = new BlockingCollection<RawData>();
 
-					await Task.WhenAll(readTask, analyzeTask);
-				}
+				// Read and analyze disk in parallel.
+				var readTask = ReadAsnyc(rawDataCollection, progress, _tokenSource.Token);
+				var analyzeTask = AnalyzeAsync(rawDataCollection, progress, _tokenSource.Token);
+
+				await Task.WhenAll(readTask, analyzeTask);
 			}
 			catch (OperationCanceledException)
 			{
@@ -100,9 +96,9 @@ namespace DiskGazer.Models
 			}
 			finally
 			{
-				progress.Report(new ProgressInfo(String.Empty));
+				progress.Report(new ProgressInfo(string.Empty));
 
-				if (_tokenSource != null)
+				if (_tokenSource is not null)
 				{
 					_isTokenSourceDisposed = true;
 					_tokenSource.Dispose();
@@ -114,7 +110,7 @@ namespace DiskGazer.Models
 		{
 			IsCanceled = true;
 
-			if (_isTokenSourceDisposed || (_tokenSource.IsCancellationRequested))
+			if (_isTokenSourceDisposed || _tokenSource.IsCancellationRequested)
 				return;
 
 			try
@@ -125,7 +121,7 @@ namespace DiskGazer.Models
 			}
 			catch (ObjectDisposedException ode)
 			{
-				Debug.WriteLine("CancellationTokenSource has been disposed when tried to cancel operation. {0}", ode);
+				Debug.WriteLine($"CancellationTokenSource has been disposed when tried to cancel operation.{Environment.NewLine}{ode}");
 			}
 		}
 
@@ -149,7 +145,7 @@ namespace DiskGazer.Models
 			}
 			catch (Exception ex)
 			{
-				Debug.WriteLine("Failed to read disk. {0}", ex);
+				Debug.WriteLine($"Failed to read disk.{Environment.NewLine}{ex}");
 				throw;
 			}
 			finally
@@ -199,7 +195,7 @@ namespace DiskGazer.Models
 							rawDataCollection.Add(rawData, cancellationToken);
 
 							// Leave current speed.
-							if (rawData.Data != null)
+							if (rawData.Data is not null)
 							{
 								_currentSpeed = rawData.Data.Average();
 							}
@@ -225,30 +221,30 @@ namespace DiskGazer.Models
 			string status = null; // Null is to indicate that no inner status exists.
 
 			// Prepare progress figures.
-			var strProgress = String.Format(" {0}/{1}", rawData.Run, Settings.Current.NumRun);
+			var progress = string.Format("{0}/{1}", rawData.Run, Settings.Current.NumRun);
 
 			if (1 < NumStep)
-				strProgress += String.Format(" - {0}/{1}", rawData.Step, NumStep);
+				progress += string.Format("- {0}/{1}", rawData.Step, NumStep);
 
 			switch (rawData.Result)
 			{
 				case ReadResult.NotYet:
 					// Prepare remaining time.
-					string strTime = "";
+					string remaining = null;
 					if (0 < _currentSpeed)
 					{
 						var remainingSteps = NumStep * (Settings.Current.NumRun - rawData.Run + 1) - rawData.Step + 1;
 						var remainingBytes = ((double)Settings.Current.AreaSize * 1024D * (double)remainingSteps * (double)Settings.Current.AreaRatioInner / (double)Settings.Current.AreaRatioOuter) * 1024D; // Bytes
 						var remainingTime = (remainingBytes / _currentSpeed) / 1000000D; // Second
 
-						strTime = String.Format(" Remaining {0:HH:mm:ss}", DateTime.MinValue.AddSeconds(remainingTime));
+						remaining = $" Remaining {DateTime.MinValue.AddSeconds(remainingTime):HH:mm:ss}";
 					}
 
-					status = String.Format("Reading{0}{1}", strProgress, strTime);
+					status = $"Reading {progress}{remaining}";
 					break;
 
 				case ReadResult.Failure:
-					status = String.Format("Failed{0}", strProgress);
+					status = $"Failed {progress}";
 					break;
 			}
 
@@ -257,15 +253,15 @@ namespace DiskGazer.Models
 			// ------------
 			string innerStatus = null; // Null is to indicate that no inner status exists.
 
-			if (!String.IsNullOrWhiteSpace(rawData.Outcome) || !String.IsNullOrEmpty(rawData.Message))
+			if (!string.IsNullOrWhiteSpace(rawData.Outcome) || !string.IsNullOrEmpty(rawData.Message))
 			{
-				innerStatus = String.Format("[{0}/{1} - {2}/{3} Reader ({4}) {5}]",
+				innerStatus = string.Format("[{0}/{1} - {2}/{3} Reader ({4}) {5}]",
 					rawData.Run, Settings.Current.NumRun,
 					rawData.Step, NumStep,
 					Settings.Current.Method.ToString().Replace("_", "/"),
 					rawData.Result) + Environment.NewLine;
 
-				innerStatus += String.IsNullOrEmpty(rawData.Message)
+				innerStatus += string.IsNullOrEmpty(rawData.Message)
 					? rawData.Outcome
 					: rawData.Message;
 			}
@@ -292,7 +288,7 @@ namespace DiskGazer.Models
 						foreach (var rawData in rawDataCollection.GetConsumingEnumerable(cancellationToken))
 						{
 							// Update progress before analyzing.
-							var innerStatusIn = String.Format("[{0}/{1} - {2}/{3} Analyzer In]",
+							var innerStatusIn = string.Format("[{0}/{1} - {2}/{3} Analyzer In]",
 								rawData.Run, Settings.Current.NumRun,
 								rawData.Step, NumStep);
 
@@ -301,7 +297,7 @@ namespace DiskGazer.Models
 							AnalyzeBase(rawData, progress, cancellationToken);
 
 							// Update progress after analyzing.
-							var innerStatusOut = String.Format("[{0}/{1} - {2}/{3} Analyzer Out ({4})]",
+							var innerStatusOut = string.Format("[{0}/{1} - {2}/{3} Analyzer Out ({4})]",
 								_diskScoresRun.Count, Settings.Current.NumRun,
 								_diskScoresStepCount, NumStep, _diskScoresStep.Count());
 
@@ -321,7 +317,7 @@ namespace DiskGazer.Models
 			}
 			catch (Exception ex)
 			{
-				Debug.WriteLine("Failed to analyze raw data. {0}", ex);
+				Debug.WriteLine($"Failed to analyze raw data.{Environment.NewLine}{ex}");
 				throw;
 			}
 			finally
@@ -333,8 +329,7 @@ namespace DiskGazer.Models
 		private void AnalyzeBase(RawData rawData, IProgress<ProgressInfo> progress, CancellationToken cancellationToken)
 		{
 			var score = CombineLocationData(rawData.BlockOffsetMultiple, rawData.Data).ToArray();
-
-			if (!score.Any())
+			if (score is not { Length: > 0 })
 				return;
 
 			cancellationToken.ThrowIfCancellationRequested();
@@ -395,7 +390,7 @@ namespace DiskGazer.Models
 			}
 			catch (Exception ex)
 			{
-				Debug.WriteLine("Failed to process scores of steps. {0}", ex);
+				Debug.WriteLine($"Failed to process scores of steps.{Environment.NewLine}{ex}");
 				throw;
 			}
 
@@ -450,7 +445,7 @@ namespace DiskGazer.Models
 			}
 			catch (Exception ex)
 			{
-				Debug.WriteLine("Failed to process scores of runs. {0}", ex);
+				Debug.WriteLine($"Failed to process scores of runs.{Environment.NewLine}{ex}");
 				throw;
 			}
 		}
@@ -479,15 +474,15 @@ namespace DiskGazer.Models
 
 		private static IEnumerable<double> RemoveOutlier(IEnumerable<double> source, double rangeMultiple)
 		{
-			var buff = source as double[] ?? source.ToArray();
+			var buffer = source as double[] ?? source.ToArray();
 
-			var average = buff.Average();
-			var rangeLength = buff.StandardDeviation() * rangeMultiple;
+			var average = buffer.Average();
+			var rangeLength = buffer.StandardDeviation() * rangeMultiple;
 
 			var rangeLowest = average - rangeLength;
 			var rangeHighest = average + rangeLength;
 
-			return buff.Where(x => (rangeLowest <= x) && (x <= rangeHighest));
+			return buffer.Where(x => (rangeLowest <= x) && (x <= rangeHighest));
 		}
 
 		#endregion
@@ -496,12 +491,9 @@ namespace DiskGazer.Models
 
 		private static int NumStep // The number of steps for block offset. The minimum number will be 1.
 		{
-			get
-			{
-				return (0 < Settings.Current.BlockOffset)
-					? Settings.Current.BlockSize / Settings.Current.BlockOffset
-					: 1;
-			}
+			get => (0 < Settings.Current.BlockOffset)
+				? Settings.Current.BlockSize / Settings.Current.BlockOffset
+				: 1;
 		}
 
 		#endregion

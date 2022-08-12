@@ -15,6 +15,7 @@
 		<Setter Property="Background" Value="{StaticResource ComboBox.Static.Background}"/>
 		<Setter Property="BorderBrush" Value="{StaticResource ComboBox.Static.Border}"/>
 		<Setter Property="BorderThickness" Value="1"/>
+		<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
 		<Setter Property="Template">
 			<Setter.Value>
 				<ControlTemplate TargetType="{x:Type ButtonBase}">
@@ -225,8 +226,8 @@
 						<Slider Grid.Row="0"
 								x:Name="PART_InnerSlider"
 								HorizontalAlignment="Stretch"
-								LargeChange="{Binding LargeChange, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type controls:SliderPlus}}, Mode=OneWay}"
-								SmallChange="{Binding SmallChange, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type controls:SliderPlus}}, Mode=OneWay}"/>
+								LargeChange="{Binding LargeChange, RelativeSource={RelativeSource AncestorType={x:Type controls:SliderPlus}}, Mode=OneWay}"
+								SmallChange="{Binding SmallChange, RelativeSource={RelativeSource AncestorType={x:Type controls:SliderPlus}}, Mode=OneWay}"/>
 
 						<StackPanel Grid.Column="1"
 									Orientation="Horizontal">

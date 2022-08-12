@@ -23,9 +23,6 @@ namespace DiskGazer.Helper
 		/// <summary>
 		/// Whether this application is run by administrator
 		/// </summary>
-		public static bool IsAdmin
-		{
-			get { return IsUserAnAdmin(); }
-		}
+		public static bool IsAdmin => IsUserAnAdmin();
 	}
 }

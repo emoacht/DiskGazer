@@ -2,15 +2,13 @@
 		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 		xmlns:views="clr-namespace:DiskGazer.Views"
-		xmlns:viewModels="clr-namespace:DiskGazer.ViewModels"
 		xmlns:controls="clr-namespace:DiskGazer.Views.Controls"
 		xmlns:converters="clr-namespace:DiskGazer.Views.Converters"
 		x:Name="MainWindowRoot"
 		Title="{Binding Source={x:Static views:ProductInfo.NameVersionShort}, Mode=OneWay}"
 		FontFamily="Verdana" FontSize="11"
 		Width="600" Height="460"
-		Icon="/DiskGazer;component/Resources/Gazer.ico"
-		Loaded="OnLoaded" SizeChanged="OnSizeChanged">
+		Icon="/DiskGazer;component/Resources/Gazer.ico">
 	<Window.Resources>
 		<ResourceDictionary>
 			<!-- Converters -->
@@ -45,8 +43,8 @@
 			<!-- Top menu -->
 			<Menu Grid.Row="0"
 				  x:Name="MenuTop"
-				  FontFamily="Verdana"
-				  Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}, Path=Width}"
+				  FontFamily="{Binding FontFamily, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+				  Width="{Binding Width, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
 				  Height="21" HorizontalAlignment="Left" VerticalAlignment="Top"
 				  Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}">
 				<!-- File -->
@@ -316,15 +314,7 @@
 						Width="54" Margin="5,0,0,0"
 						ItemsSource="{Binding MenuBlockOffset, Mode=OneWay}"
 						SelectedIndex="{Binding MenuBlockOffsetIndex, Mode=TwoWay}"
-						IsEnabled="{Binding Op.IsReady, Mode=OneWay}">
-						<!-- This Style is to suppress binding error message. -->
-						<ComboBox.ItemContainerStyle>
-							<Style TargetType="{x:Type ComboBoxItem}">
-								<Setter Property="HorizontalContentAlignment" Value="Left"/>
-								<Setter Property="VerticalContentAlignment" Value="Center"/>
-							</Style>
-						</ComboBox.ItemContainerStyle>
-					</ComboBox>
+						IsEnabled="{Binding Op.IsReady, Mode=OneWay}"/>
 				</StackPanel>
 
 				<!-- Area size -->

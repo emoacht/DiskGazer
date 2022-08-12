@@ -22,7 +22,7 @@ namespace DiskGazer.Views.Controls
 				"StringFormat",
 				typeof(string),
 				typeof(TextBoxDoubleFormat),
-				new FrameworkPropertyMetadata(String.Empty)); // String.Empty means not specified.
+				new PropertyMetadata(string.Empty)); // String.Empty means not specified.
 
 		public int ScaleNumber
 		{
@@ -34,7 +34,7 @@ namespace DiskGazer.Views.Controls
 				"ScaleNumber",
 				typeof(int),
 				typeof(TextBoxDoubleFormat),
-				new FrameworkPropertyMetadata(
+				new PropertyMetadata(
 					-1, // -1 means not specified.
 					(d, e) =>
 					{
@@ -53,39 +53,38 @@ namespace DiskGazer.Views.Controls
 				"LeavesBlankIfZero",
 				typeof(bool),
 				typeof(TextBoxDoubleFormat),
-				new FrameworkPropertyMetadata(false));
+				new PropertyMetadata(false));
 
 		#endregion
-
-		public TextBoxDoubleFormat()
-		{ }
 
 		static TextBoxDoubleFormat()
 		{
 			TextBox.TextProperty.OverrideMetadata(
 				typeof(TextBoxDoubleFormat),
 				new FrameworkPropertyMetadata(
-					String.Empty,
+					string.Empty,
 					null,
 					CoerceFormat));
 		}
 
+		public TextBoxDoubleFormat()
+		{ }
+
 		private static object CoerceFormat(DependencyObject d, object baseValue)
 		{
-			double num;
-			if ((baseValue == null) || !double.TryParse(baseValue.ToString(), out num))
+			if (!double.TryParse(baseValue?.ToString(), out double num))
 				return baseValue;
 
 			if ((num == 0D) && ((TextBoxDoubleFormat)d).LeavesBlankIfZero)
-				return String.Empty;
+				return string.Empty;
 
 			int scaleNumber = ((TextBoxDoubleFormat)d).ScaleNumber;
 			if (0 <= scaleNumber)
-				return String.Format(string.Format("{0}{1}{2}", "{0:f", scaleNumber, "}"), num);
+				return string.Format($"{{0:f{scaleNumber}}}", num);
 
 			var stringFormat = ((TextBoxDoubleFormat)d).StringFormat;
-			if (!String.IsNullOrEmpty(stringFormat))
-				return String.Format(stringFormat, num);
+			if (!string.IsNullOrEmpty(stringFormat))
+				return string.Format(stringFormat, num);
 
 			return baseValue;
 		}

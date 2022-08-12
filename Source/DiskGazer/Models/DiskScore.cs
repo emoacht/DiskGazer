@@ -14,10 +14,7 @@ namespace DiskGazer.Models
 		/// <summary>
 		/// GUID to identify each score
 		/// </summary>
-		public string Guid
-		{
-			get { return _guid ?? (_guid = System.Guid.NewGuid().ToString()); }
-		}
+		public string Guid => _guid ??= System.Guid.NewGuid().ToString();
 		private string _guid;
 
 		public DiskInfo Disk { get; set; }

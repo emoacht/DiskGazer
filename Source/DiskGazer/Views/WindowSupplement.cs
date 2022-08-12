@@ -16,22 +16,20 @@ namespace DiskGazer.Views
 	internal static class WindowSupplement
 	{
 		/// <summary>
-		/// Get rectangle of a specified window.
+		/// Gets rectangle of a specified window.
 		/// </summary>
 		/// <param name="source">Source Window</param>
 		internal static Rect GetWindowRect(Window source)
 		{
-			var handleWindow = new WindowInteropHelper(source).Handle;
+			var windowHandle = new WindowInteropHelper(source).Handle;
 
 			try
 			{
-				NativeMethod.RECT targetRect;
-
 				// For Windows XP or older
-				var result = NativeMethod.GetWindowRect(
-					handleWindow,
-					out targetRect);
-				if (!result)
+				var result1 = NativeMethod.GetWindowRect(
+					windowHandle,
+					out NativeMethod.RECT targetRect);
+				if (!result1)
 					throw new Win32Exception(Marshal.GetLastWin32Error());
 
 				if (OsVersion.IsVistaOrNewer)
@@ -39,19 +37,19 @@ namespace DiskGazer.Views
 					// For Windows Vista or newer
 					bool isEnabled = false;
 
-					var result1 = NativeMethod.DwmIsCompositionEnabled(
+					var result2 = NativeMethod.DwmIsCompositionEnabled(
 						ref isEnabled);
-					if (result1 != 0) // 0 means S_OK.
+					if (result2 != 0) // 0 means S_OK.
 						throw new Win32Exception(Marshal.GetLastWin32Error());
 
 					if (isEnabled)
 					{
-						var result2 = NativeMethod.DwmGetWindowAttribute(
-							handleWindow,
+						var result3 = NativeMethod.DwmGetWindowAttribute(
+							windowHandle,
 							NativeMethod.DWMWA_EXTENDED_FRAME_BOUNDS,
 							ref targetRect,
 							Marshal.SizeOf(typeof(NativeMethod.RECT)));
-						if (result2 != 0) // 0 means S_OK.
+						if (result3 != 0) // 0 means S_OK.
 							throw new Win32Exception(Marshal.GetLastWin32Error());
 					}
 				}
@@ -60,25 +58,23 @@ namespace DiskGazer.Views
 			}
 			catch (Win32Exception ex)
 			{
-				throw new Exception(String.Format("Failed to get window rect (Code: {0}).", ex.ErrorCode), ex);
+				throw new Exception($"Failed to get window rect (Code: {ex.ErrorCode}).", ex);
 			}
 		}
 
 		/// <summary>
-		/// Get size of client area of a specified window.
+		/// Gets size of client area of a specified window.
 		/// </summary>
 		/// <param name="source">Source Window</param>
 		internal static Size GetClientAreaSize(Window source)
 		{
-			var handleWindow = new WindowInteropHelper(source).Handle;
+			var windowHandle = new WindowInteropHelper(source).Handle;
 
 			try
 			{
-				NativeMethod.RECT targetRect;
-
 				var result = NativeMethod.GetClientRect(
-					handleWindow,
-					out targetRect);
+					windowHandle,
+					out NativeMethod.RECT targetRect);
 				if (!result)
 					throw new Win32Exception(Marshal.GetLastWin32Error());
 
@@ -86,23 +82,23 @@ namespace DiskGazer.Views
 			}
 			catch (Win32Exception ex)
 			{
-				throw new Exception(String.Format("Failed to get client area rect (Code: {0}).", ex.ErrorCode), ex);
+				throw new Exception($"Failed to get client area rect (Code: {ex.ErrorCode}).", ex);
 			}
 		}
 
 		/// <summary>
-		/// Activate a specified window.
+		/// Activates a specified window.
 		/// </summary>
 		/// <param name="target">Target Window</param>
 		internal static void ActivateWindow(Window target)
 		{
-			var handleWindow = new WindowInteropHelper(target).Handle;
+			var windowHandle = new WindowInteropHelper(target).Handle;
 
 			try
 			{
 				// Get process ID for target window's thread.
 				var targetWindowId = NativeMethod.GetWindowThreadProcessId(
-					handleWindow,
+					windowHandle,
 					IntPtr.Zero);
 				if (targetWindowId == 0)
 					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get process ID for target window.");
@@ -128,11 +124,11 @@ namespace DiskGazer.Views
 							targetWindowId,
 							true);
 						if (!result1)
-							throw new Win32Exception(Marshal.GetLastWin32Error(), String.Format("Failed to attach thread ({0}) to thread ({1}).", foregroundWindowId, targetWindowId));
+							throw new Win32Exception(Marshal.GetLastWin32Error(), $"Failed to attach thread ({foregroundWindowId}) to thread ({targetWindowId}).");
 
 						// Set position of target window.
 						var result2 = NativeMethod.SetWindowPos(
-							handleWindow,
+							windowHandle,
 							IntPtr.Zero,
 							0,
 							0,
@@ -150,13 +146,13 @@ namespace DiskGazer.Views
 							targetWindowId,
 							false);
 						if (!result3)
-							throw new Win32Exception(Marshal.GetLastWin32Error(), String.Format("Failed to detach thread ({0}) from thread ({1}).", foregroundWindowId, targetWindowId));
+							throw new Win32Exception(Marshal.GetLastWin32Error(), $"Failed to detach thread ({foregroundWindowId}) from thread ({targetWindowId}).");
 					}
 				}
 			}
 			catch (Win32Exception ex)
 			{
-				throw new Exception(String.Format("{0} (Code: {1}).", ex.Message.Substring(0, ex.Message.Length - 1), ex.ErrorCode), ex);
+				throw new Exception($"{ex.Message.Substring(0, ex.Message.Length - 1)} (Code: {ex.ErrorCode}).", ex);
 			}
 
 			// Show and activate target window.
@@ -168,7 +164,7 @@ namespace DiskGazer.Views
 		}
 
 		/// <summary>
-		/// Check if a specified window is activated.
+		/// Checks if a specified window is activated.
 		/// </summary>
 		/// <param name="target">Target Window</param>
 		/// <returns>True if activated</returns>
@@ -186,27 +182,27 @@ namespace DiskGazer.Views
 				});
 
 			// Check handles at each point.
-			var handleWindow = new WindowInteropHelper(target).Handle;
+			var windowHandle = new WindowInteropHelper(target).Handle;
 
 			try
 			{
 				foreach (var point in points)
 				{
-					var handlePoint = NativeMethod.WindowFromPoint(
+					var pointHandle = NativeMethod.WindowFromPoint(
 						point);
-					if (handlePoint == IntPtr.Zero)
+					if (pointHandle == IntPtr.Zero)
 						throw new Win32Exception(Marshal.GetLastWin32Error());
 
-					if (handlePoint == handleWindow)
+					if (pointHandle == windowHandle)
 						continue;
 
-					var handleAncestor = NativeMethod.GetAncestor(
-						handlePoint,
+					var ancestorHandle = NativeMethod.GetAncestor(
+						pointHandle,
 						NativeMethod.GA_ROOT);
-					if (handleAncestor == IntPtr.Zero)
+					if (ancestorHandle == IntPtr.Zero)
 						throw new Win32Exception(Marshal.GetLastWin32Error());
 
-					if (handleAncestor != handleWindow)
+					if (ancestorHandle != windowHandle)
 						return false;
 				}
 
@@ -214,7 +210,7 @@ namespace DiskGazer.Views
 			}
 			catch (Win32Exception ex)
 			{
-				throw new Exception(String.Format("Failed to get handles where target window is supposed to be shown (Code: {0}).", ex.ErrorCode), ex);
+				throw new Exception($"Failed to get handles where target window is supposed to be shown (Code: {ex.ErrorCode}).", ex);
 			}
 		}
 	}
