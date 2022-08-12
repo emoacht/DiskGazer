@@ -201,7 +201,7 @@
 								   Margin="0,2,0,2" HorizontalAlignment="Left" VerticalAlignment="Top"
 								   Text="Change chart line color"/>
 						<WrapPanel Grid.Row="1"
-								   x:Name="PanelColorBar"
+								   x:Name="ColorBarHost"
 								   Width="Auto" Height="30" Margin="0,2,0,4" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 					</Grid>
 					<Separator/>
