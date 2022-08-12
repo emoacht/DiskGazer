@@ -1,7 +1,6 @@
 ﻿<Window x:Class="DiskGazer.Views.MainWindow"
 		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-		xmlns:ma="clr-namespace:MonitorAware;assembly=MonitorAware"
 		xmlns:views="clr-namespace:DiskGazer.Views"
 		xmlns:viewModels="clr-namespace:DiskGazer.ViewModels"
 		xmlns:controls="clr-namespace:DiskGazer.Views.Controls"
@@ -12,10 +11,6 @@
 		Width="600" Height="460"
 		Icon="/DiskGazer;component/Resources/Gazer.ico"
 		Loaded="OnLoaded" SizeChanged="OnSizeChanged">
-	<ma:MonitorAwareProperty.Instance>
-		<ma:MonitorAwareProperty x:Name="MonitorProperty"/>
-	</ma:MonitorAwareProperty.Instance>
-
 	<Window.Resources>
 		<ResourceDictionary>
 			<!-- Converters -->
