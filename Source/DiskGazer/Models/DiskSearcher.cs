@@ -12,7 +12,7 @@ namespace DiskGazer.Models
 	internal static class DiskSearcher
 	{
 		/// <summary>
-		/// Search disks by WMI.
+		/// Searches disks by WMI.
 		/// </summary>
 		/// <returns>List of disk information</returns>
 		internal static List<DiskInfo> Search()
@@ -26,54 +26,32 @@ namespace DiskGazer.Models
 		}
 
 		/// <summary>
-		/// Search drives by WMI (Win32_DiskDrive).
+		/// Searches drives by WMI (Win32_DiskDrive).
 		/// </summary>
 		/// <param name="diskRosterPre">List of disk information</param>
 		private static void SearchDiskDrive(ref List<DiskInfo> diskRosterPre)
 		{
-			using (var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_DiskDrive"))
+			using var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_DiskDrive");
+
+			foreach (var drive in searcher.Get())
 			{
-				foreach (var drive in searcher.Get())
-				{
-					if (drive["Index"] == null) // Index number of physical drive
-						continue;
+				if (!int.TryParse(drive["Index"]?.ToString(), out int index)) // Index number of physical drive
+					continue;
 
-					int index;
-					if (!int.TryParse(drive["Index"].ToString(), out index))
-						continue;
+				var info = new DiskInfo { PhysicalDrive = index };
+				info.Model = drive["Model"]?.ToString();
+				info.InterfaceType = drive["InterfaceType"]?.ToString();
+				info.MediaTypeDiskDrive = drive["MediaType"]?.ToString();
 
-					var info = new DiskInfo();
-					info.PhysicalDrive = index;
+				if (long.TryParse(drive["Size"]?.ToString(), out long size))
+					info.SizeWMI = size;
 
-					if (drive["Model"] != null)
-					{
-						info.Model = drive["Model"].ToString();
-					}
-
-					if (drive["InterfaceType"] != null)
-					{
-						info.InterfaceType = drive["InterfaceType"].ToString();
-					}
-
-					if (drive["MediaType"] != null)
-					{
-						info.MediaTypeDiskDrive = drive["MediaType"].ToString();
-					}
-
-					if (drive["Size"] != null)
-					{
-						long numSize;
-						if (long.TryParse(drive["Size"].ToString(), out numSize))
-							info.SizeWMI = numSize;
-					}
-
-					diskRosterPre.Add(info);
-				}
+				diskRosterPre.Add(info);
 			}
 		}
 
 		/// <summary>
-		/// Search drives and supplement information by WMI (MSFT_PhysicalDisk).
+		/// Searches drives and supplement information by WMI (MSFT_PhysicalDisk).
 		/// </summary>
 		/// <param name="diskRosterPre">List of disk information</param>
 		/// <remarks>Windows Storage Management API is only available for Windows 8 or newer.</remarks>
@@ -82,35 +60,22 @@ namespace DiskGazer.Models
 			if (!OsVersion.IsEightOrNewer)
 				return;
 
-			using (var searcher = new ManagementObjectSearcher(@"\\.\Root\Microsoft\Windows\Storage", "SELECT * FROM MSFT_PhysicalDisk"))
+			using var searcher = new ManagementObjectSearcher(@"\\.\Root\Microsoft\Windows\Storage", "SELECT * FROM MSFT_PhysicalDisk");
+
+			foreach (var drive in searcher.Get())
 			{
-				foreach (var drive in searcher.Get())
-				{
-					if (drive["DeviceId"] == null) // Index number of physical drive
-						continue;
+				if (!int.TryParse(drive["DeviceId"]?.ToString(), out int deviceId)) // Index number of physical drive
+					continue;
 
-					int numId;
-					if (!int.TryParse(drive["DeviceId"].ToString(), out numId))
-						continue;
+				var info = diskRosterPre.FirstOrDefault(x => x.PhysicalDrive == deviceId);
+				if (info is null)
+					continue;
 
-					var info = diskRosterPre.FirstOrDefault(x => x.PhysicalDrive == numId);
-					if (info == null)
-						continue;
+				if (int.TryParse(drive["MediaType"]?.ToString(), out int mediaType))
+					info.MediaTypePhysicalDisk = mediaType;
 
-					if (drive["MediaType"] != null)
-					{
-						int numMediaType;
-						if (int.TryParse(drive["MediaType"].ToString(), out numMediaType))
-							info.MediaTypePhysicalDisk = numMediaType;
-					}
-
-					if (drive["SpindleSpeed"] != null)
-					{
-						uint numSpindleSpeed;
-						if (uint.TryParse(drive["SpindleSpeed"].ToString(), out numSpindleSpeed))
-							info.SpindleSpeed = numSpindleSpeed;
-					}
-				}
+				if (uint.TryParse(drive["SpindleSpeed"]?.ToString(), out uint spindleSpeed))
+					info.SpindleSpeed = spindleSpeed;
 			}
 		}
 	}

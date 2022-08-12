@@ -4,7 +4,7 @@ using Microsoft.Win32.SafeHandles;
 
 namespace DiskGazer.Models.Win32
 {
-	public class NativeMethod
+	internal static class NativeMethod
 	{
 		// Get handle to a specified disk.
 		[DllImport("Kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true)]

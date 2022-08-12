@@ -16,6 +16,7 @@ namespace DiskGazer.Views
 		public MonitorWindow()
 		{
 			InitializeComponent();
+			this.Loaded += OnLoaded;
 		}
 
 		private MainWindowViewModel _mainWindowViewModel;
@@ -23,7 +24,7 @@ namespace DiskGazer.Views
 		private void OnLoaded(object sender, RoutedEventArgs e)
 		{
 			_mainWindowViewModel = this.Owner.DataContext as MainWindowViewModel;
-			if (_mainWindowViewModel != null)
+			if (_mainWindowViewModel is not null)
 			{
 				this.TextBoxInnerStatus.SetBinding(
 					TextBox.TextProperty,

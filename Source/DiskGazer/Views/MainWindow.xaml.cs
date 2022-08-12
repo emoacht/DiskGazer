@@ -23,6 +23,8 @@ namespace DiskGazer.Views
 		public MainWindow()
 		{
 			InitializeComponent();
+			this.Loaded += OnLoaded;
+			this.SizeChanged += OnSizeChanged;
 
 			_mainWindowViewModel = new MainWindowViewModel(this);
 			this.DataContext = _mainWindowViewModel;
@@ -30,27 +32,26 @@ namespace DiskGazer.Views
 
 		private void OnLoaded(object sender, RoutedEventArgs e)
 		{
+			var initializeTask = _mainWindowViewModel.InitializeAsync();
+
 			CreateAddChart();
 			ManageColorBar();
 
-			if (_mainWindowViewModel != null)
-			{
-				this.SetBinding(
-					StatusProperty,
-					new Binding("Status")
-					{
-						Source = _mainWindowViewModel,
-						Mode = BindingMode.OneWay,
-					});
+			this.SetBinding(
+				StatusProperty,
+				new Binding("Status")
+				{
+					Source = _mainWindowViewModel,
+					Mode = BindingMode.OneWay,
+				});
 
-				this.SetBinding(
-					CurrentDiskProperty,
-					new Binding("CurrentDisk")
-					{
-						Source = _mainWindowViewModel,
-						Mode = BindingMode.OneWay,
-					});
-			}
+			this.SetBinding(
+				CurrentDiskProperty,
+				new Binding("CurrentDisk")
+				{
+					Source = _mainWindowViewModel,
+					Mode = BindingMode.OneWay,
+				});
 
 			SetMinSize();
 			ForceChartRedraw();
@@ -64,7 +65,7 @@ namespace DiskGazer.Views
 
 		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 		{
-			if (_diskChart != null)
+			if (_diskChart is not null)
 				AdjustChartAppearance();
 
 			// Binding in XAML will not work when window is maximized.
@@ -87,27 +88,24 @@ namespace DiskGazer.Views
 				"IndicatesSize",
 				typeof(bool),
 				typeof(MainWindow),
-				new FrameworkPropertyMetadata(
+				new PropertyMetadata(
 					false,
 					(d, e) =>
 					{
 						if ((bool)e.NewValue)
 							((MainWindow)d).IndicateWindowChartSize();
 						else
-							((MainWindow)d).ShowStatus(String.Empty);
+							((MainWindow)d).ShowStatus(string.Empty);
 					}));
 
-		/// <summary>
-		/// Indicate window/chart size.
-		/// </summary>
 		private void IndicateWindowChartSize()
 		{
-			var rct = WindowSupplement.GetWindowRect(this);
+			var rect = WindowSupplement.GetWindowRect(this);
 			var innerPlotAreaSize = ChartInnerPlotAreaSize();
 
-			ShowStatus(String.Format("Window {0}-{1} Chart {2}-{3}",
-				rct.Width,
-				rct.Height,
+			ShowStatus(string.Format("Window {0}-{1} Chart {2}-{3}",
+				rect.Width,
+				rect.Height,
 				innerPlotAreaSize.Width,
 				innerPlotAreaSize.Height));
 		}
@@ -165,17 +163,15 @@ namespace DiskGazer.Views
 				"Status",
 				typeof(string),
 				typeof(MainWindow),
-				new FrameworkPropertyMetadata(
-					String.Empty,
+				new PropertyMetadata(
+					string.Empty,
 					(d, e) =>
 					{
-						((MainWindow)d).ShowStatus((string)e.NewValue);
-						((MainWindow)d).ManageStartButton();
+						var window = (MainWindow)d;
+						window.ShowStatus((string)e.NewValue);
+						window.ManageStartButton();
 					}));
 
-		/// <summary>
-		/// Manage start button appearance.
-		/// </summary>
 		private void ManageStartButton()
 		{
 			if (_mainWindowViewModel.Op.IsReady)
@@ -201,18 +197,14 @@ namespace DiskGazer.Views
 			}
 		}
 
-		/// <summary>
-		/// Show status
-		/// </summary>
-		/// <param name="text">Status text</param>
 		private void ShowStatus(string text)
 		{
 			const string nameStatus = "MenuItemStatus";
 
 			var menuItemStatus = this.MenuTop.Items.OfType<MenuItem>().FirstOrDefault(x => x.Name == nameStatus);
-			if (menuItemStatus != null) // If MenuItemStatus is already in MenuTop.
+			if (menuItemStatus is not null) // If MenuItemStatus is already in MenuTop.
 			{
-				if (String.IsNullOrWhiteSpace(text))
+				if (string.IsNullOrWhiteSpace(text))
 				{
 					// Remove MenuItemStatus from MenuTop.
 					this.MenuTop.Items.Remove(menuItemStatus);
@@ -220,25 +212,25 @@ namespace DiskGazer.Views
 				else
 				{
 					// Modify header of MenuItemStatus.
-					menuItemStatus.Header = String.Format("[{0}]", text);
+					menuItemStatus.Header = $"[{text}]";
 				}
 				return;
 			}
 
-			if (String.IsNullOrWhiteSpace(text))
+			if (string.IsNullOrWhiteSpace(text))
 				return;
 
 			// Prepare ControlTemplate for MenuItemStatus.
 			var templateStatus = new ControlTemplate(typeof(MenuItem));
 
-			var gd = new FrameworkElementFactory(typeof(System.Windows.Controls.Grid));
-			gd.SetValue(System.Windows.Controls.Grid.MarginProperty, new Thickness(7, 0, 0, 0));
-			templateStatus.VisualTree = gd;
+			var grid = new FrameworkElementFactory(typeof(System.Windows.Controls.Grid));
+			grid.SetValue(System.Windows.Controls.Grid.MarginProperty, new Thickness(7, 0, 0, 0));
+			templateStatus.VisualTree = grid;
 
-			var cp = new FrameworkElementFactory(typeof(ContentPresenter));
-			cp.SetValue(ContentPresenter.ContentSourceProperty, "Header");
-			cp.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
-			gd.AppendChild(cp);
+			var presenter = new FrameworkElementFactory(typeof(ContentPresenter));
+			presenter.SetValue(ContentPresenter.ContentSourceProperty, "Header");
+			presenter.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+			grid.AppendChild(presenter);
 
 			// Create MenuItemStatus and add to MenuTop.
 			menuItemStatus = new MenuItem
@@ -246,7 +238,7 @@ namespace DiskGazer.Views
 				Name = nameStatus,
 				Height = this.MenuTop.Height,
 				Template = templateStatus,
-				Header = String.Format("[{0}]", text),
+				Header = $"[{text}]",
 			};
 
 			this.MenuTop.Items.Add(menuItemStatus);
@@ -254,7 +246,7 @@ namespace DiskGazer.Views
 
 		#endregion
 
-		#region Disk Information
+		#region Disk information
 
 		/// <summary>
 		/// Current disk
@@ -269,17 +261,13 @@ namespace DiskGazer.Views
 				"CurrentDisk",
 				typeof(DiskInfo),
 				typeof(MainWindow),
-				new FrameworkPropertyMetadata(
+				new PropertyMetadata(
 					null,
 					(d, e) => ((MainWindow)d).SetDiskInfo((DiskInfo)e.NewValue)));
 
-		/// <summary>
-		/// Set disk information.
-		/// </summary>
-		/// <param name="info">Disk information</param>
 		private void SetDiskInfo(DiskInfo info)
 		{
-			if (info == null)
+			if (info is null)
 				return;
 
 			// Create outer Grid and add to MenuItemDiskInfo.
@@ -301,7 +289,7 @@ namespace DiskGazer.Views
 			var infoSizeWMI = info.SizeWMI;
 			var infoSizePInvoke = info.SizePInvoke;
 
-			var header = new GridElement(String.Format("[{0}]", info.Name));
+			var header = new GridElement($"[{info.Name}]");
 
 			var body = new List<List<GridElement>>
 			{
@@ -363,20 +351,20 @@ namespace DiskGazer.Views
 				new List<GridElement>
 				{
 					new GridElement("Capacity (WMI)"),
-					new GridElement(String.Format("{0} Bytes", infoSizeWMI), HorizontalAlignment.Right),
-					new GridElement(String.Format("({0:f3} MiB)", (double)infoSizeWMI / (1024 * 1024)), HorizontalAlignment.Right),
+					new GridElement($"{infoSizeWMI:n0} Bytes", HorizontalAlignment.Right),
+					new GridElement($"({(double)infoSizeWMI / (1024 * 1024):n3} MiB)", HorizontalAlignment.Right),
 				},
 				new List<GridElement>
 				{
 					new GridElement("Capacity (P/Invoke)"),
-					new GridElement(String.Format("{0} Bytes", infoSizePInvoke), HorizontalAlignment.Right),
-					new GridElement(String.Format("({0:f3} MiB)", (double)infoSizePInvoke / (1024 * 1024)), HorizontalAlignment.Right),
+					new GridElement($"{infoSizePInvoke:n0} Bytes", HorizontalAlignment.Right),
+					new GridElement($"({(double)infoSizePInvoke / (1024 * 1024):n3} MiB)", HorizontalAlignment.Right),
 				},
 				new List<GridElement>
 				{
 					new GridElement("Difference"),
-					new GridElement(String.Format("{0} Bytes", (infoSizePInvoke - infoSizeWMI)), HorizontalAlignment.Right),
-					new GridElement(String.Format("({0:f3} MiB)", (double)(infoSizePInvoke - infoSizeWMI) / (1024 * 1024)), HorizontalAlignment.Right),
+					new GridElement($"{(infoSizePInvoke - infoSizeWMI):n0} Bytes", HorizontalAlignment.Right),
+					new GridElement($"({(double)(infoSizePInvoke - infoSizeWMI) / (1024 * 1024):n3} MiB)", HorizontalAlignment.Right),
 				},
 			};
 
@@ -436,16 +424,13 @@ namespace DiskGazer.Views
 
 		#region Chart
 
-		private IReadOnlyList<DiskScore> DiskScores
-		{
-			get { return _mainWindowViewModel.DiskScores; }
-		}
+		private IReadOnlyList<DiskScore> DiskScores => _mainWindowViewModel.DiskScores;
 
 		private Chart _diskChart;
 
-		private const double _chartUnit = 50D;        // Unit length of Y axis
-		private const double _chartMaxDefault = 200D; // Default maximum value of Y axis
-		private const double _chartMinDefault = 0D;   // Default minimum value of Y axis
+		private const double ChartUnit = 50D;        // Unit length of Y axis
+		private const double ChartMaxDefault = 200D; // Default maximum value of Y axis
+		private const double ChartMinDefault = 0D;   // Default minimum value of Y axis
 
 		private readonly Color[] _colBar = // Colors for color bar
 		{
@@ -475,20 +460,20 @@ namespace DiskGazer.Views
 				"ChartMax",
 				typeof(double),
 				typeof(MainWindow),
-				new FrameworkPropertyMetadata(
-					_chartMaxDefault,
+				new PropertyMetadata(
+					ChartMaxDefault,
 					(d, e) =>
 					{
 						var window = (MainWindow)d;
 
 						if ((window.SliderChartMax.IsFocused | window.SliderChartMax.IsMouseOver) &&
-							(window.SliderChartMin.Value + _chartUnit > (double)e.NewValue))
-							window.SliderChartMin.Value = (double)e.NewValue - _chartUnit;
+							(window.SliderChartMin.Value + ChartUnit > (double)e.NewValue))
+							window.SliderChartMin.Value = (double)e.NewValue - ChartUnit;
 
 						if (window.IsChartMaxFixed)
 							window.AdjustChartAppearance();
 					},
-					(d, baseValue) => Math.Round((double)baseValue / _chartUnit) * _chartUnit));
+					(d, baseValue) => Math.Round((double)baseValue / ChartUnit) * ChartUnit));
 
 		/// <summary>
 		/// Minimum value of Y axle
@@ -503,20 +488,20 @@ namespace DiskGazer.Views
 				"ChartMin",
 				typeof(double),
 				typeof(MainWindow),
-				new FrameworkPropertyMetadata(
-					_chartMinDefault,
+				new PropertyMetadata(
+					ChartMinDefault,
 					(d, e) =>
 					{
 						var window = (MainWindow)d;
 
 						if ((window.SliderChartMin.IsFocused | window.SliderChartMin.IsMouseOver) &&
-							((double)e.NewValue + _chartUnit > window.SliderChartMax.Value))
-							window.SliderChartMax.Value = (double)e.NewValue + _chartUnit;
+							((double)e.NewValue + ChartUnit > window.SliderChartMax.Value))
+							window.SliderChartMax.Value = (double)e.NewValue + ChartUnit;
 
 						if (window.IsChartMinFixed)
 							window.AdjustChartAppearance();
 					},
-					(d, baseValue) => Math.Round((double)baseValue / _chartUnit) * _chartUnit));
+					(d, baseValue) => Math.Round((double)baseValue / ChartUnit) * ChartUnit));
 
 		/// <summary>
 		/// Whether maximum value of Y axle is fixed
@@ -531,7 +516,7 @@ namespace DiskGazer.Views
 				"IsChartMaxFixed",
 				typeof(bool),
 				typeof(MainWindow),
-				new FrameworkPropertyMetadata(
+				new PropertyMetadata(
 					false,
 					(d, e) => ((MainWindow)d).AdjustChartAppearance()));
 
@@ -548,7 +533,7 @@ namespace DiskGazer.Views
 				"IsChartMinFixed",
 				typeof(bool),
 				typeof(MainWindow),
-				new FrameworkPropertyMetadata(
+				new PropertyMetadata(
 					false,
 					(d, e) => ((MainWindow)d).AdjustChartAppearance()));
 
@@ -565,12 +550,12 @@ namespace DiskGazer.Views
 				"SlidesLine",
 				typeof(bool),
 				typeof(MainWindow),
-				new FrameworkPropertyMetadata(
+				new PropertyMetadata(
 					true,
 					(d, e) => ((MainWindow)d).DrawChart(DrawMode.RefreshPinnedChart)));
 
 		/// <summary>
-		/// Create and add chart.
+		/// Creates and adds chart.
 		/// </summary>
 		private void CreateAddChart()
 		{
@@ -620,7 +605,7 @@ namespace DiskGazer.Views
 
 		private void AdjustChartAppearance()
 		{
-			if (_diskChart == null)
+			if (_diskChart is null)
 				return;
 
 			var windowDpi = VisualTreeHelper.GetDpi(this);
@@ -651,9 +636,9 @@ namespace DiskGazer.Views
 			}
 			else
 			{
-				chartMax = (DiskScores[0].Data != null)
-					? Math.Ceiling(DiskScores[0].Data.Values.Max() / _chartUnit) * _chartUnit
-					: _chartMaxDefault;
+				chartMax = (DiskScores[0].Data is not null)
+					? Math.Ceiling(DiskScores[0].Data.Values.Max() / ChartUnit) * ChartUnit
+					: ChartMaxDefault;
 			}
 
 			if (IsChartMinFixed)
@@ -662,22 +647,22 @@ namespace DiskGazer.Views
 			}
 			else
 			{
-				chartMin = (DiskScores[0].Data != null)
-					? Math.Floor(DiskScores[0].Data.Values.Min() / _chartUnit) * _chartUnit
-					: _chartMinDefault;
+				chartMin = (DiskScores[0].Data is not null)
+					? Math.Floor(DiskScores[0].Data.Values.Min() / ChartUnit) * ChartUnit
+					: ChartMinDefault;
 			}
 
-			if (chartMin + _chartUnit > chartMax) // If relationship between maximum and minimum values is screwed.
+			if (chartMin + ChartUnit > chartMax) // If relationship between maximum and minimum values is screwed.
 			{
 				if ((chartMin == 0D) | // Case where minimum value is already 0.
 					(!IsChartMaxFixed &&
 					 IsChartMinFixed)) // Case where maximum value is not fixed and minimum value is fixed.
 				{
-					chartMax = chartMin + _chartUnit;
+					chartMax = chartMin + ChartUnit;
 				}
 				else // Any other case.
 				{
-					chartMin = chartMax - _chartUnit;
+					chartMin = chartMax - ChartUnit;
 				}
 			}
 
@@ -690,14 +675,14 @@ namespace DiskGazer.Views
 			int digitX = 4; // Digit number of maximum scale in X axis
 			int digitY = 3; // Digit number of maximum scale in Y axis
 
-			if (DiskScores[0].Data != null)
+			if (DiskScores[0].Data is not null)
 			{
 				digitX = Math.Max(digitX, chartAreaOne.AxisX.Maximum.ToString(CultureInfo.InvariantCulture).Length);
 				digitY = Math.Max(digitY, chartAreaOne.AxisY.Maximum.ToString(CultureInfo.InvariantCulture).Length);
 			}
 
-			var labelX = TextSize(digitX, chartAreaOne.AxisX.LabelStyle.Font);
-			var labelY = TextSize(digitY, chartAreaOne.AxisY.LabelStyle.Font);
+			var labelX = GetSize(digitX, chartAreaOne.AxisX.LabelStyle.Font);
+			var labelY = GetSize(digitY, chartAreaOne.AxisY.LabelStyle.Font);
 
 			// Note that all properties are percentage.
 			chartAreaOne.InnerPlotPosition.Auto = false;
@@ -757,19 +742,19 @@ namespace DiskGazer.Views
 
 		private static float GetPerc(double targetLength, int baseLength)
 		{
-			var sampleNum = targetLength / (double)baseLength;
+			var sampleNumber = targetLength / (double)baseLength;
 
-			return Math.Min((float)sampleNum * 100F, 100F);
+			return Math.Min((float)sampleNumber * 100F, 100F);
 		}
 
-		private static Size TextSize(int num, System.Drawing.Font font)
+		private static Size GetSize(int num, System.Drawing.Font font)
 		{
 			var sampleText = Enumerable.Repeat("9", num).Aggregate((total, next) => total + next);
 
-			return TextSize(sampleText, font);
+			return GetSize(sampleText, font);
 		}
 
-		private static Size TextSize(string text, System.Drawing.Font font)
+		private static Size GetSize(string text, System.Drawing.Font font)
 		{
 			// System.Windows.Media.FormattedText method is not accurate (too small).
 			var sampleSize = System.Windows.Forms.TextRenderer.MeasureText(text, font);
@@ -779,18 +764,18 @@ namespace DiskGazer.Views
 
 		private Size ChartInnerPlotAreaSize()
 		{
-			if (_diskChart == null)
+			if (_diskChart is null)
 				return new Size(0, 0);
 
 			var chartAreaOne = _diskChart.ChartAreas[0];
 
 			return new Size(
-				Math.Round((_diskChart.Width * chartAreaOne.InnerPlotPosition.Width) / 100),
-				Math.Round((_diskChart.Height * chartAreaOne.InnerPlotPosition.Height) / 100));
+				Math.Round(_diskChart.Width * chartAreaOne.InnerPlotPosition.Width / 100),
+				Math.Round(_diskChart.Height * chartAreaOne.InnerPlotPosition.Height / 100));
 		}
 
 		/// <summary>
-		/// Draw chart line.
+		/// Draws chart line.
 		/// </summary>
 		/// <param name="mode">Draw mode of chart</param>
 		internal void DrawChart(DrawMode mode)
@@ -842,7 +827,7 @@ namespace DiskGazer.Views
 								foreach (var seriesTwo in _diskChart.Series)
 								{
 									var scoreTwo = DiskScores.FirstOrDefault(d => d.Guid == seriesTwo.Name);
-									if (scoreTwo != null)
+									if (scoreTwo is not null)
 									{
 										var slideLength = scoreTwo.AreaLocation - seriesTwo.Points.Min(p => p.XValue);
 
@@ -858,7 +843,7 @@ namespace DiskGazer.Views
 				case DrawMode.PinCurrentChart:
 					// Darken line color of seriesOne.
 					var seriesOne = _diskChart.Series.FirstOrDefault(s => s.Name == DiskScores[0].Guid);
-					if (seriesOne != null)
+					if (seriesOne is not null)
 					{
 						// In ControlPaint.Dark method, 2nd parameter starts from -0.5 (not darkened yet) to 1 (fully darkened to be black).
 						seriesOne.Color = System.Windows.Forms.ControlPaint.Dark(colLine, (float)-0.2);
@@ -891,7 +876,7 @@ namespace DiskGazer.Views
 							break;
 
 						case DrawMode.DrawNewChart:
-							if (DiskScores[0].Data != null)
+							if (DiskScores[0].Data is not null)
 							{
 								var dataList = new SortedList<double, double>(DiskScores[0].Data);
 
@@ -903,14 +888,14 @@ namespace DiskGazer.Views
 
 					_diskChart.Series.Add(seriesOne);
 
-					if (DiskScores[0].Data != null)
+					if (DiskScores[0].Data is not null)
 						AdjustChartAppearance();
 					break;
 			}
 		}
 
 		/// <summary>
-		/// Manage color bar for chart line color.
+		/// Manages color bar for chart line color.
 		/// </summary>
 		private void ManageColorBar()
 		{
@@ -934,7 +919,7 @@ namespace DiskGazer.Views
 					colButton.Click += (sender, e) =>
 					{
 						var button = sender as Button;
-						if (button != null)
+						if (button is not null)
 							_indexColSelected = (int)button.Tag;
 
 						ManageColorBar();
@@ -960,14 +945,14 @@ namespace DiskGazer.Views
 		#region ApplicationCommands.Open
 
 		/// <summary>
-		/// Open Monitor window.
+		/// Opens Monitor window.
 		/// </summary>
 		private void OpenExecuted(object target, ExecutedRoutedEventArgs e)
 		{
 			try
 			{
 				var monitorWindow = this.OwnedWindows.OfType<MonitorWindow>().FirstOrDefault();
-				if (monitorWindow != null)
+				if (monitorWindow is not null)
 				{
 					// Activate Monitor window.
 					WindowSupplement.ActivateWindow(monitorWindow);
@@ -995,7 +980,7 @@ namespace DiskGazer.Views
 		#region ApplicationCommands.Close
 
 		/// <summary>
-		/// Close this application.
+		/// Closes this application.
 		/// </summary>
 		private void CloseExecuted(object target, ExecutedRoutedEventArgs e)
 		{

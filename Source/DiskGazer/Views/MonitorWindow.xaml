@@ -5,8 +5,7 @@
 		FontFamily="Verdana" FontSize="12"
 		Height="400" Width="540"
 		Icon="/DiskGazer;component/Resources/Gazer.ico"
-		WindowStartupLocation="CenterOwner"
-		Loaded="OnLoaded">
+		WindowStartupLocation="CenterOwner">
 	<Grid>
 		<TextBox x:Name="TextBoxInnerStatus"
 				 Margin="10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
