@@ -90,6 +90,7 @@
     <Compile Include="Models\ReadResult.cs" />
     <Compile Include="Models\Settings.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
+    <Compile Include="Views\Controls\MenuItemModifier.cs" />
     <Compile Include="Views\Controls\TextBoxDoubleFormat.cs" />
     <Compile Include="Views\Controls\SliderPlus.cs" />
     <Compile Include="Views\Converters\DoubleScaleConverter.cs" />

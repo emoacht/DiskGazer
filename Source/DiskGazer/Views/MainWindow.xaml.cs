@@ -270,20 +270,19 @@ namespace DiskGazer.Views
 			if (info is null)
 				return;
 
-			// Create outer Grid and add to MenuItemDiskInfo.
-			var gridOuter = new System.Windows.Controls.Grid();
+			// Prepare outer Grid.
+			var outerGrid = this.DiskInfoHost;
+			outerGrid.Children.Clear();
 			for (int i = 0; i <= 1; i++) // 2 rows
 			{
-				var rowNew = new RowDefinition { Height = System.Windows.GridLength.Auto };
-				gridOuter.RowDefinitions.Add(rowNew);
+				var row = new RowDefinition { Height = System.Windows.GridLength.Auto };
+				outerGrid.RowDefinitions.Add(row);
 			}
-			this.MenuItemDiskInfo.Items.Clear();
-			this.MenuItemDiskInfo.Items.Add(gridOuter);
 
 			// Create inner Grid and add to outer Grid.
-			var gridInner = new System.Windows.Controls.Grid();
-			System.Windows.Controls.Grid.SetRow(gridInner, 1);
-			gridOuter.Children.Add(gridInner);
+			var innerGrid = new System.Windows.Controls.Grid();
+			System.Windows.Controls.Grid.SetRow(innerGrid, 1);
+			outerGrid.Children.Add(innerGrid);
 
 			// Prepare contents.
 			var infoSizeWMI = info.SizeWMI;
@@ -371,24 +370,24 @@ namespace DiskGazer.Views
 			// Add rows and columns to inner Grid.
 			for (int i = 0; i < body.Count; i++) // Rows
 			{
-				var rowNew = new RowDefinition { Height = System.Windows.GridLength.Auto };
-				gridInner.RowDefinitions.Add(rowNew);
+				var row = new RowDefinition { Height = System.Windows.GridLength.Auto };
+				innerGrid.RowDefinitions.Add(row);
 			}
 			for (int i = 0; i < body.Max(x => x.Count); i++) // Columns
 			{
-				var columnNew = new ColumnDefinition { Width = System.Windows.GridLength.Auto };
-				gridInner.ColumnDefinitions.Add(columnNew);
+				var column = new ColumnDefinition { Width = System.Windows.GridLength.Auto };
+				innerGrid.ColumnDefinitions.Add(column);
 			}
 
 			// Add contents.
-			gridOuter.Children.Add(CreateTextBlock(header, 0, 0));
+			outerGrid.Children.Add(CreateTextBlock(header, 0, 0));
 
-			for (int i = 0; i < gridInner.RowDefinitions.Count; i++)
+			for (int i = 0; i < innerGrid.RowDefinitions.Count; i++)
 			{
-				for (int j = 0; j < gridInner.ColumnDefinitions.Count; j++)
+				for (int j = 0; j < innerGrid.ColumnDefinitions.Count; j++)
 				{
 					if (j <= body[i].Count - 1)
-						gridInner.Children.Add(CreateTextBlock(body[i][j], i, j));
+						innerGrid.Children.Add(CreateTextBlock(body[i][j], i, j));
 				}
 			}
 		}
@@ -405,19 +404,19 @@ namespace DiskGazer.Views
 			}
 		}
 
-		private TextBlock CreateTextBlock(GridElement element, int indexRow, int indexColumn)
+		private TextBlock CreateTextBlock(GridElement element, int rowIndex, int columnIndex)
 		{
-			var textNew = new TextBlock
+			var textBlock = new TextBlock
 			{
 				Text = element.Text,
 				Margin = new Thickness(2),
 				HorizontalAlignment = element.Alignment,
 			};
 
-			System.Windows.Controls.Grid.SetRow(textNew, indexRow);
-			System.Windows.Controls.Grid.SetColumn(textNew, indexColumn);
+			System.Windows.Controls.Grid.SetRow(textBlock, rowIndex);
+			System.Windows.Controls.Grid.SetColumn(textBlock, columnIndex);
 
-			return textNew;
+			return textBlock;
 		}
 
 		#endregion
