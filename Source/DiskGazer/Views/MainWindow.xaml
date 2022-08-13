@@ -18,6 +18,7 @@
 
 			<ResourceDictionary.MergedDictionaries>
 				<ResourceDictionary Source="Styles/Icons.xaml"/>
+				<ResourceDictionary Source="Styles/Gazer.xaml"/>
 			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>
 	</Window.Resources>
@@ -229,17 +230,31 @@
 
 					<!-- About -->
 					<MenuItem Header="{Binding Source={x:Static views:ProductInfo.Title}, Mode=OneWay}" HeaderStringFormat="About {0}">
-						<StackPanel Margin="8,6"
-									controls:MenuItemModifier.IsEnabled="True">
-							<TextBlock Margin="2"
-									   FontSize="16" FontWeight="Bold"
-									   Text="{Binding Source={x:Static views:ProductInfo.Title}, Mode=OneWay}"/>
-							<TextBlock Margin="2"
-									   FontSize="14"
-									   Text="{Binding Source={x:Static views:ProductInfo.Version}, Mode=OneWay}"/>
-							<TextBlock Margin="2"
-									   Text="{Binding Source={x:Static views:ProductInfo.Copyright}, Mode=OneWay}"/>
-						</StackPanel>
+						<Grid Margin="8,6"
+							  controls:MenuItemModifier.IsEnabled="True">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="180"/>
+								<ColumnDefinition Width="Auto"/>
+							</Grid.ColumnDefinitions>
+
+							<StackPanel Grid.Column="0">
+								<TextBlock Margin="2"
+										   FontSize="18" FontWeight="Bold"
+										   Text="{Binding Source={x:Static views:ProductInfo.Title}, Mode=OneWay}"/>
+								<TextBlock Margin="2,6,2,2"
+										   Foreground="#656565"
+										   TextWrapping="Wrap"
+										   Text="{Binding Source={x:Static views:ProductInfo.Description}, Mode=OneWay}"/>
+								<TextBlock Margin="2"
+										   Text="{Binding Source={x:Static views:ProductInfo.Version}, Mode=OneWay}"/>
+								<TextBlock Margin="2"
+										   Text="{Binding Source={x:Static views:ProductInfo.Copyright}, Mode=OneWay}"/>
+							</StackPanel>
+							<Viewbox Grid.Column="1"
+									 Width="100" Height="100" Margin="4">
+								<StaticResource ResourceKey="Gazer"/>
+							</Viewbox>
+						</Grid>
 					</MenuItem>
 				</MenuItem>
 			</Menu>
