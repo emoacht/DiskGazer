@@ -1,0 +1,115 @@
+﻿<!DOCTYPE html>
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>Disk Gazer</title>
+<style type="text/css">
+<!--
+/* body */
+body {font-family: Segoe UI, Meiryo; line-height: 1.4em; background: white; padding: 0; margin: 0;}
+
+h1,h2,h3,p {font-weight: normal; padding: 0; margin: 0;}
+
+p,li {font-size: 0.92em;}
+
+div#wrapper {margin: 0 auto; min-width: 640px; max-width: 720px;}
+
+/* title */
+div#title {background: white; height: 70px; position: relative;}
+
+h1 {font-size: 44px; line-height: 44px; margin-top: -22px; position: absolute; top: 50%; left: 20px; color: #000000;}
+
+/* main */
+div#main {background: white; padding: 8px 20px 10px 30px; margin: 0; clear: both;}
+
+h2 {font-size: 1.4em; line-height: 1.4em; margin: 20px 0 6px -12px; padding: 0 0 0 12px; border-style: solid; border-width: 0 0 1px 0; border-color: #d7d7d7; color: #333333;}
+h3 {font-size: 1.2em; font-weight: bolder; margin: 14px 0 0 -10px; color: #333333;}
+p {margin:10px 0 0 0;}
+
+ul,ol {margin: 0.6em 0 0 1.6em; padding: 0;}
+li {margin: 0 0 0.4em 0}
+
+em {font-style: normal; font-weight: bold;}
+
+a:link,
+a:visited {color: black; background: rgb(248, 248, 248);}
+a:hover,
+a:active {color: black; background: rgb(194, 224, 255);}
+-->
+</style>
+</head>
+<body>
+
+<div id="wrapper">
+
+<div id="title">
+<h1>Disk Gazer</h1>
+</div><!-- end of title -->
+
+<div id="main">
+
+<p>Disk Gazerは物理的ディスクの転送速度を、細かい単位で、かつディスク中の位置を問わず計測できる高精細のディスク計測ツールです。</p>
+
+<h2>動作条件</h2>
+
+<ul>
+	<li>.NET Framework 4.8</li>
+</ul>
+
+<h2>単位</h2>
+
+<ul>
+	<li style="margin-bottom: 0;">Capacity (Disk capacity) - GiB</li>
+	<li style="margin-bottom: 0;">Block (Size of block) - KiB</li>
+	<li style="margin-bottom: 0;">Area (Size of area) - GiB</li>
+	<li style="margin-bottom: 0;">Location (Location of area) - GiB</li>
+	<li style="margin-bottom: 0;">Transfer rate (チャートのY軸) - MB/s (1,000,000 Bytes / second)</li>
+	<li>Location (チャートのX軸) - MiB</li>
+</ul>
+
+<h2>特記事項</h2>
+
+<h3>計測方法</h3>
+
+<p>このアプリは物理的ディスクからのシーケンシャルリードの転送速度を計測します。ディスクをファイルシステムを使わずにリードするだけなので、パーティションの有無は結果に関係せず、またディスクの中身には影響しません。</p>
+<p>計測はネイティブか（初期設定、Win32コンソールアプリを介する）、P/Invokeか（Windowsアプリから直接）によって行われます。この二つは基本的に同じものですが、一般的にはネイティブの方が少し速くなります。</p>
+
+<h3>"Block offset"</h3>
+
+<p>Block (block size)の横にある分数は"block offset"のためのもので、block sizeにこの分数を掛けたものがblock offsetになります。単位はKiBです。</p>
+<p>もしblock offsetがblock sizeより小さい場合（分数が1/1より小さい場合）、block sizeはそのままでblock offsetの分だけ開始位置をずらしながら、分数の分母と同じ回数リードします。しかる後に、各block offsetのアドレスを範囲に含む実際の値を集め、その平均をそのアドレスでの値とします。</p>
+<p>例えば、block sizeが1024KiBでblock offsetが256KiBの場合（分数が1/4の場合）、開始位置を0KiB、256KiB、512KiB、768KiBと変えながら、4回リードします。しかる後、1024KiBのアドレス（開始位置が1024KiBで、終了位置が1280KiB）での値を求めるときは、開始位置を256KiB、512KiB、768KiB、1024KiBとする実際の値を集め、その平均を計算します。</p>
+<p>このblock offsetの目的は、意味のある結果を得るにはblock sizeを小さくできない場合に、block sizeより小さな単位の計算上の値を求めることと、偽の値のように見えるものを選別することです。</p>
+
+<h3>"Area ratio"</h3>
+
+<p>Location (area location)の横にある分数は"area ratio"のためのもので、実際にリードされるblock数の、area中の全block数に対する割合を示します。この機能はarea sizeがディスク全体のようにかなり大きい場合に役立ちます。</p>
+<p>この機能はarea ratioが1/1以外のときに有効になります。area中のblockは多数の同じ長さのグループに分割され、各グループの先頭8blockのみが順にリードされます（1番目のblockはシークタイムの影響を避けるため結果には含まれない）。例えば、area ratioが1/16の場合、1つのグループは128blockで構成され、先頭の8blockのみがリードされ、残りの120blockは無視されます。</p>
+
+<h3>外れ値</h3>
+
+<p>各位置について、平均値から標準偏差を二倍した範囲の外にある値は外れ値として除外されます。</p>
+
+<h2>ライセンス</h2>
+
+<ul>
+	<li>MIT License</li>
+</ul>
+
+<h2>ライブラリ</h2>
+
+<ul>
+	<li>メニューアイコン: <a href="http://msdn.microsoft.com/en-us/library/ms246582.aspx">Visual Studio Image Library</a></li>
+</ul>
+
+<h2>開発者</h2>
+
+<ul>
+	<li>emoacht (emotom[atmark]pobox.com)</li>
+</ul>
+
+</div><!-- end of main -->
+
+</div><!-- end of wrapper -->
+
+</body></html>

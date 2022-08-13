@@ -1,0 +1,115 @@
+﻿<!DOCTYPE html>
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>Disk Gazer</title>
+<style type="text/css">
+<!--
+/* body */
+body {font-family: Segoe UI, Meiryo; line-height: 1.4em; background: white; padding: 0; margin: 0;}
+
+h1,h2,h3,p {font-weight: normal; padding: 0; margin: 0;}
+
+p,li {font-size: 0.92em;}
+
+div#wrapper {margin: 0 auto; min-width: 640px; max-width: 720px;}
+
+/* title */
+div#title {background: white; height: 70px; position: relative;}
+
+h1 {font-size: 44px; line-height: 44px; margin-top: -22px; position: absolute; top: 50%; left: 20px; color: #000000;}
+
+/* main */
+div#main {background: white; padding: 8px 20px 10px 30px; margin: 0; clear: both;}
+
+h2 {font-size: 1.4em; line-height: 1.4em; margin: 20px 0 6px -12px; padding: 0 0 0 12px; border-style: solid; border-width: 0 0 1px 0; border-color: #d9d9d9; color: #333333;}
+h3 {font-size: 1.2em; font-weight: bolder; margin: 14px 0 0 -10px; color: #333333;}
+p {margin:10px 0 0 0;}
+
+ul,ol {margin: 0.6em 0 0 1.6em; padding: 0;}
+li {margin: 0 0 0.4em 0}
+
+em {font-style: normal; font-weight: bold;}
+
+a:link,
+a:visited {color: black; background: rgb(248, 248, 248);}
+a:hover,
+a:active {color: black; background: rgb(194, 224, 255);}
+-->
+</style>
+</head>
+<body>
+
+<div id="wrapper">
+
+<div id="title">
+<h1>Disk Gazer</h1>
+</div><!-- end of title -->
+
+<div id="main">
+
+<p>Disk Gazer is a high-definition disk measuring tool which can measure the transfer rates of a physical disk in a small unit and at any location in the disk.</p>
+
+<a id="requirements"></a><h2>Requirements</h2>
+
+<ul>
+	<li>.NET Framework 4.8</li>
+</ul>
+
+<h2>Units</h2>
+
+<ul>
+	<li style="margin-bottom: 0;">Capacity (Disk capacity) - GiB</li>
+	<li style="margin-bottom: 0;">Block (Size of block) - KiB</li>
+	<li style="margin-bottom: 0;">Area (Size of area) - GiB</li>
+	<li style="margin-bottom: 0;">Location (Location of area) - GiB</li>
+	<li style="margin-bottom: 0;">Transfer rate (Y axis of chart) - MB/s (1,000,000 Bytes / second)</li>
+	<li>Location (X axis of chart) - MiB</li>
+</ul>
+
+<h2>Remarks</h2>
+
+<h3>Measuring method</h3>
+
+<p>This app measures transfer rate of sequential read from a physical disk. Since it only reads the disk without using file system, existence of partitions will not matter to the results and its contents will not be affected.</p>
+<p>The measuring will be done by native method (default, through Win32 console app) or P/Invoke method (directly from Window app). Although the both methods are identical in essence, in general, native one is a little faster.</p>
+
+<h3>"Block offset"</h3>
+
+<p>Fraction next to Block (block size) is for "block offset" that is calculated by multiplying block size by this fraction. The unit is KiB.</p>
+<p>If block offset is smaller than block size (the fraction is smaller than 1/1), this app will read the same times as the bottom number of fraction, offsetting the starting address by block offset while keeping block size. Then, actual scores that contain address of each block offset in their coverages will be collected and their average will be used as score of that address.</p>
+<p>For example, if block size is 1024KiB and block offset is 256KiB (the fraction is 1/4), this app will read 4 times changing the starting address 0KiB, 256KiB, 512KiB, 768KiB. Then, to get score at address of 1024KiB  (starting at 1024KiB and ending at 1280KiB), actual scores at addresses of 256KiB, 512KiB, 768KiB, 1024KiB will be collected and their average will be calculated.</p>
+<p>Purpose of this block offset is to get calculated score of unit that is smaller than block size when block size cannot be made smaller in order to get meaningfull results or to screen out seemingly false scores.</p>
+
+<h3>"Area ratio"</h3>
+
+<p>Fraction next to Location (area location) is for "area ratio" that represents the ratio of blocks to be actually read against the total blocks in the area. This function will be useful when area size is quite large such as the whole disk.</p>
+<p>If area ratio is other than 1/1, this function will be enabled. This app will divide blocks in the area into a number of groups of the same length and read only the leading 8 blocks of each group in sequence (the first block will not be included in the result to avoid the effect of seek time). For example, if area ratio is 1/16, a group will consist of 128 blocks and only the leading 8 blocks will be read and remaining 120 blocks will be ignored.</p>
+
+<h3>Outliers</h3>
+
+<p>This app removes outliers that are outside range of twice the standard deviation from the average at each location.</p>
+
+<h2>License</h2>
+
+<ul>
+	<li>MIT License</li>
+</ul>
+
+<h2>Libraries</h2>
+
+<ul>
+	<li>Menu icons: <a href="http://msdn.microsoft.com/en-us/library/ms246582.aspx">Visual Studio Image Library</a></li>
+</ul>
+
+<h2>Developer</h2>
+
+<ul>
+	<li>emoacht (emotom[atmark]pobox.com)</li>
+</ul>
+
+</div><!-- end of main -->
+
+</div><!-- end of wrapper -->
+
+</body></html>
