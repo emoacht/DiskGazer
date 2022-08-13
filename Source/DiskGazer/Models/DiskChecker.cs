@@ -21,7 +21,7 @@ namespace DiskGazer.Models
 		/// <returns>Disk information</returns>
 		internal static DiskInfo GetDiskInfo(int physicalDrive)
 		{
-			var info = new DiskInfo { PhysicalDrive = physicalDrive };
+			var disk = new DiskInfo(physicalDrive);
 
 			SafeFileHandle hFile = null;
 
@@ -70,10 +70,10 @@ namespace DiskGazer.Models
 				Marshal.FreeHGlobal(ptr);
 
 				// Set values.
-				info.Vendor = ConvertBytesToString(bytes, (int)storageDescriptor.VendorIdOffset).Trim();
-				info.Product = ConvertBytesToString(bytes, (int)storageDescriptor.ProductIdOffset).Trim();
-				info.IsRemovable = storageDescriptor.RemovableMedia;
-				info.BusType = ConvertBusTypeToString(storageDescriptor.BusType);
+				disk.Vendor = ConvertBytesToString(bytes, (int)storageDescriptor.VendorIdOffset).Trim();
+				disk.Product = ConvertBytesToString(bytes, (int)storageDescriptor.ProductIdOffset).Trim();
+				disk.IsRemovable = storageDescriptor.RemovableMedia;
+				disk.BusType = ConvertBusTypeToString(storageDescriptor.BusType);
 
 				// -------------------------------
 				// Use IOCTL_DISK_GET_LENGTH_INFO.
@@ -91,7 +91,7 @@ namespace DiskGazer.Models
 					throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to get disk size.");
 
 				// Set value.
-				info.SizePInvoke = diskSize;
+				disk.SizePInvoke = diskSize;
 
 				// ---------------------------
 				// Use IOCTL_ATA_PASS_THROUGH.
@@ -120,7 +120,7 @@ namespace DiskGazer.Models
 				if (result3)
 				{
 					const int index = 217; // Word index of nominal media rotation rate (1 means non-rotating media.)
-					info.NominalMediaRotationRate = ataQuery.data[index];
+					disk.NominalMediaRotationRate = ataQuery.data[index];
 				}
 				else
 				{
@@ -147,7 +147,7 @@ namespace DiskGazer.Models
 				}
 			}
 
-			return info;
+			return disk;
 		}
 
 		private static string ConvertBytesToString(byte[] source, int indexStart)

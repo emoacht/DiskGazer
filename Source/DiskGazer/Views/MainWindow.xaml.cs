@@ -262,9 +262,9 @@ namespace DiskGazer.Views
 					null,
 					(d, e) => ((MainWindow)d).SetDiskInfo((DiskInfo)e.NewValue)));
 
-		private void SetDiskInfo(DiskInfo info)
+		private void SetDiskInfo(DiskInfo disk)
 		{
-			if (info is null)
+			if (disk is null)
 				return;
 
 			// Prepare outer Grid.
@@ -282,85 +282,82 @@ namespace DiskGazer.Views
 			outerGrid.Children.Add(innerGrid);
 
 			// Prepare contents.
-			var infoSizeWMI = info.SizeWMI;
-			var infoSizePInvoke = info.SizePInvoke;
-
-			var header = new GridElement($"[{info.Name}]");
+			var header = new GridElement($"[{disk.Name}]");
 
 			var body = new List<List<GridElement>>
 			{
 				new List<GridElement>
 				{
 					new GridElement("Physical drive (WMI)"),
-					new GridElement(info.PhysicalDrive.ToString(CultureInfo.InvariantCulture), HorizontalAlignment.Right),
+					new GridElement(disk.PhysicalDrive.ToString(CultureInfo.InvariantCulture), HorizontalAlignment.Right),
 				},
 				new List<GridElement>
 				{
 					new GridElement("Model (WMI)"),
-					new GridElement(info.Model, HorizontalAlignment.Right),
+					new GridElement(disk.Model, HorizontalAlignment.Right),
 				},
 				new List<GridElement>
 				{
 					new GridElement("Vendor (P/Invoke)"),
-					new GridElement(info.Vendor, HorizontalAlignment.Right),
+					new GridElement(disk.Vendor, HorizontalAlignment.Right),
 				},
 				new List<GridElement>
 				{
 					new GridElement("Product (P/Invoke)"),
-					new GridElement(info.Product, HorizontalAlignment.Right),
+					new GridElement(disk.Product, HorizontalAlignment.Right),
 				},
 				new List<GridElement>
 				{
 					new GridElement("Interface type (WMI)"),
-					new GridElement(info.InterfaceType, HorizontalAlignment.Right),
+					new GridElement(disk.InterfaceType, HorizontalAlignment.Right),
 				},
 				new List<GridElement>
 				{
 					new GridElement("Bus type (P/Invoke)"),
-					new GridElement(info.BusType, HorizontalAlignment.Right),
+					new GridElement(disk.BusType, HorizontalAlignment.Right),
 				},
 				new List<GridElement>
 				{
 					new GridElement("Media type (WMI Win32_DiskDrive)"),
-					new GridElement(info.MediaTypeDiskDrive, HorizontalAlignment.Right),
+					new GridElement(disk.MediaTypeDiskDrive, HorizontalAlignment.Right),
 				},
 				new List<GridElement>
 				{
 					new GridElement("Fixed/Removable (P/Invoke)"),
-					new GridElement(info.IsRemovable ? "Removable" : "Fixed", HorizontalAlignment.Right),
+					new GridElement(disk.IsRemovable ? "Removable" : "Fixed", HorizontalAlignment.Right),
 				},
 				new List<GridElement>
 				{
 					new GridElement("Media type (WMI MSFT_PhysicalDisk)"),
-					new GridElement(info.MediaTypePhysicalDiskDescription, HorizontalAlignment.Right),
+					new GridElement(disk.MediaTypePhysicalDiskDescription, HorizontalAlignment.Right),
 				},
 				new List<GridElement>
 				{
 					new GridElement("Spindle Speed (WMI)"),
-					new GridElement(info.SpindleSpeedDescription, HorizontalAlignment.Right),
+					new GridElement(disk.SpindleSpeedDescription, HorizontalAlignment.Right),
 				},
 				new List<GridElement>
 				{
 					new GridElement("Nominal media rotation rate (P/Invoke)"),
-					new GridElement(info.NominalMediaRotationRateDescription, HorizontalAlignment.Right),
+					new GridElement(disk.NominalMediaRotationRateDescription, HorizontalAlignment.Right),
 				},
 				new List<GridElement>
 				{
 					new GridElement("Capacity (WMI)"),
-					new GridElement($"{infoSizeWMI:n0} Bytes", HorizontalAlignment.Right),
-					new GridElement($"({(double)infoSizeWMI / (1024 * 1024):n3} MiB)", HorizontalAlignment.Right),
+					new GridElement($"{disk.SizeWMI:n0} Bytes", HorizontalAlignment.Right),
+					new GridElement($"({(double)disk.SizeWMI / (1024 * 1024):n3} MiB)", HorizontalAlignment.Right),
 				},
 				new List<GridElement>
 				{
 					new GridElement("Capacity (P/Invoke)"),
-					new GridElement($"{infoSizePInvoke:n0} Bytes", HorizontalAlignment.Right),
-					new GridElement($"({(double)infoSizePInvoke / (1024 * 1024):n3} MiB)", HorizontalAlignment.Right),
+					new GridElement($"{disk.SizePInvoke:n0} Bytes", HorizontalAlignment.Right),
+					new GridElement($"({(double)disk.SizePInvoke / (1024 * 1024):n3} MiB)", HorizontalAlignment.Right),
 				},
 				new List<GridElement>
 				{
 					new GridElement("Difference"),
-					new GridElement($"{(infoSizePInvoke - infoSizeWMI):n0} Bytes", HorizontalAlignment.Right),
-					new GridElement($"({(double)(infoSizePInvoke - infoSizeWMI) / (1024 * 1024):n3} MiB)", HorizontalAlignment.Right),
+					new GridElement($"{(disk.SizePInvoke - disk.SizeWMI):n0} Bytes", HorizontalAlignment.Right),
+					new GridElement($"({(double)(disk.SizePInvoke - disk.SizeWMI) / (1024 * 1024):n3} MiB)", HorizontalAlignment.Right),
 				},
 			};
 

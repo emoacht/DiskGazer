@@ -433,14 +433,14 @@ namespace DiskGazer.ViewModels
 		{
 			try
 			{
-				List<DiskInfo> diskRosterPre = null;
+				List<DiskInfo> disks = null;
 
 				// Get disk information by WMI.
 				var searchTask = Task.Run(() => DiskSearcher.Search());
 
 				try
 				{
-					diskRosterPre = await searchTask;
+					disks = await searchTask;
 				}
 				catch (Exception ex)
 				{
@@ -454,24 +454,20 @@ namespace DiskGazer.ViewModels
 					}
 				}
 
-				if (diskRosterPre is null)
+				if (disks is not { Count: > 0 })
 					return;
 
 				// Sort by PhysicalDrive.
-				diskRosterPre.Sort();
+				disks.Sort();
 
-				foreach (var infoPre in diskRosterPre)
+				foreach (var disk in disks)
 				{
-					DiskInfo infoNew = null;
-
 					// Add disk information by P/Invoke.
-					var physicalDrive = infoPre.PhysicalDrive;
-
-					var checkTask = Task.Run(() => DiskChecker.GetDiskInfo(physicalDrive));
+					var checkTask = Task.Run(() => DiskChecker.GetDiskInfo(disk.PhysicalDrive));
 
 					try
 					{
-						infoNew = await checkTask;
+						disk.Import(await checkTask);
 					}
 					catch (Exception ex)
 					{
@@ -485,31 +481,19 @@ namespace DiskGazer.ViewModels
 						}
 					}
 
-					if (infoNew is null)
-					{
-						infoNew = new DiskInfo { PhysicalDrive = infoPre.PhysicalDrive };
-					}
-
-					infoNew.Model = infoPre.Model;
-					infoNew.InterfaceType = infoPre.InterfaceType;
-					infoNew.MediaTypeDiskDrive = infoPre.MediaTypeDiskDrive;
-					infoNew.MediaTypePhysicalDisk = infoPre.MediaTypePhysicalDisk;
-					infoNew.SpindleSpeed = infoPre.SpindleSpeed;
-					infoNew.SizeWMI = infoPre.SizeWMI;
-
 					// Add disk information to disk roster.
 					int index = 0;
 
 					if (_diskRoster.Any())
 					{
-						while ((index < _diskRoster.Count) && (infoNew.PhysicalDrive > _diskRoster[index].PhysicalDrive))
+						while ((index < _diskRoster.Count) && (disk.PhysicalDrive > _diskRoster[index].PhysicalDrive))
 						{
 							index++;
 						}
 					}
 
-					_diskRoster.Insert(index, infoNew);
-					DiskRosterNames.Insert(index, infoNew.NameBus);
+					_diskRoster.Insert(index, disk);
+					DiskRosterNames.Insert(index, disk.NameBus);
 
 					if (index == 0)
 					{

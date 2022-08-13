@@ -17,19 +17,18 @@ namespace DiskGazer.Models
 		/// <returns>List of disk information</returns>
 		internal static List<DiskInfo> Search()
 		{
-			var diskRosterPre = new List<DiskInfo>();
+			var disks = new List<DiskInfo>();
 
-			SearchDiskDrive(ref diskRosterPre);
-			SearchPhysicalDisk(ref diskRosterPre);
+			SearchDiskDrive(ref disks);
+			SearchPhysicalDisk(ref disks);
 
-			return diskRosterPre;
+			return disks;
 		}
 
 		/// <summary>
 		/// Searches drives by WMI (Win32_DiskDrive).
 		/// </summary>
-		/// <param name="diskRosterPre">List of disk information</param>
-		private static void SearchDiskDrive(ref List<DiskInfo> diskRosterPre)
+		private static void SearchDiskDrive(ref List<DiskInfo> disks)
 		{
 			using var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_DiskDrive");
 
@@ -38,24 +37,23 @@ namespace DiskGazer.Models
 				if (!int.TryParse(drive["Index"]?.ToString(), out int index)) // Index number of physical drive
 					continue;
 
-				var info = new DiskInfo { PhysicalDrive = index };
-				info.Model = drive["Model"]?.ToString();
-				info.InterfaceType = drive["InterfaceType"]?.ToString();
-				info.MediaTypeDiskDrive = drive["MediaType"]?.ToString();
+				var disk = new DiskInfo(index);
+				disk.Model = drive["Model"]?.ToString();
+				disk.InterfaceType = drive["InterfaceType"]?.ToString();
+				disk.MediaTypeDiskDrive = drive["MediaType"]?.ToString();
 
 				if (long.TryParse(drive["Size"]?.ToString(), out long size))
-					info.SizeWMI = size;
+					disk.SizeWMI = size;
 
-				diskRosterPre.Add(info);
+				disks.Add(disk);
 			}
 		}
 
 		/// <summary>
 		/// Searches drives and supplement information by WMI (MSFT_PhysicalDisk).
 		/// </summary>
-		/// <param name="diskRosterPre">List of disk information</param>
 		/// <remarks>Windows Storage Management API is only available for Windows 8 or newer.</remarks>
-		private static void SearchPhysicalDisk(ref List<DiskInfo> diskRosterPre)
+		private static void SearchPhysicalDisk(ref List<DiskInfo> disks)
 		{
 			if (!OsVersion.IsEightOrNewer)
 				return;
@@ -67,15 +65,15 @@ namespace DiskGazer.Models
 				if (!int.TryParse(drive["DeviceId"]?.ToString(), out int deviceId)) // Index number of physical drive
 					continue;
 
-				var info = diskRosterPre.FirstOrDefault(x => x.PhysicalDrive == deviceId);
-				if (info is null)
+				var disk = disks.FirstOrDefault(x => x.PhysicalDrive == deviceId);
+				if (disk is null)
 					continue;
 
 				if (int.TryParse(drive["MediaType"]?.ToString(), out int mediaType))
-					info.MediaTypePhysicalDisk = mediaType;
+					disk.MediaTypePhysicalDisk = mediaType;
 
 				if (uint.TryParse(drive["SpindleSpeed"]?.ToString(), out uint spindleSpeed))
-					info.SpindleSpeed = spindleSpeed;
+					disk.SpindleSpeed = spindleSpeed;
 			}
 		}
 	}
