@@ -1,0 +1,42 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+					xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+	<SolidColorBrush x:Key="Image.Foreground" Color="#242424"/>
+
+	<Canvas x:Key="Gazer"
+			Width="68" Height="68"
+			ClipToBounds="True">
+		<Path x:Name="Body"
+			  StrokeThickness="2.0"
+			  Stroke="{DynamicResource Image.Foreground}"
+			  Fill="{DynamicResource Image.Foreground}">
+			<Path.Data>
+				<PathGeometry Figures="M 130.83398 3.3222656 C 64.210581 3.0916124 25.578125 58.275849 25.578125 112.43945 C 25.578125 175.73603 80.415504 209.41602 130.17578 209.41602 C 179.93608 209.41602 255.51953 178.37305 255.51953 178.37305 C 216.99531 193.13044 246.54495 19.840182 150.35938 4.9023438 C 143.60963 3.8540942 137.09772 3.343951 130.83398 3.3222656 z M 88.21875 45.267578 C 90.605159 45.250596 93.062501 45.408953 95.591797 45.765625 C 136.06054 51.472345 169.99805 107.31641 169.99805 107.31641 C 169.99805 107.31641 128.32029 147.98993 87.851562 142.2832 C 47.382827 136.57647 32.814453 85.177734 32.814453 85.177734 C 32.814453 85.177734 52.422622 45.522312 88.21875 45.267578 Z"/>
+			</Path.Data>
+			<Path.RenderTransform>
+				<ScaleTransform ScaleX="0.26458333" ScaleY="0.26458333"/>
+			</Path.RenderTransform>
+		</Path>
+		<Path x:Name="Pupil"
+			  StrokeThickness="2.4"
+			  Stroke="{DynamicResource Image.Foreground}"
+			  Fill="{DynamicResource Image.Foreground}">
+			<Path.Data>
+				<PathGeometry Figures="M 93.246094 43.744141 A 26.754354 50.48644 9.4524761 0 0 62.138672 84.503906 26.754354 50.48644 9.4524761 0 0 76.767578 142.87109 26.754354 50.48644 9.4524761 0 0 113.05078 102.9668 26.754354 50.48644 9.4524761 0 0 98.419922 44.601562 26.754354 50.48644 9.4524761 0 0 93.246094 43.744141 Z M 87.375 52.835938 A 7.2998242 17.443971 24.058472 0 1 89.617188 53.814453 7.2998242 17.443971 24.058472 0 1 86.919922 74.583984 7.2998242 17.443971 24.058472 0 1 73.402344 84.265625 7.2998242 17.443971 24.058472 0 1 76.097656 63.496094 7.2998242 17.443971 24.058472 0 1 87.375 52.835938 Z"/>
+			</Path.Data>
+			<Path.RenderTransform>
+				<ScaleTransform ScaleX="0.26458333" ScaleY="0.26458333"/>
+			</Path.RenderTransform>
+		</Path>
+		<Path x:Name="Hands"
+			  StrokeThickness="0.4"
+			  Stroke="{DynamicResource Image.Foreground}"
+			  Fill="{DynamicResource Image.Foreground}">
+			<Path.Data>
+				<GeometryGroup FillRule="Nonzero">
+					<PathGeometry Figures="m 19.655297 37.161666 c 0 2.678599 -5.470257 18.014431 -13.720423 18.014431 -4.330043 0 -6.206853 -2.171443 -5.226826 -5.542936 0.74408 -2.559719 3.488004 -2.39087 5.880178 -2.424991 4.616168 -0.06585 13.067071 -12.725103 13.067071 -10.046504 z"/>
+					<PathGeometry Figures="m 48.008038 45.741532 c 0 3.187808 -5.770991 21.626433 -17.759492 21.439346 -5.604064 -0.08745 -8.03406 -2.584318 -6.765524 -6.596724 0.963119 -3.04636 4.702023 -2.578523 7.798306 -2.529787 6.910525 0.108744 16.72671 -15.50071 16.72671 -12.312835 z"/>
+				</GeometryGroup>
+			</Path.Data>
+		</Path>
+	</Canvas>
+</ResourceDictionary>
