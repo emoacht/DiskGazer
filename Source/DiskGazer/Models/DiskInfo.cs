@@ -20,7 +20,7 @@ namespace DiskGazer.Models
 		/// "Index" in Wi32_DiskDrive
 		/// "DeviceId" in MSFT_PhysicalDisk
 		/// </remarks>
-		public int PhysicalDrive { get; set; }
+		public int PhysicalDrive { get; private set; }
 
 		/// <summary>
 		/// Model by WMI (Win32_DiskDrive)
@@ -94,7 +94,12 @@ namespace DiskGazer.Models
 		/// <summary>
 		/// Whether removable disk by P/Invoke
 		/// </summary>
-		public bool IsRemovable { get; set; }
+		public bool IsRemovable
+		{
+			get => _isRemovable.GetValueOrDefault();
+			set => _isRemovable = value;
+		}
+		private bool? _isRemovable;
 
 		/// <summary>
 		/// Media type by WMI (MSFT_PhysicalDisk)
@@ -157,12 +162,22 @@ namespace DiskGazer.Models
 		/// <summary>
 		/// Size (Bytes) by WMI (Win32_DiskDrive)
 		/// </summary>
-		public long SizeWMI { get; set; }
+		public long SizeWMI
+		{
+			get => _sizeWMI.GetValueOrDefault();
+			set => _sizeWMI = value;
+		}
+		private long? _sizeWMI;
 
 		/// <summary>
 		/// Size (Bytes) by P/Invoke
 		/// </summary>
-		public long SizePInvoke { get; set; }
+		public long SizePInvoke
+		{
+			get => _sizePInvoke.GetValueOrDefault();
+			set => _sizePInvoke = value;
+		}
+		private long? _sizePInvoke;
 
 		/// <summary>
 		/// Size (MiB) (up to 2PiB)
@@ -172,7 +187,28 @@ namespace DiskGazer.Models
 			get => (int)Math.Truncate(Math.Max(SizeWMI, SizePInvoke) / Math.Pow(1024D, 2));
 		}
 
-		#region IComparable member
+		internal DiskInfo(int physicalDrive) => PhysicalDrive = physicalDrive;
+
+		internal void Import(DiskInfo other)
+		{
+			if (this.PhysicalDrive != other?.PhysicalDrive)
+				return;
+
+			this.Model ??= other.Model;
+			this.Vendor ??= other.Vendor;
+			this.Product ??= other.Product;
+			this.InterfaceType ??= other.InterfaceType;
+			this.BusType ??= other.BusType;
+			this.MediaTypeDiskDrive ??= other.MediaTypeDiskDrive;
+			this._isRemovable ??= other._isRemovable;
+			this.MediaTypePhysicalDisk ??= other.MediaTypePhysicalDisk;
+			this.SpindleSpeed ??= other.SpindleSpeed;
+			this.NominalMediaRotationRate ??= other.NominalMediaRotationRate;
+			this._sizeWMI ??= other._sizeWMI;
+			this._sizePInvoke ??= other._sizePInvoke;
+		}
+
+		#region IComparable
 
 		public int CompareTo(DiskInfo other)
 		{
@@ -184,7 +220,7 @@ namespace DiskGazer.Models
 
 		#endregion
 
-		#region ICloneable member
+		#region ICloneable
 
 		public DiskInfo Clone()
 		{
