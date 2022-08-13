@@ -574,8 +574,10 @@ namespace DiskGazer.Views
 			// Set X axis.
 			chartArea.AxisX.IsLabelAutoFit = false;
 			chartArea.AxisX.LabelStyle.Font = labelFont;
+			chartArea.AxisX.ToolTip = "Location (MiB)";
+
 			chartArea.AxisX.MajorGrid.LineColor = majorLineColor;
-			chartArea.AxisX.MajorTickMark.Enabled = false;
+			chartArea.AxisX.MajorTickMark.Enabled = false;			
 
 			chartArea.AxisX.MinorGrid.Enabled = true;
 			chartArea.AxisX.MinorGrid.LineColor = minorLineColor;
@@ -583,6 +585,8 @@ namespace DiskGazer.Views
 			// Set Y axis.
 			chartArea.AxisY.IsLabelAutoFit = false;
 			chartArea.AxisY.LabelStyle.Font = labelFont;
+			chartArea.AxisY.ToolTip = "Transfer rate (MB/s)";
+
 			chartArea.AxisY.MajorGrid.LineColor = majorLineColor;
 			chartArea.AxisY.MajorTickMark.Enabled = false;
 

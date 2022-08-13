@@ -292,12 +292,14 @@
 					<TextBlock
 						x:Name="TextCapacity"
 						Width="47" Margin="0" VerticalAlignment="Center"
-						Text="Capacity"/>
+						Text="Capacity"
+						ToolTip="Disk capacity"/>
 					<TextBox
 						x:Name="TextBoxCapacity"
 						Width="70" Height="18" Margin="5,0,0,0"
 						TextAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True"
-						Text="{Binding CurrentDisk.Size, Mode=OneWay, Converter={StaticResource TripleDigitConverterKey}}"/>
+						Text="{Binding CurrentDisk.Size, Mode=OneWay, Converter={StaticResource TripleDigitConverterKey}}"
+						ToolTip="Disk capacity (GiB)"/>
 				</StackPanel>
 
 				<StackPanel Grid.Column="1" Grid.Row="1"
@@ -307,25 +309,29 @@
 					<TextBlock
 						x:Name="TextNumRun"
 						Margin="0" VerticalAlignment="Center"
-						Text="Run"/>
+						Text="Run"
+						ToolTip="Number of runs"/>
 					<ComboBox
 						x:Name="ComboBoxNumRun"
 						Width="36" Margin="5,0,0,0"
 						ItemsSource="{Binding MenuNumRun, Mode=OneTime}"
 						SelectedItem="{Binding SettingsCurrent.NumRun, Mode=TwoWay}"
-						IsEnabled="{Binding Op.IsReady, Mode=OneWay}"/>
+						IsEnabled="{Binding Op.IsReady, Mode=OneWay}"
+						ToolTip="Number of runs"/>
 
 					<!-- Block size -->
 					<TextBlock
 						x:Name="TextBlockSize"
 						Margin="5,0,0,0" VerticalAlignment="Center"
-						Text="Block"/>
+						Text="Block"
+						ToolTip="Size of block"/>
 					<ComboBox
 						x:Name="ComboBoxBlockSize"
 						Width="56" Margin="5,0,0,0"
 						ItemsSource="{Binding MenuBlockSize, Mode=OneTime}"
 						SelectedItem="{Binding MenuBlockSizeItem, Mode=TwoWay}"
-						IsEnabled="{Binding Op.IsReady, Mode=OneWay}"/>
+						IsEnabled="{Binding Op.IsReady, Mode=OneWay}"
+						ToolTip="Size of block (KiB)"/>
 
 					<!-- Block offset -->
 					<ComboBox
@@ -333,7 +339,8 @@
 						Width="54" Margin="5,0,0,0"
 						ItemsSource="{Binding MenuBlockOffset, Mode=OneWay}"
 						SelectedIndex="{Binding MenuBlockOffsetIndex, Mode=TwoWay}"
-						IsEnabled="{Binding Op.IsReady, Mode=OneWay}"/>
+						IsEnabled="{Binding Op.IsReady, Mode=OneWay}"
+						ToolTip="Block offset divider"/>
 				</StackPanel>
 
 				<!-- Area size -->
@@ -351,14 +358,16 @@
 					<TextBlock
 						x:Name="TextAreaSize"
 						Margin="0" VerticalAlignment="Center"
-						Text="Area"/>
+						Text="Area"
+						ToolTip="Size of area"/>
 					<controls:TextBoxDoubleFormat
 						Grid.Column="1" Grid.Row="0"
 						x:Name="TextBoxAreaSize"
 						Height="18" Width="70" Margin="5,0,0,0" HorizontalAlignment="Left"
 						VerticalContentAlignment="Center" TextAlignment="Center" IsReadOnly="True"
 						ScaleNumber="{Binding SelectedItem, ElementName=ComboBoxAreaFineness, Mode=OneWay, Converter={StaticResource DoubleScaleConverterKey}}"
-						Text="{Binding Value, ElementName=SliderAreaSize, Mode=OneWay}"/>
+						Text="{Binding Value, ElementName=SliderAreaSize, Mode=OneWay}"
+						ToolTip="Size of area (GiB)"/>
 					<controls:SliderPlus
 						Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2"
 						x:Name="SliderAreaSize"
@@ -386,14 +395,16 @@
 					<TextBlock
 						x:Name="TextAreaLocation"
 						Width="47" Margin="0" VerticalAlignment="Center"
-						Text="Location"/>
+						Text="Location"
+						ToolTip="Location of area"/>
 					<controls:TextBoxDoubleFormat
 						Grid.Column="1" Grid.Row="0"
 						x:Name="TextBoxAreaLocation"
 						Width="70" Height="18" Margin="5,0,0,0" HorizontalAlignment="Left"
 						VerticalContentAlignment="Center" TextAlignment="Center" IsReadOnly="True"
 						ScaleNumber="{Binding SelectedItem, ElementName=ComboBoxAreaFineness, Mode=OneWay, Converter={StaticResource DoubleScaleConverterKey}}"
-						Text="{Binding Value, ElementName=SliderAreaLocation, Mode=OneWay}"/>
+						Text="{Binding Value, ElementName=SliderAreaLocation, Mode=OneWay}"
+						ToolTip="Location of area (GiB)"/>
 					<controls:SliderPlus
 						Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2"
 						x:Name="SliderAreaLocation"
@@ -412,7 +423,8 @@
 						  Width="54" Margin="5,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
 						  ItemsSource="{Binding MenuAreaRatio, Mode=OneTime}"
 						  SelectedIndex="{Binding MenuAreaRatioIndex, Mode=TwoWay}"
-						  IsEnabled="{Binding Op.IsReady, Mode=OneWay}"/>
+						  IsEnabled="{Binding Op.IsReady, Mode=OneWay}"
+						  ToolTip="Area ratio divider"/>
 
 				<!-- Scores -->
 				<StackPanel Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2"
