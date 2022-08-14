@@ -356,24 +356,26 @@
 					</Grid.RowDefinitions>
 
 					<TextBlock
-						Margin="0" VerticalAlignment="Center"
+						VerticalAlignment="Center"
 						Text="Area"
 						ToolTip="Size of area"/>
 					<controls:TextBoxDoubleFormat
 						Grid.Column="1" Grid.Row="0"
-						Height="18" Width="70" Margin="5,0,0,0" HorizontalAlignment="Left"
+						Width="70" Height="18" Margin="5,0,0,0"
 						VerticalContentAlignment="Center" TextAlignment="Center" IsReadOnly="True"
 						ScaleNumber="{Binding SelectedItem, ElementName=ComboBoxAreaFineness, Mode=OneWay, Converter={StaticResource DoubleScaleConverterKey}}"
 						Text="{Binding Value, ElementName=SliderAreaSize, Mode=OneWay}"
 						ToolTip="Size of area (GiB)"/>
-					<controls:SliderPlus
+					<Slider
 						Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2"
 						x:Name="SliderAreaSize"
-						Width="100" Height="18" Margin="0,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
-						SmallChange="1"
+						Style="{StaticResource SliderPlusStyle}"
+						Width="100" Height="18" Margin="0,5,0,0"
+						SmallChange="1" LargeChange="10"
+						IsSnapToTickEnabled="True"
+						TickFrequency="{Binding AreaFineness, Mode=OneWay, Converter={StaticResource TripleDigitConverterKey}, ConverterParameter=2}"
+						Minimum="{Binding AreaFineness, Mode=OneWay, Converter={StaticResource TripleDigitConverterKey}, ConverterParameter=2}"	
 						Maximum="{Binding CurrentDisk.Size, Mode=OneWay, Converter={StaticResource TripleDigitConverterKey}}"
-						Minimum="{Binding AreaFineness, Mode=OneWay, Converter={StaticResource TripleDigitConverterKey}, ConverterParameter=2}"
-						ButtonFrequency="{Binding AreaFineness, Mode=OneWay, Converter={StaticResource TripleDigitConverterKey}, ConverterParameter=2}"
 						Value="{Binding AreaSize, Mode=TwoWay, Converter={StaticResource TripleDigitConverterKey}, ConverterParameter=2}"
 						IsEnabled="{Binding Op.IsReady, Mode=OneWay}"/>
 				</Grid>
@@ -391,24 +393,26 @@
 					</Grid.RowDefinitions>
 
 					<TextBlock
-						Width="47" Margin="0" VerticalAlignment="Center"
+						Width="47" VerticalAlignment="Center"
 						Text="Location"
 						ToolTip="Location of area"/>
 					<controls:TextBoxDoubleFormat
 						Grid.Column="1" Grid.Row="0"
-						Width="70" Height="18" Margin="5,0,0,0" HorizontalAlignment="Left"
+						Width="70" Height="18" Margin="5,0,0,0"
 						VerticalContentAlignment="Center" TextAlignment="Center" IsReadOnly="True"
 						ScaleNumber="{Binding SelectedItem, ElementName=ComboBoxAreaFineness, Mode=OneWay, Converter={StaticResource DoubleScaleConverterKey}}"
 						Text="{Binding Value, ElementName=SliderAreaLocation, Mode=OneWay}"
 						ToolTip="Location of area (GiB)"/>
-					<controls:SliderPlus
+					<Slider
 						Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2"
 						x:Name="SliderAreaLocation"
-						Width="122" Height="18" Margin="0,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
-						SmallChange="1"
-						Maximum="{Binding CurrentDisk.Size, Mode=OneWay, Converter={StaticResource TripleDigitConverterKey}}"
+						Style="{StaticResource SliderPlusStyle}"
+						Height="18" Margin="0,5,0,0"
+						SmallChange="1" LargeChange="10"
+						IsSnapToTickEnabled="True"
+						TickFrequency="{Binding AreaFineness, Mode=OneWay, Converter={StaticResource TripleDigitConverterKey}, ConverterParameter=2}"
 						Minimum="0"
-						ButtonFrequency="{Binding AreaFineness, Mode=OneWay, Converter={StaticResource TripleDigitConverterKey}, ConverterParameter=2}"
+						Maximum="{Binding CurrentDisk.Size, Mode=OneWay, Converter={StaticResource TripleDigitConverterKey}}"
 						Value="{Binding AreaLocation, Mode=TwoWay, Converter={StaticResource TripleDigitConverterKey}, ConverterParameter=2}"
 						IsEnabled="{Binding Op.IsReady, Mode=OneWay}"/>
 				</Grid>

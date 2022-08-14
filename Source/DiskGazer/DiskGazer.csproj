@@ -92,7 +92,6 @@
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="Views\Controls\MenuItemModifier.cs" />
     <Compile Include="Views\Controls\TextBoxDoubleFormat.cs" />
-    <Compile Include="Views\Controls\SliderPlus.cs" />
     <Compile Include="Views\Converters\DoubleScaleConverter.cs" />
     <Compile Include="Views\Converters\TripleDigitConverter.cs" />
     <Compile Include="Views\Converters\ReadMethodToBooleanConverter.cs" />
