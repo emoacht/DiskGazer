@@ -153,35 +153,69 @@
 				<MenuItem Height="21"
 						  Header="_Chart">
 					<Grid Margin="0,2,0,2">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="Auto"/>
+							<ColumnDefinition/>
+						</Grid.ColumnDefinitions>
+						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="Auto"/>
+						</Grid.RowDefinitions>
+
 						<!-- Chart max -->
 						<CheckBox
-							Margin="0,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
-							Content="Fix maximum"
+							x:Name="CheckBoxChartMax"
+							MinWidth="{Binding ActualWidth, ElementName=CheckBoxChartMin}"
+							VerticalAlignment="Center"
+							Content="Fix chart max level"
 							IsChecked="{Binding IsChartMaxFixed, ElementName=MainWindowRoot, Mode=TwoWay}"/>
 						<TextBox
-							Width="40" Height="18" Margin="106,2,0,2" HorizontalAlignment="Left" VerticalAlignment="Top"
+							Grid.Column="1" Grid.Row="0"
+							Width="50" Height="18" Margin="5,3,0,0" VerticalAlignment="Center"
 							VerticalContentAlignment="Center" TextAlignment="Center" IsReadOnly="True" FontSize="11"
 							Text="{Binding Value, ElementName=SliderChartMax, Mode=OneWay}"/>
 						<Slider
+							Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2"
 							x:Name="SliderChartMax"
-							Width="80" Margin="158,2,0,2" HorizontalAlignment="Left" VerticalAlignment="Top"
-							Minimum="50" Maximum="1000" SmallChange="50" LargeChange="100"
+							Style="{StaticResource SliderPlusStyle}"
+							Height="18" Margin="20,5,0,3"
+							SmallChange="50" LargeChange="100"
+							IsSnapToTickEnabled="True"
+							TickFrequency="50"
+							Minimum="50" Maximum="10000"
 							Value="{Binding ChartMax, ElementName=MainWindowRoot, Mode=TwoWay}"/>
 					</Grid>
 					<Grid Margin="0,2,0,2">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="Auto"/>
+							<ColumnDefinition/>
+						</Grid.ColumnDefinitions>
+						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="Auto"/>
+						</Grid.RowDefinitions>
+
 						<!-- Chart min -->
 						<CheckBox
-							Margin="0,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
-							Content="Fix minimum"
+							x:Name="CheckBoxChartMin"
+							MinWidth="{Binding ActualWidth, ElementName=CheckBoxChartMax}"
+							VerticalAlignment="Center"
+							Content="Fix chart min level"
 							IsChecked="{Binding IsChartMinFixed, ElementName=MainWindowRoot, Mode=TwoWay}"/>
 						<TextBox
-							Width="40" Height="18" Margin="106,2,0,2" HorizontalAlignment="Left" VerticalAlignment="Top"
+							Grid.Column="1" Grid.Row="0"
+							Width="50" Height="18" Margin="5,3,0,0" VerticalAlignment="Center"
 							VerticalContentAlignment="Center" TextAlignment="Center" IsReadOnly="True" FontSize="11"
 							Text="{Binding Value, ElementName=SliderChartMin, Mode=OneWay}"/>
 						<Slider
+							Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2"
 							x:Name="SliderChartMin"
-							Width="80" Margin="154,2,0,2" HorizontalAlignment="Left" VerticalAlignment="Top"
-							Minimum="0" Maximum="950" SmallChange="50" LargeChange="100"
+							Style="{StaticResource SliderPlusStyle}"
+							Height="18" Margin="20,5,0,3"
+							SmallChange="50" LargeChange="100"
+							IsSnapToTickEnabled="True"
+							TickFrequency="50"
+							Minimum="0" Maximum="9950"
 							Value="{Binding ChartMin, ElementName=MainWindowRoot, Mode=TwoWay}"/>
 					</Grid>
 					<Separator/>
