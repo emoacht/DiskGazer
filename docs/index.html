@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>Disk Gazer</title>
+<style type="text/css">
+<!--
+/* body */
+body {font-family: Cambria; line-height: 1.4em; color: white; background: #343434; padding: 0; margin: 0;}
+
+h1,h2,h3,p {font-weight: normal; padding: 0; margin: 0;}
+
+p,li {font-size: 1em;}
+
+div#wrapper {margin: 0 auto; width: 760px;}
+
+/* title */
+div#title {height: 70px; margin: 8px;}
+
+h1 {font-size: 56px; line-height: 80px; text-align: center;}
+
+/* main */
+div#main {padding: 10px; margin: 0 0 20px 0; clear: both;}
+div.question {padding: 0 40px; margin: 0;}
+
+p {margin:16px 0 0 0;}
+p.question {margin:24px 0 0 0; font-style: italic;}
+
+img {display: block; margin: 12px auto 10px auto;}
+
+ul,ol {margin: 0.6em 0 0 1.6em; padding: 0;}
+li {margin: 0 0 0.4em 0}
+
+em {font-style: normal; font-weight: bold;}
+
+a:link,
+a:visited {color: white; background: #4a4a4a;}
+a:hover,
+a:active {color: white; background: #6c6c6c;}
+-->
+</style>
+</head>
+<body>
+
+<div id="wrapper">
+
+<div id="title">
+<h1>What Wave In Your Drive?</h1>
+</div><!-- end of title -->
+
+<div id="main">
+
+<p>Do you know waves in a hard disk drive?</p>
+
+<img src="images/7k1000-1000-5points.png" width="703" height="540">
+
+<p>These colorful line charts illustrate the transfer rates at 5 different locations in a 1TB hard disk drive.
+Higher line is nearer to the start of the disk and lower is nearer to the end.</p>
+<p>You can see repetitive waves that gradually change their forms and lengths.
+To be clear, I call continuous plateaus of various heights "wave" not spikes upward or downward.</p>
+<p>The below is the full chart.</p>
+
+<img src="images/7k1000-1000-full.png" width="703" height="540">
+
+<p>Perhaps you have seen charts like this before.
+It is well known that the transfer rate gradually goes down towards the end to disk because it depends on the linear rotational speed of disk.
+If you had a chance to zoom in a specific location, you would have seen waves there.</p>
+<p>Here is the charts of another hard disk drive.</p>
+
+<img src="images/5k1000-1000-5points.png" width="703" height="540">
+<img src="images/5k1000-1000-full.png" width="703" height="540">
+
+<p>You can see waves of different forms. Then, some questions might come to your mind.</p>
+
+<div class="question">
+
+<p class="question">Are they just meaningless noises?</p>
+<p>- No, not at all. They are real and perfectly reproducible. If you use a measuring tool which has enough fineness, you will be able to see them.</p>
+
+<p class="question">Dose it happen to these drives only?</p>
+<p>- No, not at all. As far as I know, all modern hard disk drives have their own wave forms. To be accurate, <u>every unit of every model of hard disk drive has its own unique wave forms.</u></p>
+
+<p class="question">So what are these waves?</p>
+<p>- I have no clear answer. However, I have a hypothesis that <u>each plateau represents a group of tracks in a zone on a recording surface of a platter in a hard disk drive</u>. There is no other reasonable explanation about them. If I try to describe how I have reached this idea, it would be a little bit long story.</p>
+
+</div><!-- end of question -->
+
+<p>If you are interested in, check what waves your drive has with - <a href="https://github.com/emoacht/DiskGazer">Disk Gazer</a>.</p>
+
+</div><!-- end of main -->
+
+</div><!-- end of wrapper -->
+
+</body></html>
