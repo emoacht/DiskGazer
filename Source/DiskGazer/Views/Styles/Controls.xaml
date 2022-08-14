@@ -10,27 +10,6 @@
 	 Custom styles, Templates
 ==============================-->
 
-	<!-- ButtonBase -->
-	<Style x:Key="ButtonBaseStyle" TargetType="{x:Type ButtonBase}">
-		<Setter Property="Background" Value="{StaticResource ComboBox.Static.Background}"/>
-		<Setter Property="BorderBrush" Value="{StaticResource ComboBox.Static.Border}"/>
-		<Setter Property="BorderThickness" Value="1"/>
-		<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-		<Setter Property="Template">
-			<Setter.Value>
-				<ControlTemplate TargetType="{x:Type ButtonBase}">
-					<Border SnapsToDevicePixels="True"
-							Width="{TemplateBinding Width}" Height="{TemplateBinding Height}"
-							Background="{TemplateBinding Background}"
-							BorderBrush="{TemplateBinding BorderBrush}"
-							BorderThickness="{TemplateBinding BorderThickness}">
-						<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-					</Border>
-				</ControlTemplate>
-			</Setter.Value>
-		</Setter>
-	</Style>
-
 	<!-- Start Button -->
 	<LinearGradientBrush x:Key="Button.Busy.Background" StartPoint="0,0" EndPoint="0,1">
 		<GradientStop Color="#FFFCECFC" Offset="0.0"/>
@@ -73,24 +52,7 @@
 				 Stretch="Fill"/>
 	</ControlTemplate>
 
-	<!-- RepeatButton -->
-	<Style x:Key="RepeatButtonStyle" TargetType="{x:Type RepeatButton}" BasedOn="{StaticResource ButtonBaseStyle}">
-		<Setter Property="Foreground" Value="{StaticResource ComboBox.Static.Glyph}"/>
-		<Style.Triggers>
-			<Trigger Property="IsMouseOver" Value="True">
-				<Setter Property="Background" Value="{StaticResource ComboBox.MouseOver.Background}"/>
-				<Setter Property="BorderBrush" Value="{StaticResource ComboBox.MouseOver.Border}"/>
-			</Trigger>
-			<Trigger Property="IsPressed" Value="True">
-				<Setter Property="Background" Value="{StaticResource ComboBox.Pressed.Background}"/>
-				<Setter Property="BorderBrush" Value="{StaticResource ComboBox.Pressed.Border}"/>
-			</Trigger>
-			<Trigger Property="IsEnabled" Value="False">
-				<Setter Property="Background" Value="{StaticResource ComboBox.Disabled.Background}"/>
-				<Setter Property="BorderBrush" Value="{StaticResource ComboBox.Disabled.Border}"/>
-			</Trigger>
-		</Style.Triggers>
-	</Style>
+
 
 	<!-- Disk ComboBox -->
 	<ControlTemplate x:Key="ComboBoxToggleButtonPlainTemplate" TargetType="{x:Type ToggleButton}">
