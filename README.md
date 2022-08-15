@@ -4,7 +4,7 @@
 
 Disk Gazer is a high-definition disk measuring tool which can measure the transfer rates of a physical disk in a small unit and at any location in the disk.
 
-The original aim was to look into waves in hard disk drives. See [What Wave In Your Drive?](http://emoacht.github.io/DiskGazer/)
+The original aim was to look into certain waves in hard disk drives. See [What Wave In Your Drive?](http://emoacht.github.io/DiskGazer/)
 
 :book: [English](https://emoacht.github.io/DiskGazer/readme_en.html) | :book: [Japanese](https://emoacht.github.io/DiskGazer/readme_jp.html)
 -|-
@@ -77,7 +77,7 @@ Ver 0.2.1 2013-03-17
 
 ## Other
 
- - Menu icons: [Visual Studio Image Library](http://msdn.microsoft.com/en-us/library/ms246582.aspx)
+ - Menu icons: [Visual Studio Image Library](https://docs.microsoft.com/en-us/visualstudio/designers/the-visual-studio-image-library)
 
 ## Developer
 
